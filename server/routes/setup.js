@@ -70,15 +70,15 @@ router.post('/create-admin', async (req, res) => {
       // Update existing user to be admin
       const stmt = db.prepare(`
         UPDATE api_users 
-        SET password_hash = ?, role = 'admin', is_active = 1, updated_at = ?
+        SET password_hash = ?, role = 'admin', updated_at = ?
         WHERE email = ?
       `);
       stmt.run(hashedPassword, new Date().toISOString(), email);
     } else {
       // Insert new admin
       const stmt = db.prepare(`
-        INSERT INTO api_users (email, password_hash, role, is_active, created_at)
-        VALUES (?, ?, 'admin', 1, ?)
+        INSERT INTO api_users (email, password_hash, role, created_at)
+        VALUES (?, ?, 'admin', ?)
       `);
       stmt.run(email, hashedPassword, new Date().toISOString());
     }
