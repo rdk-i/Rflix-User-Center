@@ -344,6 +344,42 @@ class AdminController {
   }
 
   /**
+   * Get dashboard stats
+   */
+  async getDashboardStats(req, res, next) {
+    try {
+      // Database stats
+      const totalUsers = db.prepare("SELECT COUNT(*) as count FROM api_users WHERE role != 'admin'").get().count;
+      const activeSubs = db.prepare("SELECT COUNT(*) as count FROM user_expiration WHERE isActive = 1").get().count;
+      // Mock pending requests for now (or implement pending table later)
+      const pendingRequests = 0; 
+
+      // Jellyfin connection check
+      let jellyfinConnected = false;
+      try {
+        // Simple ping to Jellyfin (e.g. get public info)
+        await jellyfinService.client.get('/System/Info/Public');
+        jellyfinConnected = true;
+      } catch (error) {
+        jellyfinConnected = false;
+      }
+
+      res.json({
+        success: true,
+        data: {
+          totalUsers,
+          activeSubs,
+          pendingRequests,
+          jellyfinConnected
+        }
+      });
+    } catch (error) {
+      logger.error('Get dashboard stats error:', error);
+      next(error);
+    }
+  }
+
+  /**
    * Get audit logs
    */
   async getAuditLogs(req, res, next) {

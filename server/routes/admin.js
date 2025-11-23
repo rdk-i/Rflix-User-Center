@@ -10,6 +10,9 @@ router.use(authenticateToken);
 router.use(requireAdmin);
 router.use(adminLimiter);
 
+// Dashboard stats
+router.get('/stats', adminController.getDashboardStats);
+
 // User management
 router.get('/users', adminController.getAllUsers);
 router.get('/users/:userId', adminController.getUserById);
