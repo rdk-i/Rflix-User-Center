@@ -6,16 +6,17 @@ class JellyfinService {
   constructor() {
     this.baseUrl = process.env.JELLYFIN_URL;
     this.apiKey = process.env.JELLYFIN_API_KEY;
-    
-    if (!this.baseUrl || !this.apiKey) {
-      throw new Error('JELLYFIN_URL and JELLYFIN_API_KEY must be set in environment variables');
+    this.isConfigured = !!(this.baseUrl && this.apiKey);
+
+    if (!this.isConfigured) {
+      logger.warn('Jellyfin service not configured. Some features will be unavailable until setup is complete.');
     }
 
     // Axios instance with default config
     this.client = axios.create({
-      baseURL: this.baseUrl,
+      baseURL: this.baseUrl || 'http://localhost', // Placeholder to prevent crash
       headers: {
-        'X-Emby-Token': this.apiKey,
+        'X-Emby-Token': this.apiKey || '',
         'Content-Type': 'application/json',
       },
       timeout: 10000,
@@ -38,6 +39,10 @@ class JellyfinService {
   }
 
   async _makeRequest(config) {
+    if (!this.isConfigured) {
+      throw new Error('Jellyfin service is not configured. Please complete the setup wizard.');
+    }
+
     try {
       const response = await this.client(config);
       return {
