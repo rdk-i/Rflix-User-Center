@@ -941,8 +941,21 @@
         <td colspan="7" style="padding: 0; border: none;">
           <div class="neu-panel p-6 m-4" style="border: 1px solid rgba(255,255,255,0.1); background: #2d3436; margin-top: 0; margin-bottom: 20px; box-shadow: inset 4px 4px 8px #1e2123, inset -4px -4px 8px #3c4649;">
             <div class="flex justify-between items-center mb-6">
-              <h3 class="text-xl font-bold" style="color: var(--accent);">Edit User: ${username}</h3>
-              <button onclick="toggleEditRow('${userId}')" class="text-muted hover:text-white" style="font-size: 1.5rem;">&times;</button>
+              <div class="flex items-center gap-4">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--bg); box-shadow: var(--shadow-out); display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 1.2rem;">
+                  ✎
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold" style="color: var(--text);">Edit Details</h3>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-xs text-muted">User:</span>
+                    <span class="neu-badge active" style="font-size: 0.7rem; padding: 2px 8px;">${username}</span>
+                  </div>
+                </div>
+              </div>
+              <button onclick="toggleEditRow('${userId}')" class="theme-btn" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: #ef4444; font-size: 1.5rem; line-height: 1;" title="Close">
+                &times;
+              </button>
             </div>
             <form onsubmit="saveUserChanges(event, '${userId}')" class="grid grid-cols-1 md:grid-cols-3 gap-6">
               
