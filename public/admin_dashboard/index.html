@@ -947,23 +947,20 @@
             <form onsubmit="saveUserChanges(event, '${userId}')" class="grid grid-cols-1 md:grid-cols-3 gap-6">
               
               <div class="neu-input-group" style="margin-bottom: 0;">
-                <label class="block text-xs font-bold mb-2 text-muted uppercase tracking-wider">Email</label>
                 <input type="email" id="edit-email-${userId}" class="neu-input w-full" placeholder="Email Address" value="${safeEmail}">
               </div>
               
               <div class="neu-input-group" style="margin-bottom: 0;">
-                <label class="block text-xs font-bold mb-2 text-muted uppercase tracking-wider">Phone</label>
                 <input type="text" id="edit-phone-${userId}" class="neu-input w-full" placeholder="Phone Number" value="${safePhone}">
               </div>
               
               <div class="neu-input-group" style="margin-bottom: 0;">
-                <label class="block text-xs font-bold mb-2 text-muted uppercase tracking-wider">Package</label>
                 <input type="text" id="edit-package-${userId}" class="neu-input w-full" placeholder="Package Name" value="${safePkg}">
               </div>
 
               <div class="md:col-span-3 flex justify-end gap-4 mt-4">
-                <button type="button" onclick="toggleEditRow('${userId}')" class="neu-btn neu-btn-sm">Cancel</button>
-                <button type="submit" class="neu-btn neu-btn-sm" style="background: var(--accent); color: #000; font-weight: bold;">Save Changes</button>
+                <button type="button" onclick="toggleEditRow('${userId}')" class="btn-action danger" style="padding: 10px 24px; font-size: 0.85rem;">CANCEL</button>
+                <button type="submit" class="btn-action success" style="padding: 10px 24px; font-size: 0.85rem;">SAVE CHANGES</button>
               </div>
             </form>
           </div>
