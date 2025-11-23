@@ -152,7 +152,7 @@
 
       <!-- Users View -->
       <div id="users-view" class="view-section hidden">
-        <div class="flex justify-between items-end mb-6" style="padding-right: 40px;">
+        <div class="flex justify-between items-end mb-6" style="padding-right: 140px;">
           <div>
             <h1 class="text-3xl font-bold mb-2">User Management</h1>
             <p class="text-muted text-sm">Manage your Jellyfin users and subscriptions</p>
@@ -164,10 +164,10 @@
                 <div class="dot"></div><div class="dot"></div><div class="dot"></div>
               </div>
             </div>
-            <button onclick="loadUsers()" class="neu-btn neu-btn-sm" style="width: 40px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Refresh List">
+            <button onclick="loadUsers()" class="theme-btn" style="width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.2rem;" title="Refresh List">
               &#x21bb;
             </button>
-            <button onclick="syncJellyfinUsers()" class="neu-btn neu-btn-sm" style="background: var(--accent); color: #000; white-space: nowrap; padding-left: 1.5rem; padding-right: 1.5rem; font-weight: 600;">
+            <button onclick="syncJellyfinUsers()" class="theme-btn" style="white-space: nowrap; color: var(--accent);">
               SYNC JELLYFIN
             </button>
           </div>
@@ -785,10 +785,10 @@
               <td style="font-size: 0.85rem;">${user.LastActivityDate ? new Date(user.LastActivityDate).toLocaleDateString() : 'Never'}</td>
               <td style="text-align: center;">
                 <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-                  <button onclick="resetPassword('${user.Id}', '${user.Name}')" class="neu-btn-sm" style="background: var(--accent); color: #000;">Reset Password</button>
+                  <button onclick="resetPassword('${user.Id}', '${user.Name}')" class="btn-action warning">Reset Password</button>
                   ${user.Policy?.IsDisabled ? 
-                    `<button onclick="enableUser('${user.Id}')" class="neu-btn-sm" style="background: #10b981; color: #fff;">Enable</button>` :
-                    `<button onclick="disableUser('${user.Id}')" class="neu-btn-sm" style="background: #ef4444; color: #fff;">Disable</button>`
+                    `<button onclick="enableUser('${user.Id}')" class="btn-action success">Enable</button>` :
+                    `<button onclick="disableUser('${user.Id}')" class="btn-action danger">Disable</button>`
                   }
                 </div>
               </td>
