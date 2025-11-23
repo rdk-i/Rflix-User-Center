@@ -71,7 +71,10 @@ if (!process.env.SETUP_COMPLETED) {
   // Setup Routes
   app.use('/api/setup', require('./routes/setup'));
   
-  // Serve setup page for all other requests
+  // Serve static files (css, js)
+  app.use(express.static(path.join(__dirname, '../public')));
+
+  // Serve setup page for ALL other requests
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/setup.html'));
   });
