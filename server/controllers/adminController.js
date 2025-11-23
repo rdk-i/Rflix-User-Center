@@ -357,10 +357,11 @@ class AdminController {
       // Jellyfin connection check
       let jellyfinConnected = false;
       try {
-        // Simple ping to Jellyfin (e.g. get public info)
-        await jellyfinService.client.get('/System/Info/Public');
+        // Simple ping to Jellyfin with short timeout (2s)
+        await jellyfinService.client.get('/System/Info/Public', { timeout: 2000 });
         jellyfinConnected = true;
       } catch (error) {
+        // logger.warn('Jellyfin ping failed:', error.message); // Optional logging
         jellyfinConnected = false;
       }
 
