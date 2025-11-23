@@ -63,19 +63,44 @@ router.post('/create-admin', async (req, res) => {
     const db = new Database(dbPath);
     const hashedPassword = await bcrypt.hash(password, 12);
     
-    // Insert admin
-    const stmt = db.prepare(`
-      INSERT INTO users (email, password, role, is_active, created_at)
-      VALUES (?, ?, 'admin', 1, ?)
-    `);
+    // Check if user exists
+    const existingUser = db.prepare('SELECT id FROM api_users WHERE email = ?').get(email);
+
+    if (existingUser) {
+      // Update existing user to be admin
+      const stmt = db.prepare(`
+        UPDATE api_users 
+        SET password_hash = ?, role = 'admin', is_active = 1, updated_at = ?
+        WHERE email = ?
+      `);
+      stmt.run(hashedPassword, new Date().toISOString(), email);
+    } else {
+      // Insert new admin
+      const stmt = db.prepare(`
+        INSERT INTO api_users (email, password_hash, role, is_active, created_at)
+        VALUES (?, ?, 'admin', 1, ?)
+      `);
+      stmt.run(email, hashedPassword, new Date().toISOString());
+    }
     
-    stmt.run(email, hashedPassword, new Date().toISOString());
+    // Ensure user has super-admin role in user_roles table
+    const user = db.prepare('SELECT id FROM api_users WHERE email = ?').get(email);
+    const superAdminRole = db.prepare("SELECT id FROM roles WHERE name = 'super-admin'").get();
+    
+    if (user && superAdminRole) {
+      const existingRole = db.prepare('SELECT * FROM user_roles WHERE userId = ? AND roleId = ?').get(user.id, superAdminRole.id);
+      if (!existingRole) {
+        db.prepare('INSERT INTO user_roles (userId, roleId) VALUES (?, ?)').run(user.id, superAdminRole.id);
+      }
+    }
+
     db.close();
     
     res.json({ success: true });
   } catch (error) {
     console.error('Create admin error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    // Return detailed error for debugging
+    res.status(500).json({ success: false, error: `DB Error: ${error.message}` });
   }
 });
 
