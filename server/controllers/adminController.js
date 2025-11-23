@@ -619,9 +619,18 @@ class AdminController {
       // Merge with local database data (email, expiration, etc)
       const users = jellyfinUsers.data.map(jfUser => {
         const dbUser = db.prepare('SELECT * FROM api_users WHERE jellyfinUserId = ?').get(jfUser.Id);
+        let profile = {};
+        try {
+          profile = dbUser?.profile_data ? JSON.parse(dbUser.profile_data) : {};
+        } catch (e) {
+          profile = {};
+        }
+
         return {
           ...jfUser,
           email: dbUser?.email || null,
+          phone: profile.phone || null,
+          package: profile.package || null,
           expirationDate: dbUser ? db.prepare('SELECT expirationDate FROM user_expiration WHERE userId = ?').get(dbUser.id)?.expirationDate : null
         };
       });
@@ -679,6 +688,62 @@ class AdminController {
       });
     } catch (error) {
       logger.error('Sync Jellyfin users error:', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Update user details (email, phone, package)
+   */
+  async updateUser(req, res, next) {
+    try {
+      const { userId } = req.params; // This is the Jellyfin User ID
+      const { email, phone, package: packageName } = req.body;
+
+      // Find local user
+      const dbUser = db.prepare('SELECT * FROM api_users WHERE jellyfinUserId = ?').get(userId);
+
+      if (!dbUser) {
+        // If user exists in Jellyfin but not in local DB (e.g. manually created in Jellyfin), create local record
+        // But for now, we assume sync has run. If not, we can insert.
+        // Let's insert if not exists.
+        const insert = db.prepare(`
+          INSERT INTO api_users (email, jellyfinUserId, password_hash, role, profile_data)
+          VALUES (?, ?, '', 'user', ?)
+        `);
+        
+        const profileData = JSON.stringify({ phone, package: packageName });
+        insert.run(email || `${userId}@placeholder.local`, userId, profileData);
+      } else {
+        // Update existing
+        let profile = {};
+        try {
+          profile = dbUser.profile_data ? JSON.parse(dbUser.profile_data) : {};
+        } catch (e) { profile = {}; }
+
+        // Update profile fields
+        if (phone !== undefined) profile.phone = phone;
+        if (packageName !== undefined) profile.package = packageName;
+
+        const update = db.prepare(`
+          UPDATE api_users 
+          SET email = COALESCE(?, email), 
+              profile_data = ?,
+              updated_at = CURRENT_TIMESTAMP
+          WHERE jellyfinUserId = ?
+        `);
+        
+        update.run(email, JSON.stringify(profile), userId);
+      }
+
+      logger.info(`User ${userId} updated by admin`);
+
+      res.json({
+        success: true,
+        message: 'User updated successfully'
+      });
+    } catch (error) {
+      logger.error('Update user error:', error);
       next(error);
     }
   }

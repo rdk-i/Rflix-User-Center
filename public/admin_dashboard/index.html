@@ -775,8 +775,8 @@
             <tr>
               <td><strong>${user.Name || 'N/A'}</strong></td>
               <td>${user.email && !user.email.includes('@jellyfin.local') ? user.email : '<span class="text-muted">Not set</span>'}</td>
-              <td><span class="text-muted">-</span></td> <!-- Phone placeholder -->
-              <td><span class="text-muted">-</span></td> <!-- Package placeholder -->
+              <td>${user.phone || '<span class="text-muted">-</span>'}</td>
+              <td>${user.package || '<span class="text-muted">-</span>'}</td>
               <td>
                 <span class="neu-badge ${user.Policy?.IsDisabled ? '' : 'active'}" style="font-size: 0.75rem;">
                   ${user.Policy?.IsDisabled ? 'Disabled' : 'Active'}
@@ -785,6 +785,7 @@
               <td style="font-size: 0.85rem;">${user.LastActivityDate ? new Date(user.LastActivityDate).toLocaleDateString() : 'Never'}</td>
               <td style="text-align: center;">
                 <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                  <button onclick="openEditModal('${user.Id}', '${user.Name}', '${user.email || 'null'}', '${user.phone || 'null'}', '${user.package || 'null'}')" class="btn-action" style="color: #60a5fa;">Edit</button>
                   <button onclick="resetPassword('${user.Id}', '${user.Name}')" class="btn-action warning">Reset Password</button>
                   ${user.Policy?.IsDisabled ? 
                     `<button onclick="enableUser('${user.Id}')" class="btn-action success">Enable</button>` :
@@ -916,9 +917,90 @@
       }
     }
 
+    // Edit User Functions
+    function openEditModal(userId, username, email, phone, pkg) {
+      document.getElementById('editUserId').value = userId;
+      document.getElementById('editUsername').value = username;
+      document.getElementById('editEmail').value = email === 'null' || email === 'Not set' || email.includes('@jellyfin.local') ? '' : email;
+      document.getElementById('editPhone').value = phone === 'null' || phone === '-' ? '' : phone;
+      document.getElementById('editPackage').value = pkg === 'null' || pkg === '-' ? '' : pkg;
+      
+      document.getElementById('editUserModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editUserModal').classList.add('hidden');
+    }
+
+    async function saveUserChanges(e) {
+      e.preventDefault();
+      
+      const userId = document.getElementById('editUserId').value;
+      const email = document.getElementById('editEmail').value;
+      const phone = document.getElementById('editPhone').value;
+      const pkg = document.getElementById('editPackage').value;
+      
+      try {
+        const res = await fetch(`/api/admin/users/${userId}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({ email, phone, package: pkg })
+        });
+        
+        const json = await res.json();
+        
+        if (json.success) {
+          alert('User updated successfully');
+          closeEditModal();
+          loadUsers();
+        } else {
+          alert('Failed: ' + (json.error?.message || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Network error');
+      }
+    }
+
     // Load users when Users tab is clicked
     document.querySelector('[data-page="users"]').addEventListener('click', loadUsers);
-
   </script>
+  <!-- Edit User Modal -->
+  <div id="editUserModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50" style="backdrop-filter: blur(5px);">
+    <div class="neu-panel w-full max-w-md p-6 relative" style="border: 1px solid rgba(255,255,255,0.1);">
+      <button onclick="closeEditModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white" style="font-size: 1.5rem;">&times;</button>
+      <h2 class="text-2xl font-bold mb-6">Edit User Details</h2>
+      <form id="editUserForm" onsubmit="saveUserChanges(event)">
+        <input type="hidden" id="editUserId">
+        
+        <div class="mb-4">
+          <label class="block text-sm font-bold mb-2 text-muted">Username</label>
+          <input type="text" id="editUsername" class="neu-input w-full" disabled style="opacity: 0.5; cursor: not-allowed;">
+        </div>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-bold mb-2 text-muted">Email</label>
+          <input type="email" id="editEmail" class="neu-input w-full" placeholder="Enter email address">
+        </div>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-bold mb-2 text-muted">Phone</label>
+          <input type="text" id="editPhone" class="neu-input w-full" placeholder="Enter phone number">
+        </div>
+        
+        <div class="mb-6">
+          <label class="block text-sm font-bold mb-2 text-muted">Package</label>
+          <input type="text" id="editPackage" class="neu-input w-full" placeholder="Enter package name">
+        </div>
+        
+        <div class="flex justify-end gap-4">
+          <button type="button" onclick="closeEditModal()" class="neu-btn neu-btn-sm">Cancel</button>
+          <button type="submit" class="neu-btn neu-btn-sm" style="background: var(--accent); color: #000; font-weight: bold;">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
 </html>
