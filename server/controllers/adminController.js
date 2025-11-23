@@ -660,11 +660,13 @@ class AdminController {
         const existing = db.prepare('SELECT id FROM api_users WHERE jellyfinUserId = ?').get(jfUser.Id);
         
         if (!existing) {
-          // Insert new user (without email, will be added manually later)
+          // Insert new user with placeholder email (can be updated later)
+          const placeholderEmail = `${jfUser.Name.toLowerCase().replace(/\s+/g, '_')}@jellyfin.local`;
+          
           db.prepare(`
-            INSERT INTO api_users (jellyfinUserId, password_hash, role)
-            VALUES (?, '', 'user')
-          `).run(jfUser.Id);
+            INSERT INTO api_users (email, jellyfinUserId, password_hash, role)
+            VALUES (?, ?, '', 'user')
+          `).run(placeholderEmail, jfUser.Id);
           synced++;
         }
       });
