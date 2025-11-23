@@ -10,10 +10,10 @@ Update your system packages:
 sudo apt update && sudo apt upgrade -y
 ```
 
-Install Node.js (v18 LTS recommended):
+Install Node.js (v20 LTS recommended):
 
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 ```
 
