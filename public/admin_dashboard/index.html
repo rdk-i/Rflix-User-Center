@@ -364,10 +364,14 @@
     // Initial Data Load
     async function loadDashboardData() {
       try {
+        console.log('Fetching dashboard stats...');
         const res = await fetch('/api/admin/stats', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        console.log('Response status:', res.status);
         const json = await res.json();
+        console.log('Response data:', json);
         
         if (json.success) {
           document.getElementById('totalUsers').textContent = json.data.totalUsers;
@@ -385,9 +389,14 @@
             jfStatus.classList.remove('active');
             jfStatus.style.color = '#ef4444';
           }
+        } else {
+          console.error('API returned error:', json.error);
+          document.getElementById('jellyfinStatus').textContent = 'Error: ' + (json.error?.message || 'Unknown');
         }
       } catch (error) {
         console.error('Failed to load stats:', error);
+        document.getElementById('jellyfinStatus').textContent = 'Failed';
+        document.getElementById('jellyfinStatus').style.color = '#ef4444';
       }
     }
 
