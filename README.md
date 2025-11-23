@@ -17,6 +17,8 @@
 - ✅ **JWT Authentication** with access & refresh tokens
 - ✅ **Role-Based Access Control (RBAC)**
 - ✅ **Captcha Protection** (Cloudflare Turnstile / Google reCAPTCHA)
+- ✅ **Modern Dark Theme** (Zinc Palette)
+- ✅ **Setup Wizard (GUI)** for easy first-time installation
 
 ### Advanced Features
 
@@ -26,7 +28,6 @@
 - 🔄 **Self-Service Renewal**
 - 📝 **Audit Logging** with IP & User-Agent tracking
 - 🌐 **i18n Support** (Indonesian & English)
-- 🎨 **Dark Mode & Theme Customizer**
 - 💾 **User Backup & Restore**
 - 🔒 **API Rate Limiting**
 - 🔌 **Webhook Outbound Integration**
@@ -39,61 +40,46 @@
 - npm 9+
 - Jellyfin Server with API access
 
-### Installation
+### Installation (New Method - GUI Wizard)
 
 1. **Clone the repository**
 
-```bash
-git clone https://github.com/yourusername/rflix-api.git
-cd rflix-api
-```
+   ```bash
+   git clone https://github.com/yourusername/rflix-api.git
+   cd rflix-api
+   ```
 
 2. **Install dependencies**
 
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
-3. **Configure environment variables**
+3. **Start the server**
 
-```bash
-cp .env.example .env
-```
+   ```bash
+   npm run dev
+   ```
 
-Edit `.env` and fill in your configuration:
+4. **Open Setup Wizard**
+   Access `http://localhost:3000` in your browser. You will be greeted by the **Rflix Setup Wizard**.
 
-- `JELLYFIN_URL`: Your Jellyfin server URL
-- `JELLYFIN_API_KEY`: Your Jellyfin API key
-- `JWT_SECRET`: Random secret for JWT signing
-- `CAPTCHA_PROVIDER`: `turnstile` or `recaptcha`
-- Captcha keys (Cloudflare Turnstile or Google reCAPTCHA)
+   Follow the on-screen instructions to:
 
-4. **Run database migrations**
+   - Configure Server & Jellyfin connection.
+   - Generate Security Keys.
+   - Create your first Admin Account.
+   - Initialize Database.
 
-```bash
-npm run migrate
-```
+### Access the Application
 
-5. **Start the server**
+Once setup is complete, you can access the application via these clean URLs:
 
-```bash
-# Development
-npm run dev
+- **User Login**: `http://localhost:3000/user`
+- **Admin Login**: `http://localhost:3000/admin`
+- **Registration**: `http://localhost:3000/registration`
 
-# Production
-npm start
-```
-
-6. **Access the application**
-
-- User Login: `http://localhost:3000/user_login.html`
-- Admin Login: `http://localhost:3000/admin_login.html`
-- Registration: `http://localhost:3000/registration.html`
-
-**Default Admin Credentials:**
-
-- Email: `admin@rflix.local`
-- Password: `admin123` (⚠️ **CHANGE THIS IMMEDIATELY!**)
+---
 
 ## 📁 Project Structure
 
@@ -114,7 +100,6 @@ rflix-api/
 ├── data/                 # SQLite database
 ├── logs/                 # Application logs
 ├── backups/              # Database backups
-├── docs/                 # Documentation
 └── tests/                # Test files
 ```
 
@@ -122,7 +107,7 @@ rflix-api/
 
 ### Environment Variables
 
-See `.env.example` for all available configuration options.
+See `.env.example` for all available configuration options. The Setup Wizard will automatically generate a `.env` file for you.
 
 ### Captcha Configuration
 

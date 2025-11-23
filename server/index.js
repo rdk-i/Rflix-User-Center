@@ -38,6 +38,19 @@ app.use(cookieParser());
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public')));
 
+// Clean URLs for frontend pages
+app.get('/user', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/user_login.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/admin_login.html'));
+});
+
+app.get('/registration', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/registration.html'));
+});
+
 // Global rate limiter
 app.use(rateLimiters.globalLimiter);
 
@@ -51,13 +64,26 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/config', configRoutes);
-app.use('/api/registration', registrationRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/coupons', couponRoutes);
+// API Routes
+if (!process.env.SETUP_COMPLETED) {
+  logger.info('Setup not completed. Serving Setup Wizard.');
+  
+  // Setup Routes
+  app.use('/api/setup', require('./routes/setup'));
+  
+  // Serve setup page for all other requests
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/setup.html'));
+  });
+} else {
+  app.use('/api/auth', authRoutes);
+  app.use('/api/users', userRoutes);
+  app.use('/api/admin', adminRoutes);
+  app.use('/api/config', configRoutes);
+  app.use('/api/registration', registrationRoutes);
+  app.use('/api/notifications', notificationRoutes);
+  app.use('/api/coupons', couponRoutes);
+}
 
 // Error handler (must be last)
 app.use(errorHandler);

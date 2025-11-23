@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rflix API - Setup Wizard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            zinc: {
+              850: '#18181b',
+              900: '#09090b',
+              950: '#000000',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-950 text-zinc-300 font-sans flex items-center justify-center p-4">
+  <div class="w-full max-w-2xl">
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">🚀 Rflix Setup</h1>
+      <p class="text-zinc-500">First time configuration wizard</p>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-zinc-900/80 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
+      <form id="setupForm" class="p-8 space-y-8">
+        
+        <!-- Step 1: Server Config -->
+        <div class="space-y-4">
+          <h2 class="text-xl font-bold text-white border-b border-white/10 pb-2">1. Server Configuration</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Port</label>
+              <input type="number" name="PORT" value="3000" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none" required />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Node Env</label>
+              <select name="NODE_ENV" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none">
+                <option value="production">Production</option>
+                <option value="development">Development</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Jellyfin Config -->
+        <div class="space-y-4">
+          <h2 class="text-xl font-bold text-white border-b border-white/10 pb-2">2. Jellyfin Connection</h2>
+          <div>
+            <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Jellyfin URL</label>
+            <input type="url" name="JELLYFIN_URL" placeholder="http://localhost:8096" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none" required />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Jellyfin API Key</label>
+            <input type="text" name="JELLYFIN_API_KEY" placeholder="Your API Key" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none" required />
+          </div>
+        </div>
+
+        <!-- Step 3: Security -->
+        <div class="space-y-4">
+          <h2 class="text-xl font-bold text-white border-b border-white/10 pb-2">3. Security</h2>
+          <div>
+            <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">JWT Secret</label>
+            <div class="flex gap-2">
+              <input type="text" name="JWT_SECRET" id="jwtSecret" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none" required />
+              <button type="button" onclick="generateSecret()" class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white border border-white/10">Generate</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Admin Account -->
+        <div class="space-y-4">
+          <h2 class="text-xl font-bold text-white border-b border-white/10 pb-2">4. Create Admin Account</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Admin Email</label>
+              <input type="email" name="ADMIN_EMAIL" placeholder="admin@example.com" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none" required />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Admin Password</label>
+              <input type="password" name="ADMIN_PASSWORD" placeholder="Strong Password" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none" required />
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="pt-4">
+          <button type="submit" id="submitBtn" class="w-full bg-white text-black font-bold py-4 rounded-lg hover:bg-zinc-200 transition-all duration-200 shadow-lg shadow-white/5">
+            Install & Configure
+          </button>
+        </div>
+
+        <div id="statusLog" class="hidden p-4 bg-black/50 rounded-lg font-mono text-xs text-zinc-400 space-y-1 max-h-40 overflow-y-auto"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function generateSecret() {
+      const array = new Uint8Array(32);
+      crypto.getRandomValues(array);
+      const secret = Array.from(array, dec => dec.toString(16).padStart(2, "0")).join("");
+      document.getElementById('jwtSecret').value = secret;
+    }
+
+    function log(msg, type = 'info') {
+      const logDiv = document.getElementById('statusLog');
+      logDiv.classList.remove('hidden');
+      const color = type === 'error' ? 'text-red-400' : (type === 'success' ? 'text-emerald-400' : 'text-zinc-400');
+      logDiv.innerHTML += `<div class="${color}">> ${msg}</div>`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    document.getElementById('setupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.classList.add('opacity-50', 'cursor-not-allowed');
+      btn.textContent = 'Installing...';
+
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+        log('Saving configuration...');
+        const configRes = await fetch('/api/setup/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        if (!configRes.ok) throw new Error('Failed to save config');
+        log('Configuration saved.', 'success');
+
+        log('Running database migrations...');
+        const migrateRes = await fetch('/api/setup/migrate', { method: 'POST' });
+        if (!migrateRes.ok) throw new Error('Migration failed');
+        log('Database initialized.', 'success');
+
+        log('Creating admin account...');
+        const adminRes = await fetch('/api/setup/create-admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: data.ADMIN_EMAIL, password: data.ADMIN_PASSWORD })
+        });
+        if (!adminRes.ok) throw new Error('Failed to create admin');
+        log('Admin account created.', 'success');
+
+        log('Installation complete! Restarting server...', 'success');
+        
+        // Trigger restart
+        await fetch('/api/setup/restart', { method: 'POST' }).catch(() => {});
+        
+        setTimeout(() => {
+          window.location.href = '/admin';
+        }, 3000);
+
+      } catch (error) {
+        log(error.message, 'error');
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        btn.textContent = 'Try Again';
+      }
+    });
+
+    // Auto generate secret on load
+    generateSecret();
+  </script>
+</body>
+</html>
