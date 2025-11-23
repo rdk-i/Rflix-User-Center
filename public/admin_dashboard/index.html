@@ -36,7 +36,7 @@
       position: fixed;
       top: 1.5rem;
       right: 2rem;
-      z-index: 50;
+      z-index: 100; /* Higher z-index to stay on top */
     }
     @media (max-width: 768px) {
       .neu-sidebar {
@@ -152,11 +152,12 @@
 
       <!-- Users View -->
       <div id="users-view" class="view-section hidden">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-6 pr-20">
           <h1 class="text-3xl font-bold">User Management</h1>
           <div class="flex gap-2">
-            <input type="text" placeholder="Search users..." class="neu-input" style="width: 200px; height: 40px;" />
-            <button class="neu-btn neu-btn-sm">Search</button>
+            <input type="text" id="searchUsers" placeholder="Search users..." class="neu-input" style="width: 200px; height: 40px;" />
+            <button onclick="searchUsers()" class="neu-btn neu-btn-sm">Search</button>
+            <button onclick="syncJellyfinUsers()" class="neu-btn neu-btn-sm" style="background: var(--accent); color: #000;">Sync Jellyfin</button>
           </div>
         </div>
         
@@ -165,10 +166,10 @@
             <table class="neu-table">
               <thead>
                 <tr>
-                  <th>User</th>
+                  <th>Username</th>
                   <th>Email</th>
                   <th>Status</th>
-                  <th>Expires</th>
+                  <th>Last Login</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -217,13 +218,16 @@
           <div class="neu-panel">
             <h3 class="text-xl font-bold mb-4 text-accent">General</h3>
             <form id="generalForm" class="space-y-4">
-              <div>
-                <label class="block text-sm text-muted mb-2">Site Name</label>
-                <input type="text" id="siteName" value="Rflix" class="neu-input w-full" />
+              <div class="neu-input-group">
+                <label class="block text-sm font-bold mb-2">Site Name</label>
+                <input type="text" id="siteName" value="Rflix" class="neu-input" placeholder="Site Name" />
+                <div class="icon-indicator">
+                  <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                </div>
               </div>
               
               <div class="flex items-center justify-between py-2">
-                <span class="text-sm">Allow Registration</span>
+                <span class="text-sm font-medium">Allow Registration</span>
                 <label class="neu-toggle">
                   <input type="checkbox" id="allowRegistration" checked />
                   <span class="neu-toggle-slider"></span>
@@ -238,17 +242,23 @@
           <div class="neu-panel">
             <h3 class="text-xl font-bold mb-4 text-accent">Jellyfin Connection</h3>
             <form id="jellyfinForm" class="space-y-4">
-              <div>
-                <label class="block text-sm text-muted mb-2">Jellyfin Server URL</label>
-                <input type="url" id="jellyfinUrl" placeholder="http://localhost:8096" class="neu-input w-full" />
+              <div class="neu-input-group">
+                <label class="block text-sm font-bold mb-2">Jellyfin Server URL</label>
+                <input type="url" id="jellyfinUrl" placeholder="http://localhost:8096" class="neu-input" />
+                <div class="icon-indicator">
+                  <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                </div>
               </div>
               
-              <div>
-                <label class="block text-sm text-muted mb-2">Jellyfin API Key</label>
-                <input type="password" id="jellyfinApiKey" placeholder="Enter API Key" class="neu-input w-full" />
+              <div class="neu-input-group">
+                <label class="block text-sm font-bold mb-2">Jellyfin API Key</label>
+                <input type="password" id="jellyfinApiKey" placeholder="Enter API Key" class="neu-input" />
+                <div class="icon-indicator">
+                  <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                </div>
               </div>
 
-              <div class="flex gap-2">
+              <div class="flex gap-4 mt-4">
                 <button type="submit" class="neu-btn">Save Jellyfin Config</button>
                 <button type="button" onclick="testJellyfinConnection()" class="neu-btn" style="background: transparent; border: 1px solid var(--accent-color);">Test Connection</button>
               </div>
@@ -262,7 +272,7 @@
             <div class="space-y-4">
               <div class="flex items-center justify-between py-2">
                 <div>
-                  <p class="text-sm font-medium">Auto Backup</p>
+                  <p class="text-sm font-bold">Auto Backup</p>
                   <p class="text-xs text-muted">Daily backup at 3:00 AM</p>
                 </div>
                 <label class="neu-toggle">
@@ -273,7 +283,7 @@
 
               <div class="flex items-center justify-between py-2 border-t border-gray-700 pt-4">
                 <div>
-                  <p class="text-sm font-medium">Last Backup</p>
+                  <p class="text-sm font-bold">Last Backup</p>
                   <p class="text-xs text-muted" id="lastBackupTime">Never</p>
                 </div>
                 <button onclick="triggerManualBackup()" class="neu-btn neu-btn-sm">Backup Now</button>
@@ -287,7 +297,7 @@
 
       <!-- Form Builder View -->
       <div id="forms-view" class="view-section hidden">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-6 pr-20">
           <h1 class="text-3xl font-bold">Registration Form Builder</h1>
           <button onclick="openFieldModal()" class="neu-btn neu-btn-sm">Add New Field</button>
         </div>
@@ -727,6 +737,129 @@
         console.error('Failed to load settings:', error);
       }
     });
+
+    // User Management Functions
+    async function loadUsers() {
+      try {
+        const res = await fetch('/api/admin/users/jellyfin', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          const tbody = document.getElementById('usersTableBody');
+          if (json.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No users found</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = json.data.map(user => `
+            <tr>
+              <td><strong>${user.Name || 'N/A'}</strong></td>
+              <td>${user.email || '-'}</td>
+              <td>
+                <span class="neu-badge ${user.Policy?.IsDisabled ? '' : 'active'}" style="font-size: 0.75rem;">
+                  ${user.Policy?.IsDisabled ? 'Disabled' : 'Active'}
+                </span>
+              </td>
+              <td>${user.LastActivityDate ? new Date(user.LastActivityDate).toLocaleDateString() : 'Never'}</td>
+              <td>
+                <button onclick="viewUser('${user.Id}')" class="neu-btn-sm" style="margin-right: 0.5rem;">View</button>
+                ${user.Policy?.IsDisabled ? 
+                  `<button onclick="enableUser('${user.Id}')" class="neu-btn-sm" style="background: #10b981; color: #fff;">Enable</button>` :
+                  `<button onclick="disableUser('${user.Id}')" class="neu-btn-sm" style="background: #ef4444; color: #fff;">Disable</button>`
+                }
+              </td>
+            </tr>
+          `).join('');
+        } else {
+          console.error('Failed to load users:', json.error);
+        }
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    }
+
+    async function syncJellyfinUsers() {
+      if (!confirm('This will sync all users from Jellyfin server. Continue?')) return;
+      
+      try {
+        const res = await fetch('/api/admin/users/sync', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          alert(`Synced ${json.data.synced} users from Jellyfin`);
+          loadUsers();
+        } else {
+          alert('Sync failed: ' + (json.error?.message || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Network error');
+      }
+    }
+
+    function searchUsers() {
+      const query = document.getElementById('searchUsers').value.toLowerCase();
+      const rows = document.querySelectorAll('#usersTableBody tr');
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+      });
+    }
+
+    async function viewUser(userId) {
+      // TODO: Implement user detail modal
+      alert('View user: ' + userId);
+    }
+
+    async function disableUser(userId) {
+      if (!confirm('Disable this user?')) return;
+      
+      try {
+        const res = await fetch(`/api/admin/users/${userId}/disable`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          alert('User disabled');
+          loadUsers();
+        } else {
+          alert('Failed: ' + (json.error?.message || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Network error');
+      }
+    }
+
+    async function enableUser(userId) {
+      if (!confirm('Enable this user?')) return;
+      
+      try {
+        const res = await fetch(`/api/admin/users/${userId}/enable`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          alert('User enabled');
+          loadUsers();
+        } else {
+          alert('Failed: ' + (json.error?.message || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Network error');
+      }
+    }
+
+    // Load users when Users tab is clicked
+    document.querySelector('[data-page="users"]').addEventListener('click', loadUsers);
 
   </script>
 </body>

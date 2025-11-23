@@ -598,6 +598,88 @@ class AdminController {
       next(error);
     }
   }
+
+  /**
+   * Get all Jellyfin users
+   */
+  async getAllJellyfinUsers(req, res, next) {
+    try {
+      const jellyfinUsers = await jellyfinService.getAllUsers();
+      
+      if (!jellyfinUsers.success) {
+        return res.status(500).json({
+          success: false,
+          error: {
+            code: 'JELLYFIN_ERROR',
+            message: 'Failed to fetch users from Jellyfin'
+          }
+        });
+      }
+
+      // Merge with local database data (email, expiration, etc)
+      const users = jellyfinUsers.data.map(jfUser => {
+        const dbUser = db.prepare('SELECT * FROM api_users WHERE jellyfinUserId = ?').get(jfUser.Id);
+        return {
+          ...jfUser,
+          email: dbUser?.email || null,
+          expirationDate: dbUser ? db.prepare('SELECT expirationDate FROM user_expiration WHERE userId = ?').get(dbUser.id)?.expirationDate : null
+        };
+      });
+
+      res.json({
+        success: true,
+        data: users
+      });
+    } catch (error) {
+      logger.error('Get Jellyfin users error:', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Sync Jellyfin users to local database
+   */
+  async syncJellyfinUsers(req, res, next) {
+    try {
+      const jellyfinUsers = await jellyfinService.getAllUsers();
+      
+      if (!jellyfinUsers.success) {
+        return res.status(500).json({
+          success: false,
+          error: {
+            code: 'JELLYFIN_ERROR',
+            message: 'Failed to fetch users from Jellyfin'
+          }
+        });
+      }
+
+      let synced = 0;
+      
+      jellyfinUsers.data.forEach(jfUser => {
+        // Check if user already exists
+        const existing = db.prepare('SELECT id FROM api_users WHERE jellyfinUserId = ?').get(jfUser.Id);
+        
+        if (!existing) {
+          // Insert new user (without email, will be added manually later)
+          db.prepare(`
+            INSERT INTO api_users (jellyfinUserId, password_hash, role)
+            VALUES (?, '', 'user')
+          `).run(jfUser.Id);
+          synced++;
+        }
+      });
+
+      logger.info(`Synced ${synced} new users from Jellyfin`);
+
+      res.json({
+        success: true,
+        data: { synced }
+      });
+    } catch (error) {
+      logger.error('Sync Jellyfin users error:', error);
+      next(error);
+    }
+  }
 }
 
 module.exports = new AdminController();

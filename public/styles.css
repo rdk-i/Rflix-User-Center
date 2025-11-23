@@ -125,6 +125,25 @@ body.centered {
   overflow-y: auto;
 }
 
+/* Navigation Items */
+.nav-item {
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.nav-item a {
+  color: var(--text);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.nav-item.active a {
+  background: var(--accent) !important;
+  color: #000 !important;
+  font-weight: bold;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   color: var(--text);

@@ -22,6 +22,10 @@ router.post('/users/:userId/enable', auditLogger('ENABLE_USER'), adminController
 router.delete('/users/:userId', auditLogger('DELETE_USER'), adminController.deleteUser);
 router.post('/users/:userId/extend', auditLogger('EXTEND_SUBSCRIPTION'), adminController.extendSubscription);
 
+// Jellyfin user management
+router.get('/users/jellyfin', adminController.getAllJellyfinUsers);
+router.post('/users/sync', auditLogger('SYNC_JELLYFIN_USERS'), adminController.syncJellyfinUsers);
+
 // Settings
 router.get('/settings', adminController.getSettings);
 router.post('/test-jellyfin', adminController.testJellyfinConnection);
