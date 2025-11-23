@@ -14,6 +14,12 @@ router.use(adminLimiter);
 router.get('/stats', adminController.getDashboardStats);
 
 // User management
+// IMPORTANT: Specific routes MUST come before parameterized routes
+// Jellyfin user management (specific routes first)
+router.get('/users/jellyfin', adminController.getAllJellyfinUsers);
+router.post('/users/sync', auditLogger('SYNC_JELLYFIN_USERS'), adminController.syncJellyfinUsers);
+
+// General user management (parameterized routes)
 router.get('/users', adminController.getAllUsers);
 router.get('/users/:userId', adminController.getUserById);
 router.post('/users', auditLogger('CREATE_USER'), adminController.createUser);
@@ -21,10 +27,6 @@ router.post('/users/:userId/disable', auditLogger('DISABLE_USER'), adminControll
 router.post('/users/:userId/enable', auditLogger('ENABLE_USER'), adminController.enableUser);
 router.delete('/users/:userId', auditLogger('DELETE_USER'), adminController.deleteUser);
 router.post('/users/:userId/extend', auditLogger('EXTEND_SUBSCRIPTION'), adminController.extendSubscription);
-
-// Jellyfin user management
-router.get('/users/jellyfin', adminController.getAllJellyfinUsers);
-router.post('/users/sync', auditLogger('SYNC_JELLYFIN_USERS'), adminController.syncJellyfinUsers);
 
 // Settings
 router.get('/settings', adminController.getSettings);
