@@ -343,15 +343,13 @@ class AdminController {
     }
   }
 
-  /**
-   * Get dashboard stats (Real-time from Jellyfin)
-   */
   async getDashboardStats(req, res, next) {
     try {
       let totalUsers = 0;
-      let activeSubs = 0;
+      let nowPlaying = 0;
       let pendingRequests = 0;
       let jellyfinConnected = false;
+      let recentActivity = [];
 
       // Try to fetch real data from Jellyfin
       try {
@@ -365,10 +363,28 @@ class AdminController {
           totalUsers = usersResponse.data.length;
         }
 
-        // Get active sessions
+        // Get active sessions (Now Playing)
         const sessionsResponse = await jellyfinService.client.get('/Sessions');
         if (sessionsResponse.data) {
-          activeSubs = sessionsResponse.data.filter(s => s.NowPlayingItem).length;
+          const activeSessions = sessionsResponse.data.filter(s => s.NowPlayingItem);
+          nowPlaying = activeSessions.length;
+
+          // Build recent activity from active sessions
+          recentActivity = activeSessions.slice(0, 5).map(session => ({
+            user: session.UserName || 'Unknown',
+            action: `watching ${session.NowPlayingItem?.Name || 'content'}`,
+            time: 'Now'
+          }));
+        }
+
+        // If no active sessions, get recent activity from audit log
+        if (recentActivity.length === 0) {
+          const auditLogs = db.prepare('SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT 5').all();
+          recentActivity = auditLogs.map(log => ({
+            user: log.adminId ? `Admin #${log.adminId}` : 'System',
+            action: log.action,
+            time: new Date(log.timestamp).toLocaleTimeString()
+          }));
         }
       } catch (error) {
         logger.warn('Failed to fetch Jellyfin stats:', error.message);
@@ -378,16 +394,18 @@ class AdminController {
       // Fallback: Get stats from local database if Jellyfin is unavailable
       if (!jellyfinConnected) {
         totalUsers = db.prepare("SELECT COUNT(*) as count FROM api_users WHERE role != 'admin'").get().count;
-        activeSubs = db.prepare("SELECT COUNT(*) as count FROM user_expiration WHERE isActive = 1").get().count;
+        nowPlaying = 0;
+        recentActivity = [];
       }
 
       res.json({
         success: true,
         data: {
           totalUsers,
-          activeSubs,
+          nowPlaying,
           pendingRequests,
-          jellyfinConnected
+          jellyfinConnected,
+          recentActivity
         }
       });
     } catch (error) {
