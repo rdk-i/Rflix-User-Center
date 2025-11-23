@@ -1,111 +1,100 @@
-# Panduan Deployment Rflix-API ke Debian VM (Metode GUI Wizard)
+# Rflix-API Deployment Guide
 
-Panduan ini telah disederhanakan. Anda hanya perlu melakukan instalasi dasar via SSH, lalu sisanya (konfigurasi database, admin, dll) dilakukan melalui **Web GUI Wizard**.
+This guide details how to deploy Rflix-API on a Debian-based Linux server (e.g., Ubuntu, Debian).
 
-## 1. Persiapan Server (Via SSH)
+## 1. Server Preparation
 
-Masuk ke server Anda menggunakan SSH:
-
-```bash
-ssh user@ip-server-anda
-```
-
-### Update System & Install Tools
+Update your system packages:
 
 ```bash
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y curl build-essential python3 git unzip nginx
 ```
 
-### Install Node.js (Versi 18 LTS)
+Install Node.js (v18 LTS recommended):
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt install -y nodejs
+```
+
+Install Git and Process Manager (PM2):
+
+```bash
+sudo apt install -y git
 sudo npm install -g pm2
 ```
 
----
+## 2. Application Setup
 
-## 2. Upload File (Via SFTP)
-
-Gunakan FileZilla/WinSCP untuk upload file project ke server (misal ke folder `~/rflix-api`).
-
-**File/Folder yang WAJIB diupload:**
-
-- 📁 `public/`
-- 📁 `server/`
-- 📁 `migrations/`
-- 📄 `package.json`
-- 📄 `tailwind.config.js`
-
-> **JANGAN** upload folder `node_modules`.
-
----
-
-## 3. Jalankan Aplikasi (Via SSH)
-
-Kembali ke terminal SSH, masuk ke folder aplikasi dan install dependensi:
+Clone the repository:
 
 ```bash
-cd ~/rflix-api
-mkdir -p data logs
-npm install
+git clone https://github.com/yourusername/Rflix-API.git
+cd Rflix-API
 ```
 
-Jalankan aplikasi dengan PM2:
+Install dependencies:
+
+```bash
+npm install --production
+```
+
+Run Database Migrations:
+
+```bash
+# This creates the SQLite database and all necessary tables
+npm run migrate
+```
+
+## 3. Configuration (Setup Wizard)
+
+1.  Start the application temporarily:
+    ```bash
+    npm start
+    ```
+2.  Open your web browser and access `http://YOUR_SERVER_IP:3000`.
+3.  Complete the **Setup Wizard**:
+    - **Server Config**: Set Port (default 3000) and Environment (Production).
+    - **Jellyfin**: Enter your Jellyfin URL and API Key.
+    - **Security**: Generate a secure JWT Secret.
+    - **Admin Account**: Create your initial Super Admin account.
+4.  Once finished, stop the server (Ctrl+C).
+
+## 4. Production Deployment with PM2
+
+Start the application in the background using PM2:
 
 ```bash
 pm2 start server/index.js --name "rflix-api"
-pm2 startup
-pm2 save
 ```
 
----
+Save the PM2 list and set it to start on boot:
 
-## 4. Konfigurasi via Web Wizard (GUI) 🚀
+```bash
+pm2 save
+pm2 startup
+```
 
-Sekarang aplikasi sudah berjalan dalam **Mode Setup**.
+## 5. Reverse Proxy (Nginx) - Optional but Recommended
 
-1.  Buka browser Anda dan akses: `http://ip-server-anda:3000`
-    _(Jika port 3000 tertutup firewall, Anda mungkin perlu membukanya dulu atau setup Nginx di langkah 5)_
+Install Nginx:
 
-2.  Anda akan melihat halaman **Rflix Setup Wizard**.
+```bash
+sudo apt install -y nginx
+```
 
-3.  Isi form yang tersedia:
-
-    - **Server Config**: Biarkan default jika ragu.
-    - **Jellyfin Connection**: Masukkan URL dan API Key Jellyfin Anda.
-    - **Security**: Klik "Generate" untuk membuat JWT Secret.
-    - **Create Admin**: Masukkan email dan password untuk akun Admin pertama Anda.
-
-4.  Klik **"Install & Configure"**.
-
-Wizard akan otomatis:
-
-- ✅ Menyimpan konfigurasi (`.env`)
-- ✅ Membuat database & tabel
-- ✅ Membuat akun admin
-- ✅ Merestart aplikasi
-
-Setelah selesai, Anda akan diarahkan ke halaman Login Admin.
-
----
-
-## 5. Setup Domain (Nginx Reverse Proxy)
-
-Agar bisa diakses tanpa port 3000 (misal `rflix.domain.com`), setup Nginx:
+Create a configuration file:
 
 ```bash
 sudo nano /etc/nginx/sites-available/rflix
 ```
 
-Isi file:
+Add the following content (replace `yourdomain.com` with your actual domain):
 
 ```nginx
 server {
     listen 80;
-    server_name domain-anda.com; # Ganti dengan domain/IP Anda
+    server_name yourdomain.com;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -118,7 +107,7 @@ server {
 }
 ```
 
-Aktifkan:
+Enable the site and restart Nginx:
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/rflix /etc/nginx/sites-enabled/
@@ -126,4 +115,28 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-Selesai! 🎉
+## 6. SSL Certificate (HTTPS)
+
+Secure your domain with a free Let's Encrypt certificate:
+
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d yourdomain.com
+```
+
+## 7. Maintenance & Updates
+
+To update the application in the future:
+
+```bash
+cd Rflix-API
+git pull
+npm install
+npm run migrate
+pm2 restart rflix-api
+```
+
+## Troubleshooting
+
+- **Logs**: View application logs with `pm2 logs rflix-api`.
+- **Database**: The SQLite database is located at `data/rflix.db`. Ensure the `data` directory has write permissions.

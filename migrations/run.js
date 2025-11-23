@@ -18,7 +18,7 @@ db.pragma("journal_mode = WAL");
 // Get all migration files
 const migrationFiles = fs
   .readdirSync(migrationsDir)
-  .filter((file) => file.endsWith(".sql"))
+  .filter((file) => file === "data.sql")
   .sort();
 
 console.log("Running migrations...");

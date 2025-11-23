@@ -1,5 +1,5 @@
 -- Rflix-API Database Schema
--- Migration 001: Initial Schema
+-- Combined Schema (data.sql)
 
 -- Table: api_users (Dashboard accounts for admin & users)
 CREATE TABLE IF NOT EXISTS api_users (
@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS api_users (
   password_hash TEXT NOT NULL,
   jellyfinUserId TEXT,
   role TEXT NOT NULL DEFAULT 'user', -- admin, user, moderator, support
+  profile_data TEXT, -- JSON storage for dynamic fields
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -122,6 +123,22 @@ CREATE TABLE IF NOT EXISTS scheduler_log (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Table: registration_fields (Dynamic form configuration)
+CREATE TABLE IF NOT EXISTS registration_fields (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  field_key TEXT UNIQUE NOT NULL,
+  label TEXT NOT NULL,
+  type TEXT NOT NULL, -- text, email, password, tel, select, number
+  placeholder TEXT,
+  required BOOLEAN DEFAULT 1,
+  sort_order INTEGER DEFAULT 0,
+  validation_pattern TEXT,
+  validation_message TEXT,
+  options TEXT, -- JSON string for select options
+  is_system BOOLEAN DEFAULT 0, -- true = cannot delete
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_user_expiration_userId ON user_expiration(userId);
 CREATE INDEX IF NOT EXISTS idx_user_expiration_jellyfinUserId ON user_expiration(jellyfinUserId);
@@ -145,3 +162,13 @@ INSERT OR IGNORE INTO roles (id, name, permissions) VALUES
 
 -- Assign super-admin role to default admin
 INSERT OR IGNORE INTO user_roles (userId, roleId) VALUES (1, 1);
+
+-- Seed default registration fields
+INSERT OR IGNORE INTO registration_fields (field_key, label, type, placeholder, required, sort_order, validation_pattern, validation_message, is_system, options) VALUES 
+('username', 'Username', 'text', 'Username', 1, 10, '.{3,}', 'Minimum 3 characters', 1, NULL),
+('email', 'Email Address', 'email', 'Email Address', 1, 20, '[^@\s]+@[^@\s]+\.[^@\s]+', 'Please enter a valid email address', 1, NULL),
+('phone', 'Phone Number', 'tel', '6281234567890', 1, 30, '^628\d+$', 'Phone number must start with 628', 0, NULL),
+('password', 'Password', 'password', 'Password (Min 6 chars, letters & numbers)', 1, 40, '(?=.*\d)(?=.*[a-zA-Z]).{6,}', 'Min 6 chars with letters & numbers', 1, NULL),
+('confirmPassword', 'Confirm Password', 'password', 'Confirm Password', 1, 50, NULL, 'Passwords do not match', 1, NULL),
+('packageMonths', 'Subscription Plan', 'select', NULL, 1, 60, NULL, NULL, 1, '[{"label":"1 Month Subscription","value":"1"},{"label":"3 Months Subscription","value":"3"},{"label":"6 Months Subscription","value":"6"},{"label":"12 Months Subscription","value":"12"}]'),
+('couponCode', 'Coupon Code', 'text', 'Coupon Code (Optional)', 0, 70, NULL, NULL, 1, NULL);

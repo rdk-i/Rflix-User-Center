@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rflix API - Home</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="centered">
+  <div class="theme-toggle">
+    <button class="theme-btn" onclick="toggleTheme()">Dark</button>
+  </div>
+
+  <div class="neu-card text-center" style="max-width: 500px;">
+    <h1 class="text-4xl mb-2">Rflix</h1>
+    <p class="text-muted mb-8">Premium Media Streaming Management</p>
+
+    <div class="grid grid-cols-1 gap-4 w-full">
+      <a href="/user" class="neu-btn">
+        User Login
+      </a>
+      <a href="/registration" class="neu-btn" style="color: var(--text);">
+        Create Account
+      </a>
+      <a href="/admin" class="neu-btn" style="font-size: 0.8rem; height: 40px; margin-top: 2rem; color: var(--text-muted); box-shadow: none; background: transparent;">
+        Admin Portal
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const body = document.body;
+      const btn = document.querySelector('.theme-btn');
+      
+      body.classList.toggle('light-mode');
+      
+      if (body.classList.contains('light-mode')) {
+        btn.textContent = 'Light';
+        localStorage.setItem('theme', 'light');
+      } else {
+        btn.textContent = 'Dark';
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light-mode');
+      document.querySelector('.theme-btn').textContent = 'Light';
+    }
+  </script>
+</body>
+</html>

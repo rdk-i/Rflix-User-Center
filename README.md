@@ -1,249 +1,90 @@
 # Rflix-API
 
-> **Comprehensive Jellyfin User Management System** with admin & user dashboards, subscription management, and advanced features.
+Rflix-API is a robust user management and automation system designed for Jellyfin media servers. It provides a seamless interface for user registration, subscription management, and automated account provisioning.
 
-![Node.js](https://img.shields.io/badge/Node.js-18+-green)
-![Express](https://img.shields.io/badge/Express-4.18+-blue)
-![SQLite](https://img.shields.io/badge/SQLite-3+-orange)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+## 🚀 Key Features
 
-## 📋 Features
+- **Automated User Management**: Automatically creates and manages Jellyfin accounts upon registration.
+- **Dynamic Form Builder**: Fully customizable registration forms managed directly from the Admin Dashboard. Add, edit, or remove fields without touching code.
+- **Neumorphic Design**: A modern, sleek, and responsive user interface with Dark/Light mode support.
+- **Subscription System**: Manage user subscriptions with automated expiration handling.
+- **Secure Authentication**: JWT-based authentication with HttpOnly cookies and reCAPTCHA/Turnstile integration.
+- **Admin Dashboard**: comprehensive control panel for managing users, approvals, logs, and system settings.
+- **Setup Wizard**: Easy-to-use GUI wizard for initial server configuration.
 
-### Core Features
+## 🛠️ Tech Stack
 
-- ✅ **User Registration** with subscription packages (1-12 months)
-- ✅ **Admin Approval** workflow for new registrations
-- ✅ **Automatic User Disabling** when subscription expires
-- ✅ **JWT Authentication** with access & refresh tokens
-- ✅ **Role-Based Access Control (RBAC)**
-- ✅ **Captcha Protection** (Cloudflare Turnstile / Google reCAPTCHA)
-- ✅ **Modern Dark Theme** (Zinc Palette)
-- ✅ **Setup Wizard (GUI)** for easy first-time installation
+- **Backend**: Node.js, Express.js
+- **Database**: SQLite (via `better-sqlite3`)
+- **Frontend**: HTML5, Vanilla CSS (Neumorphism), JavaScript
+- **Integration**: Jellyfin API
 
-### Advanced Features
-
-- 📧 **Email & Telegram Notifications**
-- 📊 **Usage Statistics & Analytics**
-- 🎫 **Discount Coupons**
-- 🔄 **Self-Service Renewal**
-- 📝 **Audit Logging** with IP & User-Agent tracking
-- 🌐 **i18n Support** (Indonesian & English)
-- 💾 **User Backup & Restore**
-- 🔒 **API Rate Limiting**
-- 🔌 **Webhook Outbound Integration**
-
-## 🚀 Quick Start
+## 📦 Installation
 
 ### Prerequisites
 
-- Node.js 18+
-- npm 9+
-- Jellyfin Server with API access
+- Node.js v16+
+- Jellyfin Server (Running)
 
-### Installation (New Method - GUI Wizard)
+### Quick Start
 
-1. **Clone the repository**
+1.  **Clone the repository**
 
-   ```bash
-   git clone https://github.com/yourusername/rflix-api.git
-   cd rflix-api
-   ```
+    ```bash
+    git clone https://github.com/yourusername/Rflix-API.git
+    cd Rflix-API
+    ```
 
-2. **Install dependencies**
+2.  **Install dependencies**
 
-   ```bash
-   npm install
-   ```
+    ```bash
+    npm install
+    ```
 
-3. **Start the server**
+3.  **Run Database Migrations**
 
-   ```bash
-   npm run dev
-   ```
+    ```bash
+    npm run migrate
+    ```
 
-4. **Open Setup Wizard**
-   Access `http://localhost:3000` in your browser. You will be greeted by the **Rflix Setup Wizard**.
+4.  **Start the Server**
 
-   Follow the on-screen instructions to:
+    ```bash
+    npm start
+    ```
 
-   - Configure Server & Jellyfin connection.
-   - Generate Security Keys.
-   - Create your first Admin Account.
-   - Initialize Database.
-
-### Access the Application
-
-Once setup is complete, you can access the application via these clean URLs:
-
-- **User Login**: `http://localhost:3000/user`
-- **Admin Login**: `http://localhost:3000/admin`
-- **Registration**: `http://localhost:3000/registration`
-
----
-
-## 📁 Project Structure
-
-```
-rflix-api/
-├── server/
-│   ├── controllers/      # Request handlers
-│   ├── routes/           # API routes
-│   ├── services/         # Business logic & external services
-│   ├── scheduler/        # Background tasks
-│   ├── middlewares/      # Express middlewares
-│   ├── models/           # Database models
-│   ├── utils/            # Helper utilities
-│   ├── config/           # Configuration files
-│   └── index.js          # Main server file
-├── public/               # Static files (HTML, CSS, JS)
-├── migrations/           # Database migrations
-├── data/                 # SQLite database
-├── logs/                 # Application logs
-├── backups/              # Database backups
-└── tests/                # Test files
-```
+5.  **Setup Wizard**
+    Open your browser and navigate to `http://localhost:3000`. You will be greeted by the Setup Wizard to configure your admin account and Jellyfin connection.
 
 ## 🔧 Configuration
 
-### Environment Variables
+The application uses a `.env` file for configuration, which is automatically generated by the Setup Wizard. Key variables include:
 
-See `.env.example` for all available configuration options. The Setup Wizard will automatically generate a `.env` file for you.
+- `PORT`: Server port (default: 3000)
+- `JELLYFIN_URL`: URL of your Jellyfin server
+- `JELLYFIN_API_KEY`: API Key from Jellyfin Dashboard
+- `JWT_SECRET`: Secret key for session security
+- `CAPTCHA_PROVIDER`: 'turnstile' or 'recaptcha'
 
-### Captcha Configuration
+## 📝 API Documentation
 
-**Cloudflare Turnstile (Default):**
+### Public Endpoints
 
-1. Get keys from https://dash.cloudflare.com/
-2. Set `CAPTCHA_PROVIDER=turnstile`
-3. Add `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`
+- `POST /api/auth/login`: User login
+- `POST /api/registration`: Register new account
+- `GET /api/form-fields`: Fetch dynamic registration form fields
 
-**Google reCAPTCHA:**
+### Admin Endpoints (Protected)
 
-1. Get keys from https://www.google.com/recaptcha/admin
-2. Set `CAPTCHA_PROVIDER=recaptcha`
-3. Add `RECAPTCHA_SITE_KEY` and `RECAPTCHA_SECRET`
-
-## 🐳 Docker Deployment
-
-```bash
-# Build image
-docker build -t rflix-api .
-
-# Run container
-docker run -d \
-  -p 3000:3000 \
-  -v $(pwd)/data:/app/data \
-  -v $(pwd)/logs:/app/logs \
-  --env-file .env \
-  --name rflix-api \
-  rflix-api
-```
-
-## 📚 API Documentation
-
-API documentation is available via Swagger UI at `/docs` when the server is running.
-
-### Authentication
-
-All protected endpoints require a JWT token in the Authorization header:
-
-```
-Authorization: Bearer <your_token>
-```
-
-### Key Endpoints
-
-- `POST /api/auth/login` - Login
-- `POST /api/auth/refresh` - Refresh access token
-- `POST /api/auth/logout` - Logout
-- `POST /api/registration` - User registration
-- `GET /api/users/me` - Get current user info
-- `GET /api/admin/users` - List all users (admin)
-- `POST /api/coupons/redeem` - Redeem coupon code
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-npm test
-
-# Run unit tests only
-npm run test:unit
-
-# Run integration tests only
-npm run test:integration
-
-# Run with coverage
-npm test -- --coverage
-```
-
-## 📊 Scheduler Tasks
-
-Background tasks run automatically:
-
-- **Disable Expired Users**: Every 1 hour (configurable)
-- **Database Backup**: Daily (configurable)
-- **Token Blacklist Cleanup**: Daily at midnight
-- **Stats Collection**: Every 1 hour (configurable)
-
-## 🔒 Security
-
-- Bcrypt password hashing (12 rounds)
-- JWT with access & refresh tokens
-- HttpOnly secure cookies
-- Rate limiting (configurable per endpoint)
-- CORS whitelist
-- Input sanitization
-- Token blacklist on logout
-- Brute-force detection
-- Circuit breaker for external services
-
-## 🌍 Internationalization
-
-The application supports multiple languages:
-
-- English (default)
-- Indonesian
-
-Language files are located in `locales/`
+- `GET /api/admin/users`: List all users
+- `POST /api/form-fields`: Add new registration field
+- `PUT /api/form-fields/:id`: Update registration field
+- `DELETE /api/form-fields/:id`: Delete registration field
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+## 📄 License
 
-## 📝 License
-
-MIT License - see [LICENSE](LICENSE) file for details
-
-## 👨‍💻 Author
-
-Your Name - [@yourhandle](https://twitter.com/yourhandle)
-
-## 🙏 Acknowledgments
-
-- [Jellyfin](https://jellyfin.org/) - The amazing media server
-- [Express.js](https://expressjs.com/) - Web framework
-- [Better SQLite3](https://github.com/WiseLibs/better-sqlite3) - Fast SQLite3 for Node.js
-
-## 📞 Support
-
-For issues and questions:
-
-- GitHub Issues: https://github.com/yourusername/rflix-api/issues
-- Email: support@yourdomain.com
-
----
-
-**⚠️ Important Notes:**
-
-- Change default admin password immediately after first login
-- Keep your `.env` file secure and never commit it to version control
-- Regularly backup your database
-- Monitor logs for security issues
-- Keep dependencies updated
+This project is licensed under the MIT License.

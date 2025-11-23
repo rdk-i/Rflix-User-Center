@@ -4,106 +4,138 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rflix API - Setup Wizard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            zinc: {
-              850: '#18181b',
-              900: '#09090b',
-              950: '#000000',
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="custom-dropdown.css" />
 </head>
-<body class="min-h-screen bg-zinc-950 text-zinc-300 font-sans flex items-center justify-center p-4">
-  <div class="w-full max-w-2xl">
+<body class="centered">
+  <div class="theme-toggle">
+    <button class="theme-btn" onclick="toggleTheme()">Dark</button>
+  </div>
+
+  <div class="neu-card" style="max-width: 600px;">
     <!-- Header -->
-    <div class="text-center mb-10">
-      <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">🚀 Rflix Setup</h1>
-      <p class="text-zinc-500">First time configuration wizard</p>
+    <div class="mb-6 text-center">
+      <h1 class="mb-2">🚀 Rflix Setup</h1>
+      <p class="text-muted">First time configuration wizard</p>
     </div>
 
-    <!-- Card -->
-    <div class="bg-zinc-900/80 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
-      <form id="setupForm" class="p-8 space-y-8">
-        
-        <!-- Step 1: Server Config -->
-        <div class="space-y-4">
-          <h2 class="text-xl font-bold text-white border-b border-white/10 pb-2">1. Server Configuration</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Port</label>
-              <input type="number" name="PORT" value="3000" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none" required />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Node Env</label>
-              <select name="NODE_ENV" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none">
-                <option value="production">Production</option>
-                <option value="development">Development</option>
-              </select>
-            </div>
+    <form id="setupForm" class="w-full">
+      
+      <!-- Step 1: Server Config -->
+      <div class="mb-6">
+        <h3 class="mb-4 text-accent">Server Configuration</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="neu-input-group">
+            <input type="number" name="PORT" value="3000" class="neu-input" placeholder="Port" required />
           </div>
-        </div>
-
-        <!-- Step 2: Jellyfin Config -->
-        <div class="space-y-4">
-          <h2 class="text-xl font-bold text-white border-b border-white/10 pb-2">2. Jellyfin Connection</h2>
-          <div>
-            <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Jellyfin URL</label>
-            <input type="url" name="JELLYFIN_URL" placeholder="http://localhost:8096" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none" required />
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Jellyfin API Key</label>
-            <input type="text" name="JELLYFIN_API_KEY" placeholder="Your API Key" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none" required />
-          </div>
-        </div>
-
-        <!-- Step 3: Security -->
-        <div class="space-y-4">
-          <h2 class="text-xl font-bold text-white border-b border-white/10 pb-2">3. Security</h2>
-          <div>
-            <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">JWT Secret</label>
-            <div class="flex gap-2">
-              <input type="text" name="JWT_SECRET" id="jwtSecret" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none" required />
-              <button type="button" onclick="generateSecret()" class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white border border-white/10">Generate</button>
+          <div class="neu-input-group">
+            <div class="custom-select-wrapper">
+              <div class="custom-select">
+                <div class="custom-select__trigger">
+                  <span>Production</span>
+                  <div class="arrow"></div>
+                </div>
+                <div class="custom-select-options">
+                  <span class="custom-option selected" data-value="production">Production</span>
+                  <span class="custom-option" data-value="development">Development</span>
+                </div>
+              </div>
+              <input type="hidden" id="nodeEnv" name="NODE_ENV" value="production">
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Step 4: Admin Account -->
-        <div class="space-y-4">
-          <h2 class="text-xl font-bold text-white border-b border-white/10 pb-2">4. Create Admin Account</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Admin Email</label>
-              <input type="email" name="ADMIN_EMAIL" placeholder="admin@example.com" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none" required />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Admin Password</label>
-              <input type="password" name="ADMIN_PASSWORD" placeholder="Strong Password" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-white/30 outline-none" required />
-            </div>
+      <!-- Step 2: Jellyfin Config -->
+      <div class="mb-6">
+        <h3 class="mb-4 text-accent">Jellyfin Connection</h3>
+        <div class="neu-input-group mb-4">
+          <input type="url" name="JELLYFIN_URL" placeholder="http://localhost:8096" class="neu-input" required />
+        </div>
+        <div class="neu-input-group">
+          <input type="text" name="JELLYFIN_API_KEY" placeholder="Jellyfin API Key" class="neu-input" required />
+        </div>
+      </div>
+
+      <!-- Step 3: Security -->
+      <div class="mb-6">
+        <h3 class="mb-4 text-accent">Security</h3>
+        <div class="flex gap-4">
+          <div class="neu-input-group">
+            <input type="text" name="JWT_SECRET" id="jwtSecret" class="neu-input" placeholder="JWT Secret" required />
+          </div>
+          <button type="button" onclick="generateSecret()" class="neu-btn neu-btn-sm" style="margin-top: 0;">Gen</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Admin Account -->
+      <div class="mb-6">
+        <h3 class="mb-4 text-accent">Create Admin Account</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="neu-input-group">
+            <input type="email" name="ADMIN_EMAIL" placeholder="admin@example.com" class="neu-input" required />
+          </div>
+          <div class="neu-input-group">
+            <input type="password" name="ADMIN_PASSWORD" placeholder="Strong Password" class="neu-input" required />
           </div>
         </div>
+      </div>
 
-        <!-- Submit -->
-        <div class="pt-4">
-          <button type="submit" id="submitBtn" class="w-full bg-white text-black font-bold py-4 rounded-lg hover:bg-zinc-200 transition-all duration-200 shadow-lg shadow-white/5">
-            Install & Configure
-          </button>
-        </div>
+      <!-- Submit -->
+      <button type="submit" id="submitBtn" class="neu-btn">
+        Install & Configure
+      </button>
 
-        <div id="statusLog" class="hidden p-4 bg-black/50 rounded-lg font-mono text-xs text-zinc-400 space-y-1 max-h-40 overflow-y-auto"></div>
-      </form>
-    </div>
+      <div id="statusLog" class="hidden mt-4 p-4 rounded-lg font-mono text-xs text-muted max-h-40 overflow-y-auto bg-black/20"></div>
+    </form>
   </div>
 
   <script>
+    // Theme Toggle Logic
+    function toggleTheme() {
+      const body = document.body;
+      const btn = document.querySelector('.theme-btn');
+      
+      body.classList.toggle('light-mode');
+      
+      if (body.classList.contains('light-mode')) {
+        btn.textContent = 'Light';
+        localStorage.setItem('theme', 'light');
+      } else {
+        btn.textContent = 'Dark';
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+
+    // Init Theme
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light-mode');
+      document.querySelector('.theme-btn').textContent = 'Light';
+    }
+
+    // Custom Dropdown Logic
+    document.querySelector('.custom-select-wrapper').addEventListener('click', function() {
+      this.querySelector('.custom-select').classList.toggle('open');
+    });
+
+    for (const option of document.querySelectorAll(".custom-option")) {
+      option.addEventListener('click', function() {
+        if (!this.classList.contains('selected')) {
+          this.parentNode.querySelector('.custom-option.selected').classList.remove('selected');
+          this.classList.add('selected');
+          this.closest('.custom-select').querySelector('.custom-select__trigger span').textContent = this.textContent;
+          document.getElementById('nodeEnv').value = this.dataset.value;
+        }
+      });
+    }
+
+    window.addEventListener('click', function(e) {
+      const select = document.querySelector('.custom-select');
+      if (select && !select.contains(e.target)) {
+        select.classList.remove('open');
+      }
+    });
+
     function generateSecret() {
       const array = new Uint8Array(32);
       crypto.getRandomValues(array);
@@ -123,7 +155,6 @@
       e.preventDefault();
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
-      btn.classList.add('opacity-50', 'cursor-not-allowed');
       btn.textContent = 'Installing...';
 
       const formData = new FormData(e.target);
@@ -166,7 +197,6 @@
       } catch (error) {
         log(error.message, 'error');
         btn.disabled = false;
-        btn.classList.remove('opacity-50', 'cursor-not-allowed');
         btn.textContent = 'Try Again';
       }
     });

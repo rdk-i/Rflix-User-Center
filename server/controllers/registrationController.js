@@ -94,10 +94,20 @@ class RegistrationController {
 
       // Create user in database
       const insertUser = db.prepare(`
-        INSERT INTO api_users (email, password_hash, jellyfinUserId, role)
-        VALUES (?, ?, ?, 'user')
+        INSERT INTO api_users (email, password_hash, jellyfinUserId, role, profile_data)
+        VALUES (?, ?, ?, 'user', ?)
       `);
-      const userResult = insertUser.run(email, passwordHash, jellyfinUserId);
+      
+      // Filter out core fields to store rest in profile_data
+      const coreFields = ['username', 'email', 'password', 'confirmPassword', 'packageMonths', 'recaptchaToken', 'provider'];
+      const profileData = {};
+      Object.keys(req.body).forEach(key => {
+        if (!coreFields.includes(key)) {
+          profileData[key] = req.body[key];
+        }
+      });
+
+      const userResult = insertUser.run(email, passwordHash, jellyfinUserId, JSON.stringify(profileData));
       const userId = userResult.lastInsertRowid;
 
       // Calculate expiration date

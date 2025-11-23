@@ -4,93 +4,110 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>User Dashboard - Rflix API</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            zinc: {
-              850: '#18181b',
-              900: '#09090b',
-              950: '#000000',
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="min-h-screen bg-zinc-950 text-zinc-300 font-sans p-4 md:p-8">
-  <div class="max-w-5xl mx-auto">
+<body>
+  <div class="theme-toggle">
+    <button class="theme-btn" onclick="toggleTheme()">Dark</button>
+  </div>
+
+  <div style="max-width: 1024px; margin: 0 auto; padding: 2rem;">
     <!-- Header -->
-    <div class="flex justify-between items-center mb-10 pb-6 border-b border-white/10">
+    <div class="flex justify-between items-center mb-6">
       <div>
-        <h1 class="text-3xl font-bold text-white tracking-tight mb-1">User Dashboard</h1>
-        <p class="text-zinc-500 text-sm">Manage your subscription and account</p>
+        <h1>User Dashboard</h1>
+        <p class="text-muted">Manage your subscription and account</p>
       </div>
       <div class="flex items-center gap-4">
-        <span id="userEmail" class="hidden md:block text-zinc-500 text-sm"></span>
-        <button onclick="logout()" class="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium rounded-lg border border-white/10 transition-colors">
-          Logout
-        </button>
+        <span id="userEmail" class="text-muted hidden md:block"></span>
+        <button onclick="logout()" class="neu-btn neu-btn-sm">Logout</button>
       </div>
     </div>
 
-    <!-- Subscription Card -->
-    <div class="bg-zinc-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 mb-8 shadow-xl">
-      <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
-        <span>💳</span> Subscription Status
-      </h2>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
-          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Status</div>
-          <div id="status" class="text-lg font-bold text-white">Loading...</div>
+    <!-- Subscription Status -->
+    <div class="neu-panel">
+      <h3 class="mb-4">Subscription Status</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="text-center">
+          <p class="text-muted text-sm uppercase mb-2">Status</p>
+          <div id="statusBadge" class="neu-badge inline-block">Loading...</div>
         </div>
-        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
-          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Package</div>
-          <div id="package" class="text-lg font-bold text-white">-</div>
+        <div class="text-center">
+          <p class="text-muted text-sm uppercase mb-2">Expires On</p>
+          <p id="expiryDate" class="text-xl font-bold">---</p>
         </div>
-        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
-          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Expiration</div>
-          <div id="expirationDate" class="text-lg font-bold text-white">-</div>
-        </div>
-        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
-          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Days Remaining</div>
-          <div id="daysRemaining" class="text-lg font-bold text-white">-</div>
+        <div class="text-center">
+          <p class="text-muted text-sm uppercase mb-2">Plan Type</p>
+          <p id="planType" class="text-xl font-bold">---</p>
         </div>
       </div>
-
-      <button onclick="renewSubscription()" class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-zinc-200 transition-all duration-200 shadow-lg shadow-white/5 transform hover:-translate-y-0.5">
-        Renew Subscription
-      </button>
     </div>
 
-    <!-- Account Info Card -->
-    <div class="bg-zinc-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 shadow-xl">
-      <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
-        <span>👤</span> Account Information
-      </h2>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
-          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Username</div>
-          <div id="username" class="text-lg font-medium text-white">-</div>
+    <!-- Extend Subscription -->
+    <div class="neu-panel">
+      <h3 class="mb-4">Extend Subscription</h3>
+      <form id="extendForm" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div class="neu-input-group">
+          <select id="extendDuration" class="neu-select">
+            <option value="1">1 Month</option>
+            <option value="3">3 Months</option>
+            <option value="6">6 Months</option>
+            <option value="12">12 Months</option>
+          </select>
         </div>
-        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
-          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Email</div>
-          <div id="email" class="text-lg font-medium text-white">-</div>
+        <div class="neu-input-group">
+          <input type="text" id="extendCoupon" class="neu-input" placeholder="Coupon Code (Optional)" />
         </div>
-        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
-          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Member Since</div>
-          <div id="memberSince" class="text-lg font-medium text-white">-</div>
-        </div>
+        <button type="submit" class="neu-btn" style="margin-top: 0;">Extend Now</button>
+      </form>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="neu-panel">
+      <h3 class="mb-4">Recent Activity</h3>
+      <div class="overflow-x-auto">
+        <table class="neu-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Action</th>
+              <th>Details</th>
+              <th>IP Address</th>
+            </tr>
+          </thead>
+          <tbody id="activityLog">
+            <tr>
+              <td colspan="4" class="text-center text-muted">Loading activity...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 
   <script>
+    // Theme Toggle Logic
+    function toggleTheme() {
+      const body = document.body;
+      const btn = document.querySelector('.theme-btn');
+      
+      body.classList.toggle('light-mode');
+      
+      if (body.classList.contains('light-mode')) {
+        btn.textContent = 'Light';
+        localStorage.setItem('theme', 'light');
+      } else {
+        btn.textContent = 'Dark';
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+
+    // Init Theme
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light-mode');
+      document.querySelector('.theme-btn').textContent = 'Light';
+    }
+
     // Check authentication
     const token = localStorage.getItem('token');
     if (!token) {
@@ -101,11 +118,9 @@
     async function loadUserData() {
       try {
         const res = await fetch('/api/users/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+          headers: { 'Authorization': `Bearer ${token}` }
         });
-
+        
         if (!res.ok) {
           if (res.status === 401) {
             localStorage.removeItem('token');
@@ -116,42 +131,46 @@
         }
 
         const data = await res.json();
-        if (data.success) {
-          const user = data.data;
-          
-          document.getElementById('userEmail').textContent = user.email;
-          document.getElementById('username').textContent = user.username || user.email;
-          document.getElementById('email').textContent = user.email;
-          document.getElementById('memberSince').textContent = new Date(user.created_at).toLocaleDateString();
-          
-          const statusEl = document.getElementById('status');
-          
-          if (user.subscription) {
-            const expirationDate = new Date(user.subscription.expirationDate);
-            const today = new Date();
-            const daysRemaining = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
-            
-            statusEl.textContent = user.subscription.isActive ? 'Active' : 'Expired';
-            statusEl.className = `text-lg font-bold ${user.subscription.isActive ? 'text-emerald-400' : 'text-red-400'}`;
-            
-            document.getElementById('package').textContent = `${user.subscription.packageMonths} Month(s)`;
-            document.getElementById('expirationDate').textContent = expirationDate.toLocaleDateString();
-            document.getElementById('daysRemaining').textContent = daysRemaining > 0 ? daysRemaining : 0;
-          } else {
-            statusEl.textContent = 'No Active Subscription';
-            statusEl.className = 'text-lg font-bold text-zinc-500';
-          }
+        const user = data.data;
+
+        document.getElementById('userEmail').textContent = user.email;
+        
+        // Status Badge
+        const statusBadge = document.getElementById('statusBadge');
+        const expiryDate = new Date(user.expiry_date);
+        const now = new Date();
+        const isExpired = expiryDate < now;
+
+        if (!user.is_active) {
+          statusBadge.textContent = 'Disabled';
+          statusBadge.className = 'neu-badge expired';
+        } else if (isExpired) {
+          statusBadge.textContent = 'Expired';
+          statusBadge.className = 'neu-badge expired';
+        } else {
+          statusBadge.textContent = 'Active';
+          statusBadge.className = 'neu-badge active';
         }
+
+        document.getElementById('expiryDate').textContent = expiryDate.toLocaleDateString();
+        document.getElementById('planType').textContent = 'Premium'; // Placeholder
+
       } catch (error) {
-        console.error('Error loading user data:', error);
-        // Optional: Display error in UI instead of alert
-        document.getElementById('status').textContent = 'Error loading data';
-        document.getElementById('status').className = 'text-lg font-bold text-red-400';
+        console.error(error);
       }
     }
 
-    function renewSubscription() {
-      alert('Renewal feature coming soon!');
+    // Load Activity Log (Mockup for now as endpoint might not exist yet)
+    function loadActivityLog() {
+      const tbody = document.getElementById('activityLog');
+      tbody.innerHTML = `
+        <tr>
+          <td>${new Date().toLocaleDateString()}</td>
+          <td>Login</td>
+          <td>Successful login</td>
+          <td>127.0.0.1</td>
+        </tr>
+      `;
     }
 
     function logout() {
@@ -161,6 +180,7 @@
 
     // Load data on page load
     loadUserData();
+    loadActivityLog();
   </script>
 </body>
 </html>

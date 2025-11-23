@@ -83,6 +83,7 @@ if (!process.env.SETUP_COMPLETED) {
   app.use('/api/registration', registrationRoutes);
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/coupons', couponRoutes);
+  app.use('/api/form-fields', require('./routes/formFields'));
 }
 
 // Error handler (must be last)
