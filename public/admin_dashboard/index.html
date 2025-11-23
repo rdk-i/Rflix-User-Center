@@ -152,17 +152,24 @@
 
       <!-- Users View -->
       <div id="users-view" class="view-section hidden">
-        <div class="flex justify-between items-center mb-6" style="padding-right: 150px;">
-          <h1 class="text-3xl font-bold">User Management</h1>
-          <div class="flex gap-2 items-center">
-            <div class="neu-input-group" style="width: 250px; margin-bottom: 0;">
-              <input type="text" id="searchUsers" placeholder="Search users..." class="neu-input" onkeyup="searchUsers()" />
+        <div class="flex justify-between items-end mb-6" style="padding-right: 40px;">
+          <div>
+            <h1 class="text-3xl font-bold mb-2">User Management</h1>
+            <p class="text-muted text-sm">Manage your Jellyfin users and subscriptions</p>
+          </div>
+          <div class="flex gap-4 items-center">
+            <div class="neu-input-group" style="width: 320px; margin-bottom: 0;">
+              <input type="text" id="searchUsers" placeholder="Search by username or email..." class="neu-input" onkeyup="searchUsers()" />
               <div class="icon-indicator">
                 <div class="dot"></div><div class="dot"></div><div class="dot"></div>
               </div>
             </div>
-            <button onclick="searchUsers()" class="neu-btn neu-btn-sm">Search</button>
-            <button onclick="syncJellyfinUsers()" class="neu-btn neu-btn-sm" style="background: var(--accent); color: #000;">Sync Jellyfin</button>
+            <button onclick="loadUsers()" class="neu-btn neu-btn-sm" style="width: 40px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Refresh List">
+              &#x21bb;
+            </button>
+            <button onclick="syncJellyfinUsers()" class="neu-btn neu-btn-sm" style="background: var(--accent); color: #000; white-space: nowrap; padding-left: 1.5rem; padding-right: 1.5rem; font-weight: 600;">
+              SYNC JELLYFIN
+            </button>
           </div>
         </div>
         
@@ -171,11 +178,13 @@
             <table class="neu-table">
               <thead>
                 <tr>
-                  <th>Username</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Last Login</th>
-                  <th>Actions</th>
+                  <th style="min-width: 120px;">Username</th>
+                  <th style="min-width: 180px;">Email</th>
+                  <th style="min-width: 130px;">Phone</th>
+                  <th style="min-width: 100px;">Package</th>
+                  <th style="min-width: 80px;">Status</th>
+                  <th style="min-width: 120px;">Last Login</th>
+                  <th style="min-width: 250px; text-align: center;">Actions</th>
                 </tr>
               </thead>
               <tbody id="usersTableBody">
@@ -758,7 +767,7 @@
         if (json.success) {
           const tbody = document.getElementById('usersTableBody');
           if (!json.data || json.data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No users found. Click "Sync Jellyfin" to import users.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No users found. Click "Sync Jellyfin" to import users.</td></tr>';
             return;
           }
 
@@ -766,18 +775,22 @@
             <tr>
               <td><strong>${user.Name || 'N/A'}</strong></td>
               <td>${user.email && !user.email.includes('@jellyfin.local') ? user.email : '<span class="text-muted">Not set</span>'}</td>
+              <td><span class="text-muted">-</span></td> <!-- Phone placeholder -->
+              <td><span class="text-muted">-</span></td> <!-- Package placeholder -->
               <td>
                 <span class="neu-badge ${user.Policy?.IsDisabled ? '' : 'active'}" style="font-size: 0.75rem;">
                   ${user.Policy?.IsDisabled ? 'Disabled' : 'Active'}
                 </span>
               </td>
-              <td>${user.LastActivityDate ? new Date(user.LastActivityDate).toLocaleDateString() : 'Never'}</td>
-              <td>
-                <button onclick="viewUser('${user.Id}')" class="neu-btn-sm" style="margin-right: 0.5rem;">View</button>
-                ${user.Policy?.IsDisabled ? 
-                  `<button onclick="enableUser('${user.Id}')" class="neu-btn-sm" style="background: #10b981; color: #fff;">Enable</button>` :
-                  `<button onclick="disableUser('${user.Id}')" class="neu-btn-sm" style="background: #ef4444; color: #fff;">Disable</button>`
-                }
+              <td style="font-size: 0.85rem;">${user.LastActivityDate ? new Date(user.LastActivityDate).toLocaleDateString() : 'Never'}</td>
+              <td style="text-align: center;">
+                <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                  <button onclick="resetPassword('${user.Id}', '${user.Name}')" class="neu-btn-sm" style="background: var(--accent); color: #000;">Reset Password</button>
+                  ${user.Policy?.IsDisabled ? 
+                    `<button onclick="enableUser('${user.Id}')" class="neu-btn-sm" style="background: #10b981; color: #fff;">Enable</button>` :
+                    `<button onclick="disableUser('${user.Id}')" class="neu-btn-sm" style="background: #ef4444; color: #fff;">Disable</button>`
+                  }
+                </div>
               </td>
             </tr>
           `).join('');
@@ -786,12 +799,12 @@
         } else {
           console.error('Failed to load users:', json.error);
           document.getElementById('usersTableBody').innerHTML = 
-            `<tr><td colspan="5" class="text-center" style="color: #ef4444;">Error: ${json.error?.message || 'Unknown error'}</td></tr>`;
+            `<tr><td colspan="7" class="text-center" style="color: #ef4444;">Error: ${json.error?.message || 'Unknown error'}</td></tr>`;
         }
       } catch (error) {
         console.error('Error loading users:', error);
         document.getElementById('usersTableBody').innerHTML = 
-          '<tr><td colspan="5" class="text-center" style="color: #ef4444;">Network error. Please try again.</td></tr>';
+          '<tr><td colspan="7" class="text-center" style="color: #ef4444;">Network error. Please try again.</td></tr>';
       }
     }
 
@@ -865,6 +878,36 @@
         if (json.success) {
           alert('User enabled');
           loadUsers();
+        } else {
+          alert('Failed: ' + (json.error?.message || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Network error');
+      }
+    }
+
+    async function resetPassword(userId, username) {
+      const newPassword = prompt(`Enter new password for ${username}:`);
+      if (!newPassword) return;
+      
+      if (newPassword.length < 6) {
+        alert('Password must be at least 6 characters');
+        return;
+      }
+      
+      try {
+        const res = await fetch(`/api/admin/users/${userId}/reset-password`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({ newPassword })
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          alert(`Password reset successful for ${username}`);
         } else {
           alert('Failed: ' + (json.error?.message || 'Unknown error'));
         }

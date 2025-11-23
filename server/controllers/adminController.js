@@ -682,6 +682,42 @@ class AdminController {
       next(error);
     }
   }
+
+  /**
+   * Reset user password
+   */
+  async resetUserPassword(req, res, next) {
+    try {
+      const { userId } = req.params;
+      const { newPassword } = req.body;
+
+      if (!newPassword || newPassword.length < 1) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'INVALID_PASSWORD',
+            message: 'Password is required'
+          }
+        });
+      }
+
+      const result = await jellyfinService.updateUserPassword(userId, newPassword);
+
+      if (!result.success) {
+        throw new Error('Failed to reset password on Jellyfin');
+      }
+
+      logger.info(`Password reset for user ${userId} by admin`);
+
+      res.json({
+        success: true,
+        message: 'Password reset successfully'
+      });
+    } catch (error) {
+      logger.error('Reset password error:', error);
+      next(error);
+    }
+  }
 }
 
 module.exports = new AdminController();

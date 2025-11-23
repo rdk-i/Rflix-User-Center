@@ -27,6 +27,7 @@ router.post('/users/:userId/disable', auditLogger('DISABLE_USER'), adminControll
 router.post('/users/:userId/enable', auditLogger('ENABLE_USER'), adminController.enableUser);
 router.delete('/users/:userId', auditLogger('DELETE_USER'), adminController.deleteUser);
 router.post('/users/:userId/extend', auditLogger('EXTEND_SUBSCRIPTION'), adminController.extendSubscription);
+router.post('/users/:userId/reset-password', auditLogger('RESET_PASSWORD'), adminController.resetUserPassword);
 
 // Settings
 router.get('/settings', adminController.getSettings);

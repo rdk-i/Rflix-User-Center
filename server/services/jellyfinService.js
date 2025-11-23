@@ -106,6 +106,17 @@ class JellyfinService {
   }
 
   /**
+   * Update user password
+   */
+  async updateUserPassword(userId, newPassword) {
+    return this.breaker.fire({
+      method: 'POST',
+      url: `/Users/${userId}/Password`,
+      data: { CurrentPassword: '', NewPassword: newPassword },
+    });
+  }
+
+  /**
    * Get user by ID
    */
   async getUserById(userId) {
