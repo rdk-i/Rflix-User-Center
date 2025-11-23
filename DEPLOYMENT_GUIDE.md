@@ -29,7 +29,7 @@ sudo npm install -g pm2
 Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/Rflix-API.git
+git clone https://github.com/rdk-i/Rflix-API
 cd Rflix-API
 ```
 

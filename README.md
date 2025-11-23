@@ -31,7 +31,7 @@ Rflix-API is a robust user management and automation system designed for Jellyfi
 1.  **Clone the repository**
 
     ```bash
-    git clone https://github.com/yourusername/Rflix-API.git
+    git clone https://github.com/rdk-i/Rflix-API
     cd Rflix-API
     ```
 
