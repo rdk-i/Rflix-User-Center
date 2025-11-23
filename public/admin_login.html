@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login - Rflix API</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-rflix-gradient flex items-center justify-center p-4 font-sans text-zinc-300">
+  <div class="w-full max-w-md">
+    <!-- Card -->
+    <div class="bg-zinc-900/80 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
+      <!-- Header -->
+      <div class="bg-gradient-to-b from-white/5 to-transparent p-8 text-center border-b border-white/5">
+        <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">🎬 Rflix Admin</h1>
+        <p class="text-zinc-400 text-sm">Admin Portal</p>
+      </div>
+
+      <!-- Form -->
+      <form id="adminLoginForm" class="p-8 space-y-6">
+        <!-- Email -->
+        <div>
+          <label for="email" class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
+            Email Address
+          </label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            required 
+            class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white placeholder-zinc-600 focus:ring-2 focus:ring-white/20 focus:border-white/30 transition-all duration-200"
+            placeholder="admin@rflix.local"
+          />
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label for="password" class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
+            Password
+          </label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            required 
+            class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white placeholder-zinc-600 focus:ring-2 focus:ring-white/20 focus:border-white/30 transition-all duration-200"
+            placeholder="••••••••"
+          />
+        </div>
+
+        <!-- Captcha Container -->
+        <div id="captchaContainer" class="flex justify-center my-4"></div>
+
+        <!-- Error Message -->
+        <div id="errorMsg" class="hidden p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center"></div>
+
+        <!-- Submit Button -->
+        <button 
+          type="submit" 
+          class="w-full bg-white text-black font-bold py-3.5 rounded-lg hover:bg-zinc-200 transition-all duration-200 shadow-lg shadow-white/5 transform hover:-translate-y-0.5"
+        >
+          Sign In
+        </button>
+      </form>
+    </div>
+
+    <!-- Footer -->
+    <p class="text-center text-zinc-500 mt-6 text-sm">
+      <a href="user_login.html" class="text-zinc-400 hover:text-white transition-colors">
+        User Portal →
+      </a>
+    </p>
+  </div>
+
+  <script>
+    // Fetch captcha provider and sitekey
+    async function getCaptchaProvider() {
+      try {
+        const res = await fetch('/api/config/captcha-provider');
+        const data = await res.json();
+        return data.data?.provider || 'turnstile';
+      } catch {
+        return 'turnstile';
+      }
+    }
+
+    async function renderCaptcha() {
+      const provider = await getCaptchaProvider();
+      const container = document.getElementById('captchaContainer');
+      
+      try {
+        const res = await fetch('/api/config/captcha-sitekey');
+        const data = await res.json();
+        const siteKey = data.data?.siteKey;
+
+        if (!siteKey) {
+          console.warn('No captcha site key configured');
+          return;
+        }
+
+        if (provider === 'turnstile' || provider === 'cloudflare') {
+          container.innerHTML = `<div class="cf-turnstile" data-sitekey="${siteKey}" data-theme="dark"></div>`;
+        } else {
+          container.innerHTML = `<div class="g-recaptcha" data-sitekey="${siteKey}" data-theme="dark"></div>`;
+        }
+      } catch (error) {
+        console.error('Failed to render captcha:', error);
+      }
+    }
+
+    document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.classList.add('hidden');
+
+      const email = e.target.email.value;
+      const password = e.target.password.value;
+      
+      const provider = await getCaptchaProvider();
+      let captchaToken = '';
+      
+      if (provider === 'turnstile' || provider === 'cloudflare') {
+        const turnstileInput = document.querySelector('.cf-turnstile input[name="cf-turnstile-response"]');
+        captchaToken = turnstileInput?.value || '';
+      } else {
+        captchaToken = typeof grecaptcha !== 'undefined' ? grecaptcha.getResponse() : '';
+      }
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, captchaToken, provider }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          localStorage.setItem('token', data.data.token);
+          window.location.href = 'admin_dashboard/';
+        } else {
+          errorMsg.textContent = data.error?.message || 'Login failed';
+          errorMsg.classList.remove('hidden');
+          if (provider === 'recaptcha' && typeof grecaptcha !== 'undefined') {
+            grecaptcha.reset();
+          }
+        }
+      } catch (error) {
+        errorMsg.textContent = 'Network error. Please try again.';
+        errorMsg.classList.remove('hidden');
+      }
+    });
+
+    // Render captcha on page load
+    renderCaptcha();
+  </script>
+</body>
+</html>

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - Rflix API</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            zinc: {
+              850: '#18181b',
+              900: '#09090b',
+              950: '#000000',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .nav-item.active {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+    
+    tr:hover {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.125rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .badge-success {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    .badge-danger {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    .badge-warning {
+      background-color: rgba(245, 158, 11, 0.1);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+    
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 150ms;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-right: 0.5rem;
+      cursor: pointer;
+    }
+    .btn-sm:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-300 font-sans">
+  <div class="grid grid-cols-[280px_1fr] min-h-screen">
+    <!-- Sidebar -->
+    <aside class="bg-zinc-900 border-r border-white/5 p-6 flex flex-col h-screen sticky top-0">
+      <div class="mb-10">
+        <h2 class="text-2xl font-bold text-white tracking-tight mb-1">Rflix Admin</h2>
+        <p class="text-zinc-500 text-sm" id="adminEmail"></p>
+      </div>
+      
+      <ul class="space-y-2 flex-1">
+        <li class="nav-item active group flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 text-zinc-400 hover:text-white hover:bg-white/5" data-page="dashboard">
+          <span class="text-lg group-[.active]:text-white">📊</span> 
+          <span class="font-medium group-[.active]:text-white">Dashboard</span>
+        </li>
+        <li class="nav-item group flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 text-zinc-400 hover:text-white hover:bg-white/5" data-page="users">
+          <span class="text-lg group-[.active]:text-white">👥</span> 
+          <span class="font-medium group-[.active]:text-white">All Users</span>
+        </li>
+        <li class="nav-item group flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 text-zinc-400 hover:text-white hover:bg-white/5" data-page="pending">
+          <span class="text-lg group-[.active]:text-white">⏳</span> 
+          <span class="font-medium group-[.active]:text-white">Pending Approvals</span>
+        </li>
+        <li class="nav-item group flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 text-zinc-400 hover:text-white hover:bg-white/5" data-page="logs">
+          <span class="text-lg group-[.active]:text-white">📝</span> 
+          <span class="font-medium group-[.active]:text-white">Audit Logs</span>
+        </li>
+        <li class="nav-item group flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 text-zinc-400 hover:text-white hover:bg-white/5" data-page="settings">
+          <span class="text-lg group-[.active]:text-white">⚙️</span> 
+          <span class="font-medium group-[.active]:text-white">Settings</span>
+        </li>
+      </ul>
+
+      <div class="mt-auto pt-6 border-t border-white/5">
+        <div class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 text-red-400 hover:text-red-300 hover:bg-red-500/10" onclick="logout()">
+          <span class="text-lg">🚪</span> 
+          <span class="font-medium">Logout</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="p-10 overflow-y-auto bg-zinc-950 h-screen">
+      <!-- Dashboard Page -->
+      <div id="dashboard-page" class="page space-y-8">
+        <div class="flex justify-between items-end">
+          <div>
+            <h1 class="text-3xl font-bold text-white mb-2">Dashboard Overview</h1>
+            <p class="text-zinc-500">Welcome to Rflix Admin Panel</p>
+          </div>
+          <div class="text-sm text-zinc-500">
+            Last updated: <span id="lastUpdated">Just now</span>
+          <div class="bg-zinc-900 border border-white/5 rounded-xl p-6 hover:border-white/10 transition-colors">
+            <div class="text-zinc-500 text-sm font-medium mb-2">Pending Approvals</div>
+            <div class="text-3xl font-bold text-amber-400" id="pendingUsers">0</div>
+          </div>
+          <div class="bg-zinc-900 border border-white/5 rounded-xl p-6 hover:border-white/10 transition-colors">
+            <div class="text-zinc-500 text-sm font-medium mb-2">Expired</div>
+            <div class="text-3xl font-bold text-red-400" id="expiredUsers">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Page -->
+      <div id="users-page" class="page hidden space-y-8">
+        <div class="flex justify-between items-center">
+          <h1 class="text-3xl font-bold text-white">All Users</h1>
+          <button class="bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-zinc-200 transition-colors" onclick="showCreateUserModal()">
+            + Create User
+          </button>
+        </div>
+
+        <div class="bg-zinc-900 border border-white/5 rounded-xl overflow-hidden">
+          <table id="usersTable" class="w-full text-left">
+            <thead class="bg-white/5 text-zinc-400 text-xs uppercase font-bold tracking-wider">
+              <tr>
+                <th class="p-4">Email</th>
+                <th class="p-4">Package</th>
+                <th class="p-4">Expiration</th>
+                <th class="p-4">Status</th>
+                <th class="p-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5 text-zinc-300 text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pending Page -->
+      <div id="pending-page" class="page hidden space-y-8">
+        <div class="flex justify-between items-center">
+          <h1 class="text-3xl font-bold text-white">Pending Approvals</h1>
+        </div>
+
+        <div class="bg-zinc-900 border border-white/5 rounded-xl overflow-hidden">
+          <table id="pendingTable" class="w-full text-left">
+            <thead class="bg-white/5 text-zinc-400 text-xs uppercase font-bold tracking-wider">
+              <tr>
+                <th class="p-4">Email</th>
+                <th class="p-4">Package</th>
+                <th class="p-4">Registered</th>
+                <th class="p-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5 text-zinc-300 text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Logs Page -->
+      <div id="logs-page" class="page hidden space-y-8">
+        <div class="flex justify-between items-center">
+          <h1 class="text-3xl font-bold text-white">Audit Logs</h1>
+        </div>
+
+        <div class="bg-zinc-900 border border-white/5 rounded-xl overflow-hidden">
+          <table id="logsTable" class="w-full text-left">
+            <thead class="bg-white/5 text-zinc-400 text-xs uppercase font-bold tracking-wider">
+              <tr>
+                <th class="p-4">Timestamp</th>
+                <th class="p-4">Admin</th>
+                <th class="p-4">Action</th>
+                <th class="p-4">IP</th>
+                <th class="p-4">Details</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5 text-zinc-300 text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Settings Page -->
+      <div id="settings-page" class="page hidden space-y-8">
+        <div class="flex justify-between items-center">
+          <h1 class="text-3xl font-bold text-white">Settings</h1>
+        </div>
+
+        <div class="bg-zinc-900 border border-white/5 rounded-xl p-8">
+          <h2 class="text-xl font-bold text-white mb-4">Captcha Configuration</h2>
+          <p class="text-zinc-400 mb-6">
+            Current provider: <strong id="currentProvider" class="text-white">Cloudflare Turnstile</strong>
+          </p>
+          <p class="text-sm text-zinc-500">Captcha settings are configured via environment variables.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '../admin_login.html';
+    }
+
+    // Navigation
+    document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+      item.addEventListener('click', function() {
+        const page = this.dataset.page;
+        switchPage(page);
+      });
+    });
+
+    function switchPage(page) {
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      document.querySelector(`[data-page="${page}"]`).classList.add('active');
+      
+      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+      document.getElementById(`${page}-page`).classList.remove('hidden');
+      
+      if (page === 'dashboard') loadDashboard();
+      if (page === 'users') loadUsers();
+      if (page === 'pending') loadPending();
+      if (page === 'logs') loadLogs();
+    }
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/admin/users', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          const users = data.data;
+          document.getElementById('totalUsers').textContent = users.length;
+          document.getElementById('activeUsers').textContent = users.filter(u => u.isActive).length;
+          document.getElementById('expiredUsers').textContent = users.filter(u => !u.isActive).length;
+        }
+
+        const pendingRes = await fetch('/api/registration/pending', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const pendingData = await pendingRes.json();
+        if (pendingData.success) {
+          document.getElementById('pendingUsers').textContent = pendingData.data.length;
+        }
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+      }
+    }
+
+    async function loadUsers() {
+      try {
+        const res = await fetch('/api/admin/users', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          const tbody = document.querySelector('#usersTable tbody');
+          tbody.innerHTML = '';
+          
+          data.data.forEach(user => {
+            const row = document.createElement('tr');
+            const expiration = new Date(user.expirationDate);
+            const isActive = user.isActive;
+            
+            row.innerHTML = `
+              <td>${user.email}</td>
+              <td>${user.packageMonths || '-'} months</td>
+              <td>${user.expirationDate ? expiration.toLocaleDateString() : '-'}</td>
+              <td>
+                <span class="badge ${isActive ? 'badge-success' : 'badge-danger'}">
+                  ${isActive ? 'Active' : 'Inactive'}
+                </span>
+              </td>
+              <td>
+                ${isActive ? 
+                  `<button class="btn-sm" onclick="disableUser(${user.id})">Disable</button>` :
+                  `<button class="btn-sm" onclick="enableUser(${user.id})">Enable</button>`
+                }
+                <button class="btn-sm" onclick="deleteUser(${user.id})">Delete</button>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    }
+
+    async function loadPending() {
+      try {
+        const res = await fetch('/api/registration/pending', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          const tbody = document.querySelector('#pendingTable tbody');
+          tbody.innerHTML = '';
+          
+          data.data.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${user.email}</td>
+              <td>${user.packageMonths} months</td>
+              <td>${new Date(user.created_at).toLocaleDateString()}</td>
+              <td>
+                <button class="btn-sm" onclick="approveUser(${user.id})">Approve</button>
+                <button class="btn-sm" onclick="rejectUser(${user.id})">Reject</button>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading pending:', error);
+      }
+    }
+
+    async function loadLogs() {
+      try {
+        const res = await fetch('/api/admin/logs?limit=50', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          const tbody = document.querySelector('#logsTable tbody');
+          tbody.innerHTML = '';
+          
+          data.data.forEach(log => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${new Date(log.timestamp).toLocaleString()}</td>
+              <td>${log.adminId || '-'}</td>
+              <td><span class="badge badge-warning">${log.action}</span></td>
+              <td>${log.ip || '-'}</td>
+              <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${log.details || '-'}</td>
+            `;
+            tbody.appendChild(row);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading logs:', error);
+      }
+    }
+
+    async function approveUser(userId) {
+      if (!confirm('Approve this user?')) return;
+      
+      try {
+        const res = await fetch(`/api/registration/${userId}/approve`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          alert('User approved!');
+          loadPending();
+          loadDashboard();
+        }
+      } catch (error) {
+        alert('Failed to approve user');
+      }
+    }
+
+    async function rejectUser(userId) {
+      if (!confirm('Reject this user? This will delete their account.')) return;
+      
+      try {
+        const res = await fetch(`/api/registration/${userId}/reject`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          alert('User rejected');
+          loadPending();
+          loadDashboard();
+        }
+      } catch (error) {
+        alert('Failed to reject user');
+      }
+    }
+
+    async function disableUser(userId) {
+      if (!confirm('Disable this user?')) return;
+      
+      try {
+        const res = await fetch(`/api/admin/users/${userId}/disable`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          alert('User disabled');
+          loadUsers();
+          loadDashboard();
+        }
+      } catch (error) {
+        alert('Failed to disable user');
+      }
+    }
+
+    async function enableUser(userId) {
+      if (!confirm('Enable this user?')) return;
+      
+      try {
+        const res = await fetch(`/api/admin/users/${userId}/enable`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          alert('User enabled');
+          loadUsers();
+          loadDashboard();
+        }
+      } catch (error) {
+        alert('Failed to enable user');
+      }
+    }
+
+    async function deleteUser(userId) {
+      if (!confirm('Delete this user permanently? This cannot be undone.')) return;
+      
+      try {
+        const res = await fetch(`/api/admin/users/${userId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          alert('User deleted');
+          loadUsers();
+          loadDashboard();
+        }
+      } catch (error) {
+        alert('Failed to delete user');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '../admin_login.html';
+    }
+
+    // Initial load
+    loadDashboard();
+  </script>
+</body>
+</html>

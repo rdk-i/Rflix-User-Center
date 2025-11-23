@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  rflix-api:
+    build: .
+    container_name: rflix-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    networks:
+      - rflix-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3000/health', (r) => {if(r.statusCode !== 200) throw Error('Health check failed')})",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+networks:
+  rflix-network:
+    driver: bridge
+
+volumes:
+  data:
+  logs:
+  backups:

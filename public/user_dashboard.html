@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Dashboard - Rflix API</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            zinc: {
+              850: '#18181b',
+              900: '#09090b',
+              950: '#000000',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-950 text-zinc-300 font-sans p-4 md:p-8">
+  <div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-10 pb-6 border-b border-white/10">
+      <div>
+        <h1 class="text-3xl font-bold text-white tracking-tight mb-1">User Dashboard</h1>
+        <p class="text-zinc-500 text-sm">Manage your subscription and account</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <span id="userEmail" class="hidden md:block text-zinc-500 text-sm"></span>
+        <button onclick="logout()" class="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium rounded-lg border border-white/10 transition-colors">
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Subscription Card -->
+    <div class="bg-zinc-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 mb-8 shadow-xl">
+      <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+        <span>💳</span> Subscription Status
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
+          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Status</div>
+          <div id="status" class="text-lg font-bold text-white">Loading...</div>
+        </div>
+        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
+          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Package</div>
+          <div id="package" class="text-lg font-bold text-white">-</div>
+        </div>
+        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
+          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Expiration</div>
+          <div id="expirationDate" class="text-lg font-bold text-white">-</div>
+        </div>
+        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
+          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Days Remaining</div>
+          <div id="daysRemaining" class="text-lg font-bold text-white">-</div>
+        </div>
+      </div>
+
+      <button onclick="renewSubscription()" class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-zinc-200 transition-all duration-200 shadow-lg shadow-white/5 transform hover:-translate-y-0.5">
+        Renew Subscription
+      </button>
+    </div>
+
+    <!-- Account Info Card -->
+    <div class="bg-zinc-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 shadow-xl">
+      <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+        <span>👤</span> Account Information
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
+          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Username</div>
+          <div id="username" class="text-lg font-medium text-white">-</div>
+        </div>
+        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
+          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Email</div>
+          <div id="email" class="text-lg font-medium text-white">-</div>
+        </div>
+        <div class="bg-zinc-900 border border-white/5 rounded-xl p-5">
+          <div class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Member Since</div>
+          <div id="memberSince" class="text-lg font-medium text-white">-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Check authentication
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = 'user_login.html';
+    }
+
+    // Load user data
+    async function loadUserData() {
+      try {
+        const res = await fetch('/api/users/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = 'user_login.html';
+            return;
+          }
+          throw new Error('Failed to load user data');
+        }
+
+        const data = await res.json();
+        if (data.success) {
+          const user = data.data;
+          
+          document.getElementById('userEmail').textContent = user.email;
+          document.getElementById('username').textContent = user.username || user.email;
+          document.getElementById('email').textContent = user.email;
+          document.getElementById('memberSince').textContent = new Date(user.created_at).toLocaleDateString();
+          
+          const statusEl = document.getElementById('status');
+          
+          if (user.subscription) {
+            const expirationDate = new Date(user.subscription.expirationDate);
+            const today = new Date();
+            const daysRemaining = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
+            
+            statusEl.textContent = user.subscription.isActive ? 'Active' : 'Expired';
+            statusEl.className = `text-lg font-bold ${user.subscription.isActive ? 'text-emerald-400' : 'text-red-400'}`;
+            
+            document.getElementById('package').textContent = `${user.subscription.packageMonths} Month(s)`;
+            document.getElementById('expirationDate').textContent = expirationDate.toLocaleDateString();
+            document.getElementById('daysRemaining').textContent = daysRemaining > 0 ? daysRemaining : 0;
+          } else {
+            statusEl.textContent = 'No Active Subscription';
+            statusEl.className = 'text-lg font-bold text-zinc-500';
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        // Optional: Display error in UI instead of alert
+        document.getElementById('status').textContent = 'Error loading data';
+        document.getElementById('status').className = 'text-lg font-bold text-red-400';
+      }
+    }
+
+    function renewSubscription() {
+      alert('Renewal feature coming soon!');
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'user_login.html';
+    }
+
+    // Load data on page load
+    loadUserData();
+  </script>
+</body>
+</html>
