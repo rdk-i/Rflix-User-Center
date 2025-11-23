@@ -35,50 +35,38 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, '../public')));
-
-// Clean URLs for frontend pages
-app.get('/user', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/user_login.html'));
-});
-
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/admin_login.html'));
-});
-
-app.get('/registration', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/registration.html'));
-});
-
-// Global rate limiter
-app.use(rateLimiters.globalLimiter);
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// API Routes
-// API Routes
+// Setup Wizard Logic (Must be before static files)
 if (!process.env.SETUP_COMPLETED) {
   logger.info('Setup not completed. Serving Setup Wizard.');
   
   // Setup Routes
   app.use('/api/setup', require('./routes/setup'));
   
-  // Serve static files (css, js)
+  // Serve static files needed for setup (css, js)
   app.use(express.static(path.join(__dirname, '../public')));
 
-  // Serve setup page for ALL other requests
-  app.get('*', (req, res) => {
+  // Force redirect to setup.html for ANY other request
+  app.use((req, res) => {
     res.sendFile(path.join(__dirname, '../public/setup.html'));
   });
 } else {
+  // Serve static files from public directory
+  app.use(express.static(path.join(__dirname, '../public')));
+
+  // Clean URLs for frontend pages
+  app.get('/user', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/user_login.html'));
+  });
+
+  app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/admin_login.html'));
+  });
+
+  app.get('/registration', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/registration.html'));
+  });
+
+  // API Routes
   app.use('/api/auth', authRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/admin', adminRoutes);
