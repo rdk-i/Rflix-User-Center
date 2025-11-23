@@ -772,7 +772,7 @@
           }
 
           tbody.innerHTML = json.data.map(user => `
-            <tr>
+            <tr id="user-row-${user.Id}">
               <td><strong>${user.Name || 'N/A'}</strong></td>
               <td>${user.email && !user.email.includes('@jellyfin.local') ? user.email : '<span class="text-muted">Not set</span>'}</td>
               <td>${user.phone || '<span class="text-muted">-</span>'}</td>
@@ -785,7 +785,7 @@
               <td style="font-size: 0.85rem;">${user.LastActivityDate ? new Date(user.LastActivityDate).toLocaleDateString() : 'Never'}</td>
               <td style="text-align: center;">
                 <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-                  <button onclick="openEditModal('${user.Id}', '${user.Name}', '${user.email || 'null'}', '${user.phone || 'null'}', '${user.package || 'null'}')" class="btn-action" style="color: #60a5fa;">Edit</button>
+                  <button onclick="toggleEditRow('${user.Id}', '${user.Name}', '${user.email || 'null'}', '${user.phone || 'null'}', '${user.package || 'null'}')" class="btn-action" style="color: #60a5fa;">Edit</button>
                   <button onclick="resetPassword('${user.Id}', '${user.Name}')" class="btn-action warning">Reset Password</button>
                   ${user.Policy?.IsDisabled ? 
                     `<button onclick="enableUser('${user.Id}')" class="btn-action success">Enable</button>` :
@@ -917,28 +917,68 @@
       }
     }
 
-    // Edit User Functions
-    function openEditModal(userId, username, email, phone, pkg) {
-      document.getElementById('editUserId').value = userId;
-      document.getElementById('editUsername').value = username;
-      document.getElementById('editEmail').value = email === 'null' || email === 'Not set' || email.includes('@jellyfin.local') ? '' : email;
-      document.getElementById('editPhone').value = phone === 'null' || phone === '-' ? '' : phone;
-      document.getElementById('editPackage').value = pkg === 'null' || pkg === '-' ? '' : pkg;
+    // Inline Edit Functions
+    function toggleEditRow(userId, username, email, phone, pkg) {
+      const existingRow = document.getElementById(`edit-row-${userId}`);
+      if (existingRow) {
+        existingRow.remove();
+        return;
+      }
+
+      // Close other edit rows
+      document.querySelectorAll('.edit-row').forEach(row => row.remove());
+
+      const userRow = document.getElementById(`user-row-${userId}`);
+      const editRow = document.createElement('tr');
+      editRow.id = `edit-row-${userId}`;
+      editRow.className = 'edit-row';
       
-      document.getElementById('editUserModal').classList.remove('hidden');
+      const safeEmail = email === 'null' || email === 'Not set' || email.includes('@jellyfin.local') ? '' : email;
+      const safePhone = phone === 'null' || phone === '-' ? '' : phone;
+      const safePkg = pkg === 'null' || pkg === '-' ? '' : pkg;
+
+      editRow.innerHTML = `
+        <td colspan="7" style="padding: 0; border: none;">
+          <div class="neu-panel p-6 m-4" style="border: 1px solid rgba(255,255,255,0.1); background: #2d3436; margin-top: 0; margin-bottom: 20px; box-shadow: inset 4px 4px 8px #1e2123, inset -4px -4px 8px #3c4649;">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-xl font-bold" style="color: var(--accent);">Edit User: ${username}</h3>
+              <button onclick="toggleEditRow('${userId}')" class="text-muted hover:text-white" style="font-size: 1.5rem;">&times;</button>
+            </div>
+            <form onsubmit="saveUserChanges(event, '${userId}')" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              <div class="neu-input-group" style="margin-bottom: 0;">
+                <label class="block text-xs font-bold mb-2 text-muted uppercase tracking-wider">Email</label>
+                <input type="email" id="edit-email-${userId}" class="neu-input w-full" placeholder="Email Address" value="${safeEmail}">
+              </div>
+              
+              <div class="neu-input-group" style="margin-bottom: 0;">
+                <label class="block text-xs font-bold mb-2 text-muted uppercase tracking-wider">Phone</label>
+                <input type="text" id="edit-phone-${userId}" class="neu-input w-full" placeholder="Phone Number" value="${safePhone}">
+              </div>
+              
+              <div class="neu-input-group" style="margin-bottom: 0;">
+                <label class="block text-xs font-bold mb-2 text-muted uppercase tracking-wider">Package</label>
+                <input type="text" id="edit-package-${userId}" class="neu-input w-full" placeholder="Package Name" value="${safePkg}">
+              </div>
+
+              <div class="md:col-span-3 flex justify-end gap-4 mt-4">
+                <button type="button" onclick="toggleEditRow('${userId}')" class="neu-btn neu-btn-sm">Cancel</button>
+                <button type="submit" class="neu-btn neu-btn-sm" style="background: var(--accent); color: #000; font-weight: bold;">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </td>
+      `;
+
+      userRow.parentNode.insertBefore(editRow, userRow.nextSibling);
     }
 
-    function closeEditModal() {
-      document.getElementById('editUserModal').classList.add('hidden');
-    }
-
-    async function saveUserChanges(e) {
+    async function saveUserChanges(e, userId) {
       e.preventDefault();
       
-      const userId = document.getElementById('editUserId').value;
-      const email = document.getElementById('editEmail').value;
-      const phone = document.getElementById('editPhone').value;
-      const pkg = document.getElementById('editPackage').value;
+      const email = document.getElementById(`edit-email-${userId}`).value;
+      const phone = document.getElementById(`edit-phone-${userId}`).value;
+      const pkg = document.getElementById(`edit-package-${userId}`).value;
       
       try {
         const res = await fetch(`/api/admin/users/${userId}`, {
@@ -953,8 +993,6 @@
         const json = await res.json();
         
         if (json.success) {
-          alert('User updated successfully');
-          closeEditModal();
           loadUsers();
         } else {
           alert('Failed: ' + (json.error?.message || 'Unknown error'));
@@ -967,40 +1005,5 @@
     // Load users when Users tab is clicked
     document.querySelector('[data-page="users"]').addEventListener('click', loadUsers);
   </script>
-  <!-- Edit User Modal -->
-  <div id="editUserModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50" style="backdrop-filter: blur(5px);">
-    <div class="neu-panel w-full max-w-md p-6 relative" style="border: 1px solid rgba(255,255,255,0.1);">
-      <button onclick="closeEditModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white" style="font-size: 1.5rem;">&times;</button>
-      <h2 class="text-2xl font-bold mb-6">Edit User Details</h2>
-      <form id="editUserForm" onsubmit="saveUserChanges(event)">
-        <input type="hidden" id="editUserId">
-        
-        <div class="mb-4">
-          <label class="block text-sm font-bold mb-2 text-muted">Username</label>
-          <input type="text" id="editUsername" class="neu-input w-full" disabled style="opacity: 0.5; cursor: not-allowed;">
-        </div>
-        
-        <div class="mb-4">
-          <label class="block text-sm font-bold mb-2 text-muted">Email</label>
-          <input type="email" id="editEmail" class="neu-input w-full" placeholder="Enter email address">
-        </div>
-        
-        <div class="mb-4">
-          <label class="block text-sm font-bold mb-2 text-muted">Phone</label>
-          <input type="text" id="editPhone" class="neu-input w-full" placeholder="Enter phone number">
-        </div>
-        
-        <div class="mb-6">
-          <label class="block text-sm font-bold mb-2 text-muted">Package</label>
-          <input type="text" id="editPackage" class="neu-input w-full" placeholder="Enter package name">
-        </div>
-        
-        <div class="flex justify-end gap-4">
-          <button type="button" onclick="closeEditModal()" class="neu-btn neu-btn-sm">Cancel</button>
-          <button type="submit" class="neu-btn neu-btn-sm" style="background: var(--accent); color: #000; font-weight: bold;">Save Changes</button>
-        </div>
-      </form>
-    </div>
-  </div>
 </body>
 </html>
