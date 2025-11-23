@@ -344,25 +344,41 @@ class AdminController {
   }
 
   /**
-   * Get dashboard stats
+   * Get dashboard stats (Real-time from Jellyfin)
    */
   async getDashboardStats(req, res, next) {
     try {
-      // Database stats
-      const totalUsers = db.prepare("SELECT COUNT(*) as count FROM api_users WHERE role != 'admin'").get().count;
-      const activeSubs = db.prepare("SELECT COUNT(*) as count FROM user_expiration WHERE isActive = 1").get().count;
-      // Mock pending requests for now (or implement pending table later)
-      const pendingRequests = 0; 
-
-      // Jellyfin connection check
+      let totalUsers = 0;
+      let activeSubs = 0;
+      let pendingRequests = 0;
       let jellyfinConnected = false;
+
+      // Try to fetch real data from Jellyfin
       try {
-        // Simple ping to Jellyfin with short timeout (2s)
+        // Ping Jellyfin
         await jellyfinService.client.get('/System/Info/Public', { timeout: 2000 });
         jellyfinConnected = true;
+
+        // Get all users from Jellyfin
+        const usersResponse = await jellyfinService.getAllUsers();
+        if (usersResponse.success) {
+          totalUsers = usersResponse.data.length;
+        }
+
+        // Get active sessions
+        const sessionsResponse = await jellyfinService.client.get('/Sessions');
+        if (sessionsResponse.data) {
+          activeSubs = sessionsResponse.data.filter(s => s.NowPlayingItem).length;
+        }
       } catch (error) {
-        // logger.warn('Jellyfin ping failed:', error.message); // Optional logging
+        logger.warn('Failed to fetch Jellyfin stats:', error.message);
         jellyfinConnected = false;
+      }
+
+      // Fallback: Get stats from local database if Jellyfin is unavailable
+      if (!jellyfinConnected) {
+        totalUsers = db.prepare("SELECT COUNT(*) as count FROM api_users WHERE role != 'admin'").get().count;
+        activeSubs = db.prepare("SELECT COUNT(*) as count FROM user_expiration WHERE isActive = 1").get().count;
       }
 
       res.json({
