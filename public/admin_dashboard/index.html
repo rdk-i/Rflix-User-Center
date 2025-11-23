@@ -211,29 +211,77 @@
       <!-- Settings View -->
       <div id="settings-view" class="view-section hidden">
         <h1 class="text-3xl font-bold mb-6">System Settings</h1>
-        <div class="neu-panel max-w-2xl">
-          <form id="settingsForm" class="space-y-6">
-            <div>
-              <h3 class="mb-4 text-accent">General</h3>
-              <div class="neu-input-group mb-4">
-                <label class="text-muted text-sm mb-1 block px-2">Site Name</label>
-                <input type="text" value="Rflix" class="neu-input" />
+        
+        <div class="grid grid-cols-1 gap-6 max-w-4xl">
+          <!-- General Settings -->
+          <div class="neu-panel">
+            <h3 class="text-xl font-bold mb-4 text-accent">General</h3>
+            <form id="generalForm" class="space-y-4">
+              <div>
+                <label class="block text-sm text-muted mb-2">Site Name</label>
+                <input type="text" id="siteName" value="Rflix" class="neu-input w-full" />
               </div>
-            </div>
-            
-            <div>
-              <h3 class="mb-4 text-accent">Security</h3>
-              <div class="flex items-center gap-4 mb-4">
-                <span class="text-muted">Allow Registration</span>
-                <label class="switch">
-                  <input type="checkbox" checked>
-                  <span class="slider round"></span>
+              
+              <div class="flex items-center justify-between py-2">
+                <span class="text-sm">Allow Registration</span>
+                <label class="neu-toggle">
+                  <input type="checkbox" id="allowRegistration" checked />
+                  <span class="neu-toggle-slider"></span>
                 </label>
               </div>
-            </div>
 
-            <button type="submit" class="neu-btn">Save Changes</button>
-          </form>
+              <button type="submit" class="neu-btn mt-4">Save General Settings</button>
+            </form>
+          </div>
+
+          <!-- Jellyfin Configuration -->
+          <div class="neu-panel">
+            <h3 class="text-xl font-bold mb-4 text-accent">Jellyfin Connection</h3>
+            <form id="jellyfinForm" class="space-y-4">
+              <div>
+                <label class="block text-sm text-muted mb-2">Jellyfin Server URL</label>
+                <input type="url" id="jellyfinUrl" placeholder="http://localhost:8096" class="neu-input w-full" />
+              </div>
+              
+              <div>
+                <label class="block text-sm text-muted mb-2">Jellyfin API Key</label>
+                <input type="password" id="jellyfinApiKey" placeholder="Enter API Key" class="neu-input w-full" />
+              </div>
+
+              <div class="flex gap-2">
+                <button type="submit" class="neu-btn">Save Jellyfin Config</button>
+                <button type="button" onclick="testJellyfinConnection()" class="neu-btn" style="background: transparent; border: 1px solid var(--accent-color);">Test Connection</button>
+              </div>
+              <div id="jellyfinTestResult" class="hidden mt-2 p-3 rounded text-sm"></div>
+            </form>
+          </div>
+
+          <!-- Backup Settings -->
+          <div class="neu-panel">
+            <h3 class="text-xl font-bold mb-4 text-accent">Database Backup</h3>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between py-2">
+                <div>
+                  <p class="text-sm font-medium">Auto Backup</p>
+                  <p class="text-xs text-muted">Daily backup at 3:00 AM</p>
+                </div>
+                <label class="neu-toggle">
+                  <input type="checkbox" id="autoBackup" checked />
+                  <span class="neu-toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="flex items-center justify-between py-2 border-t border-gray-700 pt-4">
+                <div>
+                  <p class="text-sm font-medium">Last Backup</p>
+                  <p class="text-xs text-muted" id="lastBackupTime">Never</p>
+                </div>
+                <button onclick="triggerManualBackup()" class="neu-btn neu-btn-sm">Backup Now</button>
+              </div>
+
+              <div id="backupResult" class="hidden mt-2 p-3 rounded text-sm"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -555,6 +603,130 @@
 
     // Load fields when tab is clicked
     document.querySelector('[data-page="forms"]').addEventListener('click', loadFormFields);
+
+    // Settings Page Functions
+    async function testJellyfinConnection() {
+      const url = document.getElementById('jellyfinUrl').value;
+      const apiKey = document.getElementById('jellyfinApiKey').value;
+      const resultDiv = document.getElementById('jellyfinTestResult');
+      
+      if (!url || !apiKey) {
+        resultDiv.textContent = 'Please enter both URL and API Key';
+        resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+        resultDiv.style.color = '#ef4444';
+        resultDiv.classList.remove('hidden');
+        return;
+      }
+
+      resultDiv.textContent = 'Testing connection...';
+      resultDiv.style.background = 'rgba(100, 100, 100, 0.1)';
+      resultDiv.style.color = 'var(--text-muted)';
+      resultDiv.classList.remove('hidden');
+
+      try {
+        const res = await fetch('/api/admin/test-jellyfin', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({ url, apiKey })
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          resultDiv.textContent = '✓ Connection successful!';
+          resultDiv.style.background = 'rgba(16, 185, 129, 0.1)';
+          resultDiv.style.color = '#10b981';
+        } else {
+          resultDiv.textContent = '✗ ' + (json.error?.message || 'Connection failed');
+          resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+          resultDiv.style.color = '#ef4444';
+        }
+      } catch (error) {
+        resultDiv.textContent = '✗ Network error';
+        resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+        resultDiv.style.color = '#ef4444';
+      }
+    }
+
+    document.getElementById('jellyfinForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const url = document.getElementById('jellyfinUrl').value;
+      const apiKey = document.getElementById('jellyfinApiKey').value;
+
+      try {
+        const res = await fetch('/api/admin/update-jellyfin', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({ url, apiKey })
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          alert('Jellyfin configuration updated! Server will restart...');
+          setTimeout(() => location.reload(), 2000);
+        } else {
+          alert('Failed to update: ' + (json.error?.message || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Network error');
+      }
+    });
+
+    async function triggerManualBackup() {
+      const resultDiv = document.getElementById('backupResult');
+      resultDiv.textContent = 'Creating backup...';
+      resultDiv.style.background = 'rgba(100, 100, 100, 0.1)';
+      resultDiv.style.color = 'var(--text-muted)';
+      resultDiv.classList.remove('hidden');
+
+      try {
+        const res = await fetch('/api/admin/backup', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          resultDiv.textContent = '✓ Backup created: ' + json.data.filename;
+          resultDiv.style.background = 'rgba(16, 185, 129, 0.1)';
+          resultDiv.style.color = '#10b981';
+          document.getElementById('lastBackupTime').textContent = new Date().toLocaleString();
+        } else {
+          resultDiv.textContent = '✗ Backup failed: ' + (json.error?.message || 'Unknown error');
+          resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+          resultDiv.style.color = '#ef4444';
+        }
+      } catch (error) {
+        resultDiv.textContent = '✗ Network error';
+        resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+        resultDiv.style.color = '#ef4444';
+      }
+    }
+
+    // Load current settings when settings tab is opened
+    document.querySelector('[data-page="settings"]').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/admin/settings', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const json = await res.json();
+        
+        if (json.success) {
+          document.getElementById('siteName').value = json.data.siteName || 'Rflix';
+          document.getElementById('jellyfinUrl').value = json.data.jellyfinUrl || '';
+          document.getElementById('allowRegistration').checked = json.data.allowRegistration !== false;
+          document.getElementById('autoBackup').checked = json.data.autoBackup !== false;
+          document.getElementById('lastBackupTime').textContent = json.data.lastBackup || 'Never';
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      }
+    });
 
   </script>
 </body>

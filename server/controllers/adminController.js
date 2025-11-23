@@ -453,6 +453,151 @@ class AdminController {
       next(error);
     }
   }
+
+  /**
+   * Get settings
+   */
+  async getSettings(req, res, next) {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const backupsDir = path.join(__dirname, '../../backups');
+      
+      let lastBackup = 'Never';
+      if (fs.existsSync(backupsDir)) {
+        const files = fs.readdirSync(backupsDir).filter(f => f.endsWith('.db'));
+        if (files.length > 0) {
+          const latest = files.sort().reverse()[0];
+          const stats = fs.statSync(path.join(backupsDir, latest));
+          lastBackup = stats.mtime.toLocaleString();
+        }
+      }
+
+      res.json({
+        success: true,
+        data: {
+          siteName: process.env.SITE_NAME || 'Rflix',
+          jellyfinUrl: process.env.JELLYFIN_URL || '',
+          allowRegistration: process.env.ALLOW_REGISTRATION !== 'false',
+          autoBackup: process.env.AUTO_BACKUP !== 'false',
+          lastBackup
+        }
+      });
+    } catch (error) {
+      logger.error('Get settings error:', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Test Jellyfin connection
+   */
+  async testJellyfinConnection(req, res, next) {
+    try {
+      const { url, apiKey } = req.body;
+      const axios = require('axios');
+
+      const testClient = axios.create({
+        baseURL: url,
+        headers: { 'X-Emby-Token': apiKey },
+        timeout: 5000
+      });
+
+      await testClient.get('/System/Info/Public');
+
+      res.json({
+        success: true,
+        data: { message: 'Connection successful' }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'JELLYFIN_TEST_FAILED',
+          message: error.message || 'Connection failed'
+        }
+      });
+    }
+  }
+
+  /**
+   * Update Jellyfin configuration
+   */
+  async updateJellyfinConfig(req, res, next) {
+    try {
+      const { url, apiKey } = req.body;
+      const fs = require('fs');
+      const path = require('path');
+      const envPath = path.join(__dirname, '../../.env');
+
+      // Read current .env
+      let envContent = fs.readFileSync(envPath, 'utf8');
+
+      // Update or add Jellyfin config
+      const updateEnvVar = (key, value) => {
+        const regex = new RegExp(`^${key}=.*$`, 'm');
+        if (envContent.match(regex)) {
+          envContent = envContent.replace(regex, `${key}=${value}`);
+        } else {
+          envContent += `\n${key}=${value}`;
+        }
+      };
+
+      updateEnvVar('JELLYFIN_URL', url);
+      updateEnvVar('JELLYFIN_API_KEY', apiKey);
+
+      fs.writeFileSync(envPath, envContent);
+
+      logger.info('Jellyfin configuration updated');
+
+      res.json({
+        success: true,
+        data: { message: 'Configuration updated. Please restart the server.' }
+      });
+    } catch (error) {
+      logger.error('Update Jellyfin config error:', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Create database backup
+   */
+  async createBackup(req, res, next) {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const dbPath = process.env.DB_PATH || path.join(__dirname, '../../data/rflix.db');
+      const backupsDir = path.join(__dirname, '../../backups');
+      
+      // Create backups directory if not exists
+      if (!fs.existsSync(backupsDir)) {
+        fs.mkdirSync(backupsDir, { recursive: true });
+      }
+
+      // Generate backup filename with timestamp
+      const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
+      const backupFilename = `rflix-backup-${timestamp}.db`;
+      const backupPath = path.join(backupsDir, backupFilename);
+
+      // Copy database file
+      fs.copyFileSync(dbPath, backupPath);
+
+      logger.info(`Database backup created: ${backupFilename}`);
+
+      res.json({
+        success: true,
+        data: {
+          filename: backupFilename,
+          path: backupPath,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      logger.error('Create backup error:', error);
+      next(error);
+    }
+  }
 }
 
 module.exports = new AdminController();
