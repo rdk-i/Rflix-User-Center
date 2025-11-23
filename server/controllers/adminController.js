@@ -626,12 +626,23 @@ class AdminController {
           profile = {};
         }
 
+        // Get expiration and package info
+        const expiration = dbUser ? db.prepare(`
+          SELECT ue.*, p.name as packageName, p.durationMonths 
+          FROM user_expiration ue
+          LEFT JOIN packages p ON ue.packageId = p.id
+          WHERE ue.userId = ?
+          ORDER BY ue.created_at DESC
+          LIMIT 1
+        `).get(dbUser.id) : null;
+
         return {
           ...jfUser,
           email: dbUser?.email || null,
           phone: profile.phone || null,
-          package: profile.package || null,
-          expirationDate: dbUser ? db.prepare('SELECT expirationDate FROM user_expiration WHERE userId = ?').get(dbUser.id)?.expirationDate : null
+          package: expiration?.packageName || null,
+          packageId: expiration?.packageId || null,
+          expirationDate: expiration?.expirationDate || null
         };
       });
 
@@ -698,24 +709,23 @@ class AdminController {
   async updateUser(req, res, next) {
     try {
       const { userId } = req.params; // This is the Jellyfin User ID
-      const { email, phone, package: packageName } = req.body;
+      const { email, phone, packageId } = req.body;
 
       // Find local user
-      const dbUser = db.prepare('SELECT * FROM api_users WHERE jellyfinUserId = ?').get(userId);
+      let dbUser = db.prepare('SELECT * FROM api_users WHERE jellyfinUserId = ?').get(userId);
 
       if (!dbUser) {
-        // If user exists in Jellyfin but not in local DB (e.g. manually created in Jellyfin), create local record
-        // But for now, we assume sync has run. If not, we can insert.
-        // Let's insert if not exists.
+        // Create local record if doesn't exist
         const insert = db.prepare(`
           INSERT INTO api_users (email, jellyfinUserId, password_hash, role, profile_data)
           VALUES (?, ?, '', 'user', ?)
         `);
         
-        const profileData = JSON.stringify({ phone, package: packageName });
-        insert.run(email || `${userId}@placeholder.local`, userId, profileData);
+        const profileData = JSON.stringify({ phone: phone || null });
+        const result = insert.run(email || `${userId}@placeholder.local`, userId, profileData);
+        dbUser = { id: result.lastInsertRowid, jellyfinUserId: userId };
       } else {
-        // Update existing
+        // Update existing user
         let profile = {};
         try {
           profile = dbUser.profile_data ? JSON.parse(dbUser.profile_data) : {};
@@ -723,7 +733,6 @@ class AdminController {
 
         // Update profile fields
         if (phone !== undefined) profile.phone = phone;
-        if (packageName !== undefined) profile.package = packageName;
 
         const update = db.prepare(`
           UPDATE api_users 
@@ -734,6 +743,46 @@ class AdminController {
         `);
         
         update.run(email, JSON.stringify(profile), userId);
+      }
+
+      // Handle package assignment
+      if (packageId) {
+        const pkg = db.prepare('SELECT * FROM packages WHERE id = ?').get(packageId);
+        if (!pkg) {
+          return res.status(400).json({
+            success: false,
+            error: {
+              code: 'INVALID_PACKAGE',
+              message: 'Package not found'
+            }
+          });
+        }
+
+        // Calculate expiration date
+        const now = new Date();
+        const expirationDate = new Date(now);
+        expirationDate.setMonth(expirationDate.getMonth() + pkg.durationMonths);
+
+        // Check if user has existing expiration
+        const existingExpiration = db.prepare('SELECT * FROM user_expiration WHERE userId = ?').get(dbUser.id);
+
+        if (existingExpiration) {
+          // Update existing expiration
+          db.prepare(`
+            UPDATE user_expiration 
+            SET packageId = ?,
+                expirationDate = ?,
+                packageMonths = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE userId = ?
+          `).run(packageId, expirationDate.toISOString(), pkg.durationMonths, dbUser.id);
+        } else {
+          // Create new expiration record
+          db.prepare(`
+            INSERT INTO user_expiration (userId, jellyfinUserId, packageId, expirationDate, packageMonths)
+            VALUES (?, ?, ?, ?, ?)
+          `).run(dbUser.id, userId, packageId, expirationDate.toISOString(), pkg.durationMonths);
+        }
       }
 
       logger.info(`User ${userId} updated by admin`);

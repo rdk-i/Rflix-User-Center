@@ -785,7 +785,7 @@
               <td style="font-size: 0.85rem;">${user.LastActivityDate ? new Date(user.LastActivityDate).toLocaleDateString() : 'Never'}</td>
               <td style="text-align: center;">
                 <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-                  <button onclick="toggleEditRow('${user.Id}', '${user.Name}', '${user.email || 'null'}', '${user.phone || 'null'}', '${user.package || 'null'}')" class="btn-action" style="color: #60a5fa;">Edit</button>
+                  <button onclick="toggleEditRow('${user.Id}', '${user.Name}', '${user.email || 'null'}', '${user.phone || 'null'}', '${user.package || 'null'}', '${user.packageId || ''}')" class="btn-action" style="color: #60a5fa;">Edit</button>
                   <button onclick="resetPassword('${user.Id}', '${user.Name}')" class="btn-action warning">Reset Password</button>
                   ${user.Policy?.IsDisabled ? 
                     `<button onclick="enableUser('${user.Id}')" class="btn-action success">Enable</button>` :
@@ -918,7 +918,7 @@
     }
 
     // Inline Edit Functions
-    function toggleEditRow(userId, username, email, phone, pkg) {
+    async function toggleEditRow(userId, username, email, phone, pkg, packageId) {
       const existingRow = document.getElementById(`edit-row-${userId}`);
       if (existingRow) {
         existingRow.remove();
@@ -928,6 +928,20 @@
       // Close other edit rows
       document.querySelectorAll('.edit-row').forEach(row => row.remove());
 
+      // Fetch available packages
+      let packagesHTML = '<option value="">Select Package</option>';
+      try {
+        const res = await fetch('/api/packages');
+        const json = await res.json();
+        if (json.success) {
+          packagesHTML = '<option value="">No Package</option>' + json.data.map(p => 
+            `<option value="${p.id}" ${p.id == packageId ? 'selected' : ''}>${p.name} (${p.durationMonths} months)</option>`
+          ).join('');
+        }
+      } catch (e) {
+        console.error('Failed to fetch packages:', e);
+      }
+
       const userRow = document.getElementById(`user-row-${userId}`);
       const editRow = document.createElement('tr');
       editRow.id = `edit-row-${userId}`;
@@ -935,7 +949,6 @@
       
       const safeEmail = email === 'null' || email === 'Not set' || email.includes('@jellyfin.local') ? '' : email;
       const safePhone = phone === 'null' || phone === '-' ? '' : phone;
-      const safePkg = pkg === 'null' || pkg === '-' ? '' : pkg;
 
       editRow.innerHTML = `
         <td colspan="7" style="padding: 0; border: none;">
@@ -968,7 +981,9 @@
               </div>
               
               <div class="neu-input-group" style="margin-bottom: 0;">
-                <input type="text" id="edit-package-${userId}" class="neu-input w-full" placeholder="Package Name" value="${safePkg}">
+                <select id="edit-package-${userId}" class="neu-input w-full" style="cursor: pointer;">
+                  ${packagesHTML}
+                </select>
               </div>
 
               <div class="md:col-span-3 flex justify-end gap-4 mt-4">
@@ -988,7 +1003,7 @@
       
       const email = document.getElementById(`edit-email-${userId}`).value;
       const phone = document.getElementById(`edit-phone-${userId}`).value;
-      const pkg = document.getElementById(`edit-package-${userId}`).value;
+      const packageId = document.getElementById(`edit-package-${userId}`).value;
       
       try {
         const res = await fetch(`/api/admin/users/${userId}`, {
@@ -997,7 +1012,7 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}` 
           },
-          body: JSON.stringify({ email, phone, package: pkg })
+          body: JSON.stringify({ email, phone, packageId: packageId || null })
         });
         
         const json = await res.json();

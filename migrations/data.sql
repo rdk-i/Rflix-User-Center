@@ -13,17 +13,39 @@ CREATE TABLE IF NOT EXISTS api_users (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Table: packages (Subscription packages)
+CREATE TABLE IF NOT EXISTS packages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT UNIQUE NOT NULL,
+  durationMonths INTEGER NOT NULL,
+  price REAL NOT NULL DEFAULT 0,
+  description TEXT,
+  isActive BOOLEAN DEFAULT 1,
+  displayOrder INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Default packages
+INSERT OR IGNORE INTO packages (id, name, durationMonths, price, description, displayOrder) VALUES
+  (1, '1 Month', 1, 50000, 'Monthly subscription', 1),
+  (2, '3 Months', 3, 135000, 'Quarterly subscription (10% discount)', 2),
+  (3, '6 Months', 6, 255000, 'Semi-annual subscription (15% discount)', 3),
+  (4, '12 Months', 12, 480000, 'Annual subscription (20% discount)', 4);
+
 -- Table: user_expiration (Subscription expiration tracking)
 CREATE TABLE IF NOT EXISTS user_expiration (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   userId INTEGER NOT NULL,
   jellyfinUserId TEXT NOT NULL,
+  packageId INTEGER,
   expirationDate DATETIME NOT NULL,
   packageMonths INTEGER NOT NULL DEFAULT 1,
   isActive BOOLEAN DEFAULT 1,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (userId) REFERENCES api_users(id) ON DELETE CASCADE
+  FOREIGN KEY (userId) REFERENCES api_users(id) ON DELETE CASCADE,
+  FOREIGN KEY (packageId) REFERENCES packages(id) ON DELETE SET NULL
 );
 
 -- Table: audit_log (Admin action tracking)

@@ -16,6 +16,7 @@ const configRoutes = require('./routes/config');
 const registrationRoutes = require('./routes/registration');
 const notificationRoutes = require('./routes/notifications');
 const couponRoutes = require('./routes/coupons');
+const packageRoutes = require('./routes/packages');
 
 // Import scheduler
 const scheduler = require('./scheduler');
@@ -74,6 +75,7 @@ if (!process.env.SETUP_COMPLETED) {
   app.use('/api/registration', registrationRoutes);
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/coupons', couponRoutes);
+  app.use('/api/packages', packageRoutes);
   app.use('/api/form-fields', require('./routes/formFields'));
 }
 
