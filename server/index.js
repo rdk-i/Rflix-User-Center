@@ -18,6 +18,7 @@ const configRoutes = require('./routes/config');
 const registrationRoutes = require('./routes/registration');
 const notificationRoutes = require('./routes/notifications');
 const couponRoutes = require('./routes/coupons');
+const subscriptionRoutes = require('./routes/subscriptions');
 
 const simplePackageRoutes = require('./routes/simplePackages');
 const simpleRegistrationRoutes = require('./routes/simpleRegistration');
@@ -109,6 +110,7 @@ if (!process.env.SETUP_COMPLETED) {
   app.use('/api/notifications', notificationRoutes);
   
   app.use('/api/coupons', couponRoutes);
+  app.use('/api/subscriptions', subscriptionRoutes);
   app.use('/api/usage-limits', usageLimitsRoutes);
   app.use('/api/simple-packages', simplePackageRoutes);
   app.use('/api/simple-registration', simpleRegistrationRoutes);

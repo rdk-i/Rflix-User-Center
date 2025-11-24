@@ -1,886 +1,1083 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard - Rflix API</title>
-  <link rel="stylesheet" href="../styles.css" />
-  <style>
-    /* Specific overrides for dashboard layout */
-    body {
-      display: block; /* Override flex center from global styles */
-      align-items: unset;
-      justify-content: unset;
-      overflow-x: hidden;
-    }
-    .dashboard-grid {
-      display: flex;
-      min-height: 100vh;
-    }
-    .neu-sidebar {
-      width: 280px;
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      z-index: 40;
-      overflow-y: auto;
-    }
-    main {
-      flex: 1;
-      margin-left: 280px; /* Offset for fixed sidebar */
-      padding: 2rem;
-      width: calc(100% - 280px);
-    }
-    .theme-toggle {
-      position: fixed;
-      top: 1.5rem;
-      right: 2rem;
-      z-index: 100; /* Higher z-index to stay on top */
-    }
-    @media (max-width: 768px) {
-      .neu-sidebar {
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Rflix API</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <style>
+      /* Specific overrides for dashboard layout */
+      body {
+        display: block; /* Override flex center from global styles */
+        align-items: unset;
+        justify-content: unset;
+        overflow-x: hidden;
       }
-      .neu-sidebar.open {
-        transform: translateX(0);
+      .dashboard-grid {
+        display: flex;
+        min-height: 100vh;
+      }
+      .neu-sidebar {
+        width: 280px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 40;
+        overflow-y: auto;
       }
       main {
-        margin-left: 0;
+        flex: 1;
+        margin-left: 280px; /* Offset for fixed sidebar */
+        padding: 2rem;
+        width: calc(100% - 280px);
+      }
+      .theme-toggle {
+        position: fixed;
+        top: 1.5rem;
+        right: 2rem;
+        z-index: 100; /* Higher z-index to stay on top */
+      }
+      @media (max-width: 768px) {
+        .neu-sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+        }
+        .neu-sidebar.open {
+          transform: translateX(0);
+        }
+        main {
+          margin-left: 0;
+          width: 100%;
+        }
+      }
+
+      /* Loading spinner styles */
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top: 4px solid var(--accent);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Subscription management styles */
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .metric-card {
+        background: var(--bg);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-out);
+        padding: 1.5rem;
+        text-align: center;
+        transition: var(--transition);
+      }
+
+      .metric-card:hover {
+        box-shadow: var(--shadow-in);
+        transform: translateY(-2px);
+      }
+
+      .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+      }
+
+      .metric-label {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 1rem;
+      }
+
+      .tab-navigation {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+      }
+
+      .tab-btn {
+        padding: 0.75rem 1.5rem;
+        background: var(--bg);
+        border: none;
+        border-radius: var(--radius-md);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: var(--shadow-out);
+      }
+
+      .tab-btn.active {
+        background: var(--accent);
+        color: var(--bg);
+        box-shadow: var(--shadow-in);
+      }
+
+      .tab-btn:hover:not(.active) {
+        box-shadow: var(--shadow-in);
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .status-active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+      }
+      .status-inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+      }
+      .status-pending {
+        background: rgba(251, 191, 36, 0.1);
+        color: #fbbf24;
+      }
+      .status-cancelled {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+      }
+      .status-cancel-pending {
+        background: rgba(251, 191, 36, 0.1);
+        color: #fbbf24;
+      }
+      .status-downgrade-pending {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+      }
+      .status-expiring {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+      }
+
+      .search-box {
+        position: relative;
+        margin-bottom: 1rem;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 3rem;
+        background: var(--bg);
+        border: none;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-in);
+        color: var(--text);
+        font-size: 0.875rem;
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+      }
+
+      .data-table-container {
+        overflow-x: auto;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-in);
+        background: var(--bg);
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .btn-action {
+        padding: 0.25rem 0.5rem;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .btn-action.warning {
+        background: rgba(251, 191, 36, 0.1);
+        color: #fbbf24;
+      }
+
+      .btn-action.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+      }
+
+      .btn-action.danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+      }
+
+      .btn-action:hover {
+        opacity: 0.8;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: var(--bg);
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: var(--shadow-in);
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--input-text));
+        transition: width 0.3s ease;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+      }
+
+      .page-btn {
+        padding: 0.5rem 0.75rem;
+        background: var(--bg);
+        border: none;
+        border-radius: var(--radius-md);
+        color: var(--text);
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: var(--shadow-out);
+      }
+
+      .page-btn:hover:not(:disabled) {
+        box-shadow: var(--shadow-in);
+      }
+
+      .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .page-btn.active {
+        background: var(--accent);
+        color: var(--bg);
+      }
+
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+      }
+
+      .modal-content {
+        background: var(--bg);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-deep);
+        padding: 2rem;
+        max-width: 90vw;
+        max-height: 90vh;
+        overflow-y: auto;
         width: 100%;
       }
-    }
 
-    /* Loading spinner styles */
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(255, 255, 255, 0.1);
-      border-top: 4px solid var(--accent);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto;
-    }
+      .neu-toggle {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+      }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+      .neu-toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
 
-    /* Subscription management styles */
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
+      .neu-toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--bg);
+        transition: 0.4s;
+        border-radius: 34px;
+        box-shadow: var(--shadow-in);
+      }
 
-    .metric-card {
-      background: var(--bg);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-out);
-      padding: 1.5rem;
-      text-align: center;
-      transition: var(--transition);
-    }
+      .neu-toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: var(--text-muted);
+        transition: 0.4s;
+        border-radius: 50%;
+      }
 
-    .metric-card:hover {
-      box-shadow: var(--shadow-in);
-      transform: translateY(-2px);
-    }
+      .neu-toggle input:checked + .neu-toggle-slider {
+        background-color: var(--accent);
+      }
 
-    .metric-value {
-      font-size: 2.5rem;
-      font-weight: bold;
-      color: var(--accent);
-      margin-bottom: 0.5rem;
-    }
+      .neu-toggle input:checked + .neu-toggle-slider:before {
+        transform: translateX(26px);
+        background-color: var(--bg);
+      }
 
-    .metric-label {
-      color: var(--text-muted);
-      font-size: 0.875rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+      .neu-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: var(--bg);
+        border: none;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-in);
+        color: var(--text);
+        font-size: 0.875rem;
+        cursor: pointer;
+      }
 
-    .chart-container {
-      position: relative;
-      height: 300px;
-      margin-bottom: 1rem;
-    }
+      .alert {
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        margin-bottom: 1rem;
+        border-left: 4px solid;
+      }
 
-    .tab-navigation {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-    }
+      .alert-success {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: #10b981;
+        color: #10b981;
+      }
 
-    .tab-btn {
-      padding: 0.75rem 1.5rem;
-      background: var(--bg);
-      border: none;
-      border-radius: var(--radius-md);
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: var(--transition);
-      box-shadow: var(--shadow-out);
-    }
+      .alert-error {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: #ef4444;
+        color: #ef4444;
+      }
 
-    .tab-btn.active {
-      background: var(--accent);
-      color: var(--bg);
-      box-shadow: var(--shadow-in);
-    }
+      .alert-warning {
+        background: rgba(251, 191, 36, 0.1);
+        border-color: #fbbf24;
+        color: #fbbf24;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="theme-toggle">
+      <button class="theme-btn" onclick="toggleTheme()">Dark</button>
+    </div>
 
-    .tab-btn:hover:not(.active) {
-      box-shadow: var(--shadow-in);
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    .status-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .status-active { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-    .status-inactive { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-    .status-pending { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
-    .status-cancelled { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
-    .status-cancel-pending { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
-    .status-downgrade-pending { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
-    .status-expiring { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-
-    .search-box {
-      position: relative;
-      margin-bottom: 1rem;
-    }
-
-    .search-input {
-      width: 100%;
-      padding: 0.75rem 1rem 0.75rem 3rem;
-      background: var(--bg);
-      border: none;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-in);
-      color: var(--text);
-      font-size: 0.875rem;
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-    }
-
-    .data-table-container {
-      overflow-x: auto;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-in);
-      background: var(--bg);
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-
-    .btn-action {
-      padding: 0.25rem 0.5rem;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .btn-action.warning {
-      background: rgba(251, 191, 36, 0.1);
-      color: #fbbf24;
-    }
-
-    .btn-action.success {
-      background: rgba(16, 185, 129, 0.1);
-      color: #10b981;
-    }
-
-    .btn-action.danger {
-      background: rgba(239, 68, 68, 0.1);
-      color: #ef4444;
-    }
-
-    .btn-action:hover {
-      opacity: 0.8;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-    }
-
-    .progress-bar {
-      width: 100%;
-      height: 8px;
-      background: var(--bg);
-      border-radius: 4px;
-      overflow: hidden;
-      box-shadow: var(--shadow-in);
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--input-text));
-      transition: width 0.3s ease;
-    }
-
-    .pagination {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 1.5rem;
-    }
-
-    .page-btn {
-      padding: 0.5rem 0.75rem;
-      background: var(--bg);
-      border: none;
-      border-radius: var(--radius-md);
-      color: var(--text);
-      cursor: pointer;
-      transition: var(--transition);
-      box-shadow: var(--shadow-out);
-    }
-
-    .page-btn:hover:not(:disabled) {
-      box-shadow: var(--shadow-in);
-    }
-
-    .page-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .page-btn.active {
-      background: var(--accent);
-      color: var(--bg);
-    }
-
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      backdrop-filter: blur(5px);
-    }
-
-    .modal-content {
-      background: var(--bg);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-deep);
-      padding: 2rem;
-      max-width: 90vw;
-      max-height: 90vh;
-      overflow-y: auto;
-      width: 100%;
-    }
-
-    .neu-toggle {
-      position: relative;
-      display: inline-block;
-      width: 60px;
-      height: 34px;
-    }
-
-    .neu-toggle input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .neu-toggle-slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: var(--bg);
-      transition: .4s;
-      border-radius: 34px;
-      box-shadow: var(--shadow-in);
-    }
-
-    .neu-toggle-slider:before {
-      position: absolute;
-      content: "";
-      height: 26px;
-      width: 26px;
-      left: 4px;
-      bottom: 4px;
-      background-color: var(--text-muted);
-      transition: .4s;
-      border-radius: 50%;
-    }
-
-    .neu-toggle input:checked + .neu-toggle-slider {
-      background-color: var(--accent);
-    }
-
-    .neu-toggle input:checked + .neu-toggle-slider:before {
-      transform: translateX(26px);
-      background-color: var(--bg);
-    }
-
-    .neu-select {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      background: var(--bg);
-      border: none;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-in);
-      color: var(--text);
-      font-size: 0.875rem;
-      cursor: pointer;
-    }
-
-    .alert {
-      padding: 1rem;
-      border-radius: var(--radius-md);
-      margin-bottom: 1rem;
-      border-left: 4px solid;
-    }
-
-    .alert-success {
-      background: rgba(16, 185, 129, 0.1);
-      border-color: #10b981;
-      color: #10b981;
-    }
-
-    .alert-error {
-      background: rgba(239, 68, 68, 0.1);
-      border-color: #ef4444;
-      color: #ef4444;
-    }
-
-    .alert-warning {
-      background: rgba(251, 191, 36, 0.1);
-      border-color: #fbbf24;
-      color: #fbbf24;
-    }
-  </style>
-</head>
-<body>
-  <div class="theme-toggle">
-    <button class="theme-btn" onclick="toggleTheme()">Dark</button>
-  </div>
-
-  <div class="dashboard-grid">
-    <!-- Sidebar -->
-    <aside class="neu-sidebar p-6 flex flex-col">
-      <div class="mb-10 text-center">
-        <h2 class="text-2xl font-bold mb-1">Rflix Admin</h2>
-        <p class="text-muted text-sm" id="adminEmail"></p>
-      </div>
-      
-      <ul class="space-y-2 flex-1" style="list-style: none; padding: 0;">
-        <li class="nav-item active mb-2" data-page="dashboard">
-          <a href="#" class="neu-btn neu-btn-sm w-full justify-start" style="text-align: left;">
-            📊 Dashboard
-          </a>
-        </li>
-        <li class="nav-item mb-2" data-page="users">
-          <a href="#" class="neu-btn neu-btn-sm w-full justify-start" style="text-align: left;">
-            👥 Users
-          </a>
-        </li>
-        <li class="nav-item mb-2" data-page="pending">
-          <a href="#" class="neu-btn neu-btn-sm w-full justify-start" style="text-align: left;">
-            ⏳ Pending
-          </a>
-        </li>
-        <li class="nav-item mb-2" data-page="logs">
-          <a href="#" class="neu-btn neu-btn-sm w-full justify-start" style="text-align: left;">
-            📜 Logs
-          </a>
-        </li>
-        <li class="nav-item mb-2" data-page="settings">
-          <a href="#" class="neu-btn neu-btn-sm w-full justify-start" style="text-align: left;">
-            ⚙️ Settings
-          </a>
-        </li>
-        <li class="nav-item mb-2">
-          <a href="/admin_dashboard/subscriptions.html" class="neu-btn neu-btn-sm w-full justify-start" style="text-align: left;">
-            📦 Subscriptions
-          </a>
-        </li>
-
-        <li class="nav-item mb-2" data-page="subscriptions">
-          <a href="#" class="neu-btn neu-btn-sm w-full justify-start" style="text-align: left;">
-            💳 Subscriptions
-          </a>
-        </li>
-        <li class="nav-item mb-2" data-page="forms">
-          <a href="#" class="neu-btn neu-btn-sm w-full justify-start" style="text-align: left;">
-            📝 Form Builder
-          </a>
-        </li>
-      </ul>
-
-      <button onclick="logout()" class="neu-btn neu-btn-danger mt-auto">
-        Logout
-      </button>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="p-8 overflow-y-auto h-screen">
-      <!-- Dashboard View -->
-      <div id="dashboard-view" class="view-section">
-        <h1 class="text-3xl font-bold mb-8">Dashboard Overview</h1>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div class="neu-panel text-center">
-            <p class="text-muted text-sm uppercase mb-2">Total Users</p>
-            <p class="text-4xl font-bold text-accent" id="totalUsers">-</p>
-          </div>
-          <div class="neu-panel text-center">
-            <p class="text-muted text-sm uppercase mb-2">Now Playing</p>
-            <p class="text-4xl font-bold text-input-text" id="nowPlaying">-</p>
-          </div>
-          <div class="neu-panel text-center">
-            <p class="text-muted text-sm uppercase mb-2">Pending Requests</p>
-            <p class="text-4xl font-bold text-yellow-500" id="pendingReqs">-</p>
-          </div>
+    <div class="dashboard-grid">
+      <!-- Sidebar -->
+      <aside class="neu-sidebar p-6 flex flex-col">
+        <div class="mb-10 text-center">
+          <h2 class="text-2xl font-bold mb-1">Rflix Admin</h2>
+          <p class="text-muted text-sm" id="adminEmail"></p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="neu-panel">
-            <h3 class="mb-4">Recent Activity</h3>
-            <div id="recentActivity" class="text-sm text-muted">Loading...</div>
+        <ul class="space-y-2 flex-1" style="list-style: none; padding: 0">
+          <li class="nav-item active mb-2" data-page="dashboard">
+            <a
+              href="#"
+              class="neu-btn neu-btn-sm w-full justify-start"
+              style="text-align: left"
+            >
+              📊 Dashboard
+            </a>
+          </li>
+          <li class="nav-item mb-2" data-page="users">
+            <a
+              href="#"
+              class="neu-btn neu-btn-sm w-full justify-start"
+              style="text-align: left"
+            >
+              👥 Users
+            </a>
+          </li>
+          <li class="nav-item mb-2" data-page="pending">
+            <a
+              href="#"
+              class="neu-btn neu-btn-sm w-full justify-start"
+              style="text-align: left"
+            >
+              ⏳ Pending
+            </a>
+          </li>
+          <li class="nav-item mb-2" data-page="logs">
+            <a
+              href="#"
+              class="neu-btn neu-btn-sm w-full justify-start"
+              style="text-align: left"
+            >
+              📜 Logs
+            </a>
+          </li>
+        </ul>
+
+        <button onclick="logout()" class="neu-btn neu-btn-danger mt-auto">
+          Logout
+        </button>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="p-8 overflow-y-auto h-screen">
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view-section">
+          <h1 class="text-3xl font-bold mb-8">Dashboard Overview</h1>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="neu-panel text-center">
+              <p class="text-muted text-sm uppercase mb-2">Total Users</p>
+              <p class="text-4xl font-bold text-accent" id="totalUsers">-</p>
+            </div>
+            <div class="neu-panel text-center">
+              <p class="text-muted text-sm uppercase mb-2">Now Playing</p>
+              <p class="text-4xl font-bold text-input-text" id="nowPlaying">
+                -
+              </p>
+            </div>
+            <div class="neu-panel text-center">
+              <p class="text-muted text-sm uppercase mb-2">Pending Requests</p>
+              <p class="text-4xl font-bold text-yellow-500" id="pendingReqs">
+                -
+              </p>
+            </div>
           </div>
-          <div class="neu-panel">
-            <h3 class="mb-4">System Status</h3>
-            <div class="space-y-4">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-muted">Jellyfin Connection</span>
-                <span class="neu-badge" id="jellyfinStatus">Checking...</span>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="neu-panel">
+              <h3 class="mb-4">Recent Activity</h3>
+              <div id="recentActivity" class="text-sm text-muted">
+                Loading...
               </div>
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-muted">Database</span>
-                <span class="neu-badge active">Healthy</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-muted">Last Backup</span>
-                <span class="text-sm">Today, 03:00 AM</span>
+            </div>
+            <div class="neu-panel">
+              <h3 class="mb-4">System Status</h3>
+              <div class="space-y-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-muted">Jellyfin Connection</span>
+                  <span class="neu-badge" id="jellyfinStatus">Checking...</span>
+                </div>
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-muted">Database</span>
+                  <span class="neu-badge active">Healthy</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-muted">Last Backup</span>
+                  <span class="text-sm">Today, 03:00 AM</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Users View -->
-      <div id="users-view" class="view-section hidden">
-        <div class="flex justify-between items-end mb-6" style="padding-right: 140px;">
-          <div>
-            <h1 class="text-3xl font-bold mb-2">User Management</h1>
-            <p class="text-muted text-sm">Manage your Jellyfin users and subscriptions</p>
-          </div>
-          <div class="flex gap-4 items-center">
-            <div class="neu-input-group" style="width: 320px; margin-bottom: 0;">
-              <input type="text" id="searchUsers" placeholder="Search by username or email..." class="neu-input" onkeyup="searchUsers()" />
-              <div class="icon-indicator">
-                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-              </div>
+        <!-- Users View -->
+        <div id="users-view" class="view-section hidden">
+          <div
+            class="flex justify-between items-end mb-6"
+            style="padding-right: 140px"
+          >
+            <div>
+              <h1 class="text-3xl font-bold mb-2">User Management</h1>
+              <p class="text-muted text-sm">
+                Manage your Jellyfin users and subscriptions
+              </p>
             </div>
-            <button onclick="loadUsers()" class="theme-btn" style="width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.2rem;" title="Refresh List">
-              &#x21bb;
-            </button>
-            <button onclick="syncJellyfinUsers()" class="theme-btn" style="white-space: nowrap; color: var(--accent);">
-              SYNC JELLYFIN
-            </button>
+            <div class="flex gap-4 items-center">
+              <div
+                class="neu-input-group"
+                style="width: 320px; margin-bottom: 0"
+              >
+                <input
+                  type="text"
+                  id="searchUsers"
+                  placeholder="Search by username or email..."
+                  class="neu-input"
+                  onkeyup="searchUsers()"
+                />
+                <div class="icon-indicator">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+              </div>
+              <button
+                onclick="loadUsers()"
+                class="theme-btn"
+                style="
+                  width: 40px;
+                  height: 40px;
+                  padding: 0;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  border-radius: 50%;
+                  font-size: 1.2rem;
+                "
+                title="Refresh List"
+              >
+                &#x21bb;
+              </button>
+              <button
+                onclick="syncJellyfinUsers()"
+                class="theme-btn"
+                style="white-space: nowrap; color: var(--accent)"
+              >
+                SYNC JELLYFIN
+              </button>
+            </div>
+          </div>
+
+          <div class="neu-panel overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="neu-table">
+                <thead>
+                  <tr>
+                    <th style="min-width: 120px">Username</th>
+                    <th style="min-width: 180px">Email</th>
+                    <th style="min-width: 130px">Phone</th>
+                    <th style="min-width: 100px">Package</th>
+                    <th style="min-width: 80px">Status</th>
+                    <th style="min-width: 120px">Last Login</th>
+                    <th style="min-width: 250px; text-align: center">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <!-- Users will be populated here -->
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-        
-        <div class="neu-panel overflow-hidden">
-          <div class="overflow-x-auto">
+
+        <!-- Pending View -->
+        <div id="pending-view" class="view-section hidden">
+          <h1 class="text-3xl font-bold mb-6">Pending Approvals</h1>
+          <div class="neu-panel">
             <table class="neu-table">
               <thead>
                 <tr>
-                  <th style="min-width: 120px;">Username</th>
-                  <th style="min-width: 180px;">Email</th>
-                  <th style="min-width: 130px;">Phone</th>
-                  <th style="min-width: 100px;">Package</th>
-                  <th style="min-width: 80px;">Status</th>
-                  <th style="min-width: 120px;">Last Login</th>
-                  <th style="min-width: 250px; text-align: center;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="usersTableBody">
-                <!-- Users will be populated here -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pending View -->
-      <div id="pending-view" class="view-section hidden">
-        <h1 class="text-3xl font-bold mb-6">Pending Approvals</h1>
-        <div class="neu-panel">
-          <table class="neu-table">
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Plan</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="pendingTableBody">
-              <!-- Pending requests here -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Logs View -->
-      <div id="logs-view" class="view-section hidden">
-        <h1 class="text-3xl font-bold mb-6">System Logs</h1>
-        <div class="neu-panel bg-black/20 font-mono text-sm p-4 h-[600px] overflow-y-auto" id="logsContainer">
-          <!-- Logs content -->
-        </div>
-      </div>
-
-      <!-- Settings View -->
-      <div id="settings-view" class="view-section hidden">
-        <h1 class="text-3xl font-bold mb-6">System Settings</h1>
-        
-        <div class="grid grid-cols-1 gap-6 max-w-4xl">
-          <!-- General Settings -->
-          <div class="neu-panel">
-            <h3 class="text-xl font-bold mb-4 text-accent">General</h3>
-            <form id="generalForm" class="space-y-4">
-              <div class="neu-input-group">
-                <label class="block text-sm font-bold mb-2">Site Name</label>
-                <input type="text" id="siteName" value="Rflix" class="neu-input" placeholder="Site Name" />
-                <div class="icon-indicator">
-                  <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                </div>
-              </div>
-              
-              <div class="flex items-center justify-between py-2">
-                <span class="text-sm font-medium">Allow Registration</span>
-                <label class="neu-toggle">
-                  <input type="checkbox" id="allowRegistration" checked />
-                  <span class="neu-toggle-slider"></span>
-                </label>
-              </div>
-
-              <button type="submit" class="neu-btn mt-4">Save General Settings</button>
-            </form>
-          </div>
-
-          <!-- Jellyfin Configuration -->
-          <div class="neu-panel">
-            <h3 class="text-xl font-bold mb-4 text-accent">Jellyfin Connection</h3>
-            <form id="jellyfinForm" class="space-y-4">
-              <div class="neu-input-group">
-                <label class="block text-sm font-bold mb-2">Jellyfin Server URL</label>
-                <input type="url" id="jellyfinUrl" placeholder="http://localhost:8096" class="neu-input" />
-                <div class="icon-indicator">
-                  <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                </div>
-              </div>
-              
-              <div class="neu-input-group">
-                <label class="block text-sm font-bold mb-2">Jellyfin API Key</label>
-                <input type="password" id="jellyfinApiKey" placeholder="Enter API Key" class="neu-input" />
-                <div class="icon-indicator">
-                  <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                </div>
-              </div>
-
-              <div class="flex gap-4 mt-4">
-                <button type="submit" class="neu-btn">Save Jellyfin Config</button>
-                <button type="button" onclick="testJellyfinConnection()" class="neu-btn" style="background: transparent; border: 1px solid var(--accent-color);">Test Connection</button>
-              </div>
-              <div id="jellyfinTestResult" class="hidden mt-2 p-3 rounded text-sm"></div>
-            </form>
-          </div>
-
-          <!-- Backup Settings -->
-          <div class="neu-panel">
-            <h3 class="text-xl font-bold mb-4 text-accent">Database Backup</h3>
-            <div class="space-y-4">
-              <div class="flex items-center justify-between py-2">
-                <div>
-                  <p class="text-sm font-bold">Auto Backup</p>
-                  <p class="text-xs text-muted">Daily backup at 3:00 AM</p>
-                </div>
-                <label class="neu-toggle">
-                  <input type="checkbox" id="autoBackup" checked />
-                  <span class="neu-toggle-slider"></span>
-                </label>
-              </div>
-
-              <div class="flex items-center justify-between py-2 border-t border-gray-700 pt-4">
-                <div>
-                  <p class="text-sm font-bold">Last Backup</p>
-                  <p class="text-xs text-muted" id="lastBackupTime">Never</p>
-                </div>
-                <button onclick="triggerManualBackup()" class="neu-btn neu-btn-sm">Backup Now</button>
-              </div>
-
-              <div id="backupResult" class="hidden mt-2 p-3 rounded text-sm"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Subscriptions View -->
-      <div id="subscriptions-view" class="view-section hidden">
-        <div class="flex justify-between items-center mb-8">
-          <div>
-            <h1 class="text-3xl font-bold mb-2">Subscription Management</h1>
-            <p class="text-muted">Manage packages, subscriptions, payments, and analytics</p>
-          </div>
-          <div class="flex gap-4">
-            <button onclick="loadSubscriptionsContent()" class="theme-btn" title="Refresh Data">
-              🔄
-            </button>
-            <button onclick="exportSubscriptionAnalytics()" class="neu-btn neu-btn-sm">
-              📊 Export Data
-            </button>
-          </div>
-        </div>
-
-        <!-- Subscription Management Content -->
-        <div id="subscriptionsContent" class="neu-panel" style="min-height: 80vh;">
-          <div class="text-center text-muted py-8">
-            <div class="loading-spinner"></div>
-            <p class="mt-4">Loading subscription management interface...</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Form Builder View -->
-      <div id="forms-view" class="view-section hidden">
-        <div class="flex justify-between items-center mb-6 pr-20">
-          <h1 class="text-3xl font-bold">Registration Form Builder</h1>
-          <button onclick="openFieldModal()" class="neu-btn neu-btn-sm">Add New Field</button>
-        </div>
-
-        <div class="neu-panel">
-          <div class="overflow-x-auto">
-            <table class="neu-table">
-              <thead>
-                <tr>
-                  <th>Label</th>
-                  <th>Key</th>
-                  <th>Type</th>
-                  <th>Required</th>
-                  <th>Order</th>
+                  <th>Email</th>
+                  <th>Plan</th>
+                  <th>Date</th>
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody id="fieldsTableBody">
-                <tr><td colspan="6" class="text-center text-muted">Loading fields...</td></tr>
+              <tbody id="pendingTableBody">
+                <!-- Pending requests here -->
               </tbody>
             </table>
           </div>
         </div>
-      </div>
 
-      <!-- Field Modal -->
-      <div id="fieldModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50" style="backdrop-filter: blur(5px);">
-        <div class="neu-card" style="max-width: 500px; margin: 0;">
-          <h2 class="mb-4" id="modalTitle">Add Field</h2>
-          <form id="fieldForm" class="w-full">
-            <input type="hidden" id="fieldId">
-            
-            <div class="neu-input-group">
-              <input type="text" id="fieldLabel" name="label" class="neu-input" placeholder="Label (e.g. Phone Number)" required>
-            </div>
-            
-            <div class="neu-input-group">
-              <input type="text" id="fieldKey" name="field_key" class="neu-input" placeholder="Key (e.g. phone)" required>
-            </div>
-
-            <div class="neu-input-group">
-              <select id="fieldType" name="type" class="neu-select">
-                <option value="text">Text</option>
-                <option value="email">Email</option>
-                <option value="password">Password</option>
-                <option value="tel">Phone</option>
-                <option value="number">Number</option>
-                <option value="select">Dropdown</option>
-              </select>
-            </div>
-
-            <div class="neu-input-group">
-              <input type="number" id="fieldOrder" name="sort_order" class="neu-input" placeholder="Sort Order (e.g. 10)" value="99">
-            </div>
-
-            <div class="flex items-center gap-4 mb-4 px-2">
-              <label class="text-muted text-sm">Required?</label>
-              <input type="checkbox" id="fieldRequired" name="required" checked>
-            </div>
-
-            <div class="flex gap-2">
-              <button type="button" onclick="closeFieldModal()" class="neu-btn" style="background: transparent; box-shadow: none; border: 1px solid var(--text-muted);">Cancel</button>
-              <button type="submit" class="neu-btn">Save Field</button>
-            </div>
-          </form>
+        <!-- Logs View -->
+        <div id="logs-view" class="view-section hidden">
+          <h1 class="text-3xl font-bold mb-6">System Logs</h1>
+          <div
+            class="neu-panel bg-black/20 font-mono text-sm p-4 h-[600px] overflow-y-auto"
+            id="logsContainer"
+          >
+            <!-- Logs content -->
+          </div>
         </div>
-      </div>
-    </main>
-  </div>
 
-  <script>
-    // Theme Toggle Logic
-    function toggleTheme() {
-      const body = document.body;
-      const btn = document.querySelector('.theme-btn');
-      
-      body.classList.toggle('light-mode');
-      
-      if (body.classList.contains('light-mode')) {
-        btn.textContent = 'Light';
-        localStorage.setItem('theme', 'light');
-      } else {
-        btn.textContent = 'Dark';
-        localStorage.setItem('theme', 'dark');
-      }
-    }
+        <!-- Settings View -->
+        <div id="settings-view" class="view-section hidden">
+          <h1 class="text-3xl font-bold mb-6">System Settings</h1>
 
-    // Init Theme
-    if (localStorage.getItem('theme') === 'light') {
-      document.body.classList.add('light-mode');
-      document.querySelector('.theme-btn').textContent = 'Light';
-    }
+          <div class="grid grid-cols-1 gap-6 max-w-4xl">
+            <!-- General Settings -->
+            <div class="neu-panel">
+              <h3 class="text-xl font-bold mb-4 text-accent">General</h3>
+              <form id="generalForm" class="space-y-4">
+                <div class="neu-input-group">
+                  <label class="block text-sm font-bold mb-2">Site Name</label>
+                  <input
+                    type="text"
+                    id="siteName"
+                    value="Rflix"
+                    class="neu-input"
+                    placeholder="Site Name"
+                  />
+                  <div class="icon-indicator">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                  </div>
+                </div>
 
-    // Check Auth
-    const token = localStorage.getItem('token');
-    if (!token) {
-      window.location.href = '/admin';
-    }
+                <div class="flex items-center justify-between py-2">
+                  <span class="text-sm font-medium">Allow Registration</span>
+                  <label class="neu-toggle">
+                    <input type="checkbox" id="allowRegistration" checked />
+                    <span class="neu-toggle-slider"></span>
+                  </label>
+                </div>
 
-    // Navigation Logic
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        e.preventDefault();
-        
-        // Update active state
-        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-        item.classList.add('active');
-        
-        // Show target view
-        const targetId = item.dataset.page + '-view';
-        document.querySelectorAll('.view-section').forEach(view => view.classList.add('hidden'));
-        document.getElementById(targetId).classList.remove('hidden');
-      });
-    });
+                <button type="submit" class="neu-btn mt-4">
+                  Save General Settings
+                </button>
+              </form>
+            </div>
 
-    function logout() {
-      localStorage.removeItem('token');
-      window.location.href = '/admin';
-    }
+            <!-- Jellyfin Configuration -->
+            <div class="neu-panel">
+              <h3 class="text-xl font-bold mb-4 text-accent">
+                Jellyfin Connection
+              </h3>
+              <form id="jellyfinForm" class="space-y-4">
+                <div class="neu-input-group">
+                  <label class="block text-sm font-bold mb-2"
+                    >Jellyfin Server URL</label
+                  >
+                  <input
+                    type="url"
+                    id="jellyfinUrl"
+                    placeholder="http://localhost:8096"
+                    class="neu-input"
+                  />
+                  <div class="icon-indicator">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                  </div>
+                </div>
 
-    // Initial Data Load (Mockup)
-    // Initial Data Load
-    async function loadDashboardData() {
-      try {
-        console.log('Fetching dashboard stats...');
-        const res = await fetch('/api/admin/stats', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        console.log('Response status:', res.status);
-        const json = await res.json();
-        console.log('Response data:', json);
-        
-        if (json.success) {
-          document.getElementById('totalUsers').textContent = json.data.totalUsers;
-          document.getElementById('nowPlaying').textContent = json.data.nowPlaying;
-          document.getElementById('pendingReqs').textContent = json.data.pendingRequests;
-          
-          // Load recent activity
-          loadRecentActivity(json.data.recentActivity);
-          
-          // Update Jellyfin Status
-          const jfStatus = document.getElementById('jellyfinStatus');
-          if (json.data.jellyfinConnected) {
-            jfStatus.textContent = 'Connected';
-            jfStatus.classList.add('active');
-            jfStatus.style.color = 'var(--accent-color)';
-          } else {
-            jfStatus.textContent = 'Disconnected';
-            jfStatus.classList.remove('active');
-            jfStatus.style.color = '#ef4444';
-          }
+                <div class="neu-input-group">
+                  <label class="block text-sm font-bold mb-2"
+                    >Jellyfin API Key</label
+                  >
+                  <input
+                    type="password"
+                    id="jellyfinApiKey"
+                    placeholder="Enter API Key"
+                    class="neu-input"
+                  />
+                  <div class="icon-indicator">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                  </div>
+                </div>
+
+                <div class="flex gap-4 mt-4">
+                  <button type="submit" class="neu-btn">
+                    Save Jellyfin Config
+                  </button>
+                  <button
+                    type="button"
+                    onclick="testJellyfinConnection()"
+                    class="neu-btn"
+                    style="
+                      background: transparent;
+                      border: 1px solid var(--accent-color);
+                    "
+                  >
+                    Test Connection
+                  </button>
+                </div>
+                <div
+                  id="jellyfinTestResult"
+                  class="hidden mt-2 p-3 rounded text-sm"
+                ></div>
+              </form>
+            </div>
+
+            <!-- Backup Settings -->
+            <div class="neu-panel">
+              <h3 class="text-xl font-bold mb-4 text-accent">
+                Database Backup
+              </h3>
+              <div class="space-y-4">
+                <div class="flex items-center justify-between py-2">
+                  <div>
+                    <p class="text-sm font-bold">Auto Backup</p>
+                    <p class="text-xs text-muted">Daily backup at 3:00 AM</p>
+                  </div>
+                  <label class="neu-toggle">
+                    <input type="checkbox" id="autoBackup" checked />
+                    <span class="neu-toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div
+                  class="flex items-center justify-between py-2 border-t border-gray-700 pt-4"
+                >
+                  <div>
+                    <p class="text-sm font-bold">Last Backup</p>
+                    <p class="text-xs text-muted" id="lastBackupTime">Never</p>
+                  </div>
+                  <button
+                    onclick="triggerManualBackup()"
+                    class="neu-btn neu-btn-sm"
+                  >
+                    Backup Now
+                  </button>
+                </div>
+
+                <div
+                  id="backupResult"
+                  class="hidden mt-2 p-3 rounded text-sm"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subscriptions View -->
+        <div id="subscriptions-view" class="view-section hidden">
+          <div class="flex justify-between items-center mb-8">
+            <div>
+              <h1 class="text-3xl font-bold mb-2">Subscription Management</h1>
+              <p class="text-muted">
+                Manage packages, subscriptions, payments, and analytics
+              </p>
+            </div>
+            <div class="flex gap-4">
+              <button
+                onclick="loadSubscriptionsContent()"
+                class="theme-btn"
+                title="Refresh Data"
+              >
+                🔄
+              </button>
+              <button
+                onclick="exportSubscriptionAnalytics()"
+                class="neu-btn neu-btn-sm"
+              >
+                📊 Export Data
+              </button>
+            </div>
+          </div>
+
+          <!-- Subscription Management Content -->
+          <div
+            id="subscriptionsContent"
+            class="neu-panel"
+            style="min-height: 80vh"
+          >
+            <div class="text-center text-muted py-8">
+              <div class="loading-spinner"></div>
+              <p class="mt-4">Loading subscription management interface...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Builder View -->
+        <div id="forms-view" class="view-section hidden">
+          <div class="flex justify-between items-center mb-6 pr-20">
+            <h1 class="text-3xl font-bold">Registration Form Builder</h1>
+            <button onclick="openFieldModal()" class="neu-btn neu-btn-sm">
+              Add New Field
+            </button>
+          </div>
+
+          <div class="neu-panel">
+            <div class="overflow-x-auto">
+              <table class="neu-table">
+                <thead>
+                  <tr>
+                    <th>Label</th>
+                    <th>Key</th>
+                    <th>Type</th>
+                    <th>Required</th>
+                    <th>Order</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="fieldsTableBody">
+                  <tr>
+                    <td colspan="6" class="text-center text-muted">
+                      Loading fields...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Field Modal -->
+        <div
+          id="fieldModal"
+          class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          style="backdrop-filter: blur(5px)"
+        >
+          <div class="neu-card" style="max-width: 500px; margin: 0">
+            <h2 class="mb-4" id="modalTitle">Add Field</h2>
+            <form id="fieldForm" class="w-full">
+              <input type="hidden" id="fieldId" />
+
+              <div class="neu-input-group">
+                <input
+                  type="text"
+                  id="fieldLabel"
+                  name="label"
+                  class="neu-input"
+                  placeholder="Label (e.g. Phone Number)"
+                  required
+                />
+              </div>
+
+              <div class="neu-input-group">
+                <input
+                  type="text"
+                  id="fieldKey"
+                  name="field_key"
+                  class="neu-input"
+                  placeholder="Key (e.g. phone)"
+                  required
+                />
+              </div>
+
+              <div class="neu-input-group">
+                <select id="fieldType" name="type" class="neu-select">
+                  <option value="text">Text</option>
+                  <option value="email">Email</option>
+                  <option value="password">Password</option>
+                  <option value="tel">Phone</option>
+                  <option value="number">Number</option>
+                  <option value="select">Dropdown</option>
+                </select>
+              </div>
+
+              <div class="neu-input-group">
+                <input
+                  type="number"
+                  id="fieldOrder"
+                  name="sort_order"
+                  class="neu-input"
+                  placeholder="Sort Order (e.g. 10)"
+                  value="99"
+                />
+              </div>
+
+              <div class="flex items-center gap-4 mb-4 px-2">
+                <label class="text-muted text-sm">Required?</label>
+                <input
+                  type="checkbox"
+                  id="fieldRequired"
+                  name="required"
+                  checked
+                />
+              </div>
+
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  onclick="closeFieldModal()"
+                  class="neu-btn"
+                  style="
+                    background: transparent;
+                    box-shadow: none;
+                    border: 1px solid var(--text-muted);
+                  "
+                >
+                  Cancel
+                </button>
+                <button type="submit" class="neu-btn">Save Field</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // Theme Toggle Logic
+      function toggleTheme() {
+        const body = document.body;
+        const btn = document.querySelector(".theme-btn");
+
+        body.classList.toggle("light-mode");
+
+        if (body.classList.contains("light-mode")) {
+          btn.textContent = "Light";
+          localStorage.setItem("theme", "light");
         } else {
-          console.error('API returned error:', json.error);
-          document.getElementById('jellyfinStatus').textContent = 'Error: ' + (json.error?.message || 'Unknown');
+          btn.textContent = "Dark";
+          localStorage.setItem("theme", "dark");
         }
-      } catch (error) {
-        console.error('Failed to load stats:', error);
-        document.getElementById('jellyfinStatus').textContent = 'Failed';
-        document.getElementById('jellyfinStatus').style.color = '#ef4444';
       }
-    }
 
-    // Load admin email from token
-    function parseJwt (token) {
-      try {
-        var base64Url = token.split('.')[1];
-        var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        return JSON.parse(jsonPayload);
-      } catch (e) {
-        return {};
+      // Init Theme
+      if (localStorage.getItem("theme") === "light") {
+        document.body.classList.add("light-mode");
+        document.querySelector(".theme-btn").textContent = "Light";
       }
-    }
-    
-    const user = parseJwt(token);
-    if (user.email) {
-      document.getElementById('adminEmail').textContent = user.email;
-    }
 
-    // Load recent activity
-    function loadRecentActivity(activities) {
-      const container = document.getElementById('recentActivity');
-      if (!activities || activities.length === 0) {
-        container.innerHTML = '<p class="text-muted text-sm">No recent activity</p>';
-        return;
+      // Check Auth
+      const token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "/admin";
       }
-      
-      let html = '<div class="space-y-2">';
-      activities.forEach(item => {
-        html += `
+
+      // Navigation Logic
+      document.querySelectorAll(".nav-item").forEach((item) => {
+        item.addEventListener("click", (e) => {
+          e.preventDefault();
+
+          // Update active state
+          document
+            .querySelectorAll(".nav-item")
+            .forEach((nav) => nav.classList.remove("active"));
+          item.classList.add("active");
+
+          // Show target view
+          const targetId = item.dataset.page + "-view";
+          document
+            .querySelectorAll(".view-section")
+            .forEach((view) => view.classList.add("hidden"));
+          document.getElementById(targetId).classList.remove("hidden");
+        });
+      });
+
+      function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/admin";
+      }
+
+      // Initial Data Load (Mockup)
+      // Initial Data Load
+      async function loadDashboardData() {
+        try {
+          console.log("Fetching dashboard stats...");
+          const res = await fetch("/api/admin/stats", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          console.log("Response status:", res.status);
+          const json = await res.json();
+          console.log("Response data:", json);
+
+          if (json.success) {
+            document.getElementById("totalUsers").textContent =
+              json.data.totalUsers;
+            document.getElementById("nowPlaying").textContent =
+              json.data.nowPlaying;
+            document.getElementById("pendingReqs").textContent =
+              json.data.pendingRequests;
+
+            // Load recent activity
+            loadRecentActivity(json.data.recentActivity);
+
+            // Update Jellyfin Status
+            const jfStatus = document.getElementById("jellyfinStatus");
+            if (json.data.jellyfinConnected) {
+              jfStatus.textContent = "Connected";
+              jfStatus.classList.add("active");
+              jfStatus.style.color = "var(--accent-color)";
+            } else {
+              jfStatus.textContent = "Disconnected";
+              jfStatus.classList.remove("active");
+              jfStatus.style.color = "#ef4444";
+            }
+          } else {
+            console.error("API returned error:", json.error);
+            document.getElementById("jellyfinStatus").textContent =
+              "Error: " + (json.error?.message || "Unknown");
+          }
+        } catch (error) {
+          console.error("Failed to load stats:", error);
+          document.getElementById("jellyfinStatus").textContent = "Failed";
+          document.getElementById("jellyfinStatus").style.color = "#ef4444";
+        }
+      }
+
+      // Load admin email from token
+      function parseJwt(token) {
+        try {
+          var base64Url = token.split(".")[1];
+          var base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+          var jsonPayload = decodeURIComponent(
+            window
+              .atob(base64)
+              .split("")
+              .map(function (c) {
+                return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+              })
+              .join("")
+          );
+          return JSON.parse(jsonPayload);
+        } catch (e) {
+          return {};
+        }
+      }
+
+      const user = parseJwt(token);
+      if (user.email) {
+        document.getElementById("adminEmail").textContent = user.email;
+      }
+
+      // Load recent activity
+      function loadRecentActivity(activities) {
+        const container = document.getElementById("recentActivity");
+        if (!activities || activities.length === 0) {
+          container.innerHTML =
+            '<p class="text-muted text-sm">No recent activity</p>';
+          return;
+        }
+
+        let html = '<div class="space-y-2">';
+        activities.forEach((item) => {
+          html += `
           <div class="flex justify-between items-center text-sm py-2 border-b border-gray-700">
             <div>
               <span class="font-medium">${item.user}</span>
@@ -889,444 +1086,520 @@
             <span class="text-muted text-xs">${item.time}</span>
           </div>
         `;
-      });
-      html += '</div>';
-      container.innerHTML = html;
-    }
+        });
+        html += "</div>";
+        container.innerHTML = html;
+      }
 
-    loadDashboardData();
+      loadDashboardData();
 
-    // Form Builder Logic
-    async function loadFormFields() {
-      try {
-        const res = await fetch('/api/form-fields');
-        const json = await res.json();
-        
-        if (!json.success) throw new Error(json.error.message);
-        
-        const tbody = document.getElementById('fieldsTableBody');
-        tbody.innerHTML = '';
+      // Form Builder Logic
+      async function loadFormFields() {
+        try {
+          const res = await fetch("/api/form-fields");
+          const json = await res.json();
 
-        json.data.forEach(field => {
-          const row = `
+          if (!json.success) throw new Error(json.error.message);
+
+          const tbody = document.getElementById("fieldsTableBody");
+          tbody.innerHTML = "";
+
+          json.data.forEach((field) => {
+            const row = `
             <tr>
               <td>${field.label}</td>
               <td class="text-muted text-sm">${field.field_key}</td>
               <td><span class="neu-badge">${field.type}</span></td>
-              <td>${field.required ? '✅' : '❌'}</td>
+              <td>${field.required ? "✅" : "❌"}</td>
               <td>${field.sort_order}</td>
               <td>
-                <button onclick='editField(${JSON.stringify(field).replace(/'/g, "&#39;")})' class="text-accent hover:text-white mr-2">Edit</button>
-                ${!field.is_system ? `
+                <button onclick='editField(${JSON.stringify(field).replace(
+                  /'/g,
+                  "&#39;"
+                )})' class="text-accent hover:text-white mr-2">Edit</button>
+                ${
+                  !field.is_system
+                    ? `
                   <button onclick="deleteField(${field.id})" class="text-red-400 hover:text-red-300">Delete</button>
-                ` : '<span class="text-muted text-xs">System</span>'}
+                `
+                    : '<span class="text-muted text-xs">System</span>'
+                }
               </td>
             </tr>
           `;
-          tbody.insertAdjacentHTML('beforeend', row);
-        });
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    function openFieldModal() {
-      document.getElementById('fieldModal').classList.remove('hidden');
-      document.getElementById('fieldForm').reset();
-      document.getElementById('fieldId').value = '';
-      document.getElementById('modalTitle').textContent = 'Add Field';
-      document.getElementById('fieldKey').disabled = false;
-    }
-
-    function editField(field) {
-      document.getElementById('fieldModal').classList.remove('hidden');
-      document.getElementById('modalTitle').textContent = 'Edit Field';
-      
-      document.getElementById('fieldId').value = field.id;
-      document.getElementById('fieldLabel').value = field.label;
-      document.getElementById('fieldKey').value = field.field_key;
-      document.getElementById('fieldKey').disabled = true; // Key cannot be changed
-      document.getElementById('fieldType').value = field.type;
-      document.getElementById('fieldOrder').value = field.sort_order;
-      document.getElementById('fieldRequired').checked = field.required;
-    }
-
-    function closeFieldModal() {
-      document.getElementById('fieldModal').classList.add('hidden');
-    }
-
-    document.getElementById('fieldForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData.entries());
-      data.required = document.getElementById('fieldRequired').checked;
-
-      const id = document.getElementById('fieldId').value;
-      const method = id ? 'PUT' : 'POST';
-      const url = id ? `/api/form-fields/${id}` : '/api/form-fields';
-
-      try {
-        const res = await fetch(url, {
-          method: method,
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` 
-          },
-          body: JSON.stringify(data)
-        });
-
-        if (res.ok) {
-          closeFieldModal();
-          loadFormFields();
-        } else {
-          alert('Failed to save field');
+            tbody.insertAdjacentHTML("beforeend", row);
+          });
+        } catch (error) {
+          console.error(error);
         }
-      } catch (error) {
-        console.error(error);
-      }
-    });
-
-    async function deleteField(id) {
-      if (!confirm('Are you sure you want to delete this field?')) return;
-      
-      try {
-        const res = await fetch(`/api/form-fields/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (res.ok) loadFormFields();
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    // Load fields when tab is clicked
-    document.querySelector('[data-page="forms"]').addEventListener('click', loadFormFields);
-
-    // Settings Page Functions
-    async function testJellyfinConnection() {
-      const url = document.getElementById('jellyfinUrl').value;
-      const apiKey = document.getElementById('jellyfinApiKey').value;
-      const resultDiv = document.getElementById('jellyfinTestResult');
-      
-      if (!url || !apiKey) {
-        resultDiv.textContent = 'Please enter both URL and API Key';
-        resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
-        resultDiv.style.color = '#ef4444';
-        resultDiv.classList.remove('hidden');
-        return;
       }
 
-      resultDiv.textContent = 'Testing connection...';
-      resultDiv.style.background = 'rgba(100, 100, 100, 0.1)';
-      resultDiv.style.color = 'var(--text-muted)';
-      resultDiv.classList.remove('hidden');
-
-      try {
-        const res = await fetch('/api/admin/test-jellyfin', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` 
-          },
-          body: JSON.stringify({ url, apiKey })
-        });
-        const json = await res.json();
-
-        if (json.success) {
-          resultDiv.textContent = '✓ Connection successful!';
-          resultDiv.style.background = 'rgba(16, 185, 129, 0.1)';
-          resultDiv.style.color = '#10b981';
-        } else {
-          resultDiv.textContent = '✗ ' + (json.error?.message || 'Connection failed');
-          resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
-          resultDiv.style.color = '#ef4444';
-        }
-      } catch (error) {
-        resultDiv.textContent = '✗ Network error';
-        resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
-        resultDiv.style.color = '#ef4444';
+      function openFieldModal() {
+        document.getElementById("fieldModal").classList.remove("hidden");
+        document.getElementById("fieldForm").reset();
+        document.getElementById("fieldId").value = "";
+        document.getElementById("modalTitle").textContent = "Add Field";
+        document.getElementById("fieldKey").disabled = false;
       }
-    }
 
-    document.getElementById('jellyfinForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const url = document.getElementById('jellyfinUrl').value;
-      const apiKey = document.getElementById('jellyfinApiKey').value;
+      function editField(field) {
+        document.getElementById("fieldModal").classList.remove("hidden");
+        document.getElementById("modalTitle").textContent = "Edit Field";
 
-      try {
-        const res = await fetch('/api/admin/update-jellyfin', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` 
-          },
-          body: JSON.stringify({ url, apiKey })
-        });
-        const json = await res.json();
-
-        if (json.success) {
-          alert('Jellyfin configuration updated! Server will restart...');
-          setTimeout(() => location.reload(), 2000);
-        } else {
-          alert('Failed to update: ' + (json.error?.message || 'Unknown error'));
-        }
-      } catch (error) {
-        alert('Network error');
+        document.getElementById("fieldId").value = field.id;
+        document.getElementById("fieldLabel").value = field.label;
+        document.getElementById("fieldKey").value = field.field_key;
+        document.getElementById("fieldKey").disabled = true; // Key cannot be changed
+        document.getElementById("fieldType").value = field.type;
+        document.getElementById("fieldOrder").value = field.sort_order;
+        document.getElementById("fieldRequired").checked = field.required;
       }
-    });
 
-    async function triggerManualBackup() {
-      const resultDiv = document.getElementById('backupResult');
-      resultDiv.textContent = 'Creating backup...';
-      resultDiv.style.background = 'rgba(100, 100, 100, 0.1)';
-      resultDiv.style.color = 'var(--text-muted)';
-      resultDiv.classList.remove('hidden');
-
-      try {
-        const res = await fetch('/api/admin/backup', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const json = await res.json();
-
-        if (json.success) {
-          resultDiv.textContent = '✓ Backup created: ' + json.data.filename;
-          resultDiv.style.background = 'rgba(16, 185, 129, 0.1)';
-          resultDiv.style.color = '#10b981';
-          document.getElementById('lastBackupTime').textContent = new Date().toLocaleString();
-        } else {
-          resultDiv.textContent = '✗ Backup failed: ' + (json.error?.message || 'Unknown error');
-          resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
-          resultDiv.style.color = '#ef4444';
-        }
-      } catch (error) {
-        resultDiv.textContent = '✗ Network error';
-        resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
-        resultDiv.style.color = '#ef4444';
+      function closeFieldModal() {
+        document.getElementById("fieldModal").classList.add("hidden");
       }
-    }
 
-    // Load current settings when settings tab is opened
-    document.querySelector('[data-page="settings"]').addEventListener('click', async () => {
-      try {
-        const res = await fetch('/api/admin/settings', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const json = await res.json();
-        
-        if (json.success) {
-          document.getElementById('siteName').value = json.data.siteName || 'Rflix';
-          document.getElementById('jellyfinUrl').value = json.data.jellyfinUrl || '';
-          document.getElementById('allowRegistration').checked = json.data.allowRegistration !== false;
-          document.getElementById('autoBackup').checked = json.data.autoBackup !== false;
-          document.getElementById('lastBackupTime').textContent = json.data.lastBackup || 'Never';
-        }
-      } catch (error) {
-        console.error('Failed to load settings:', error);
-      }
-    });
+      document
+        .getElementById("fieldForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const data = Object.fromEntries(formData.entries());
+          data.required = document.getElementById("fieldRequired").checked;
 
-    // User Management Functions
-    async function loadUsers() {
-      console.log('Loading users...');
-      try {
-        const res = await fetch('/api/admin/users/jellyfin', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        console.log('Users API response status:', res.status);
-        const json = await res.json();
-        console.log('Users API response data:', json);
+          const id = document.getElementById("fieldId").value;
+          const method = id ? "PUT" : "POST";
+          const url = id ? `/api/form-fields/${id}` : "/api/form-fields";
 
-        if (json.success) {
-          const tbody = document.getElementById('usersTableBody');
-          if (!json.data || json.data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No users found. Click "Sync Jellyfin" to import users.</td></tr>';
-            return;
+          try {
+            const res = await fetch(url, {
+              method: method,
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(data),
+            });
+
+            if (res.ok) {
+              closeFieldModal();
+              loadFormFields();
+            } else {
+              alert("Failed to save field");
+            }
+          } catch (error) {
+            console.error(error);
           }
+        });
 
-          tbody.innerHTML = json.data.map(user => `
+      async function deleteField(id) {
+        if (!confirm("Are you sure you want to delete this field?")) return;
+
+        try {
+          const res = await fetch(`/api/form-fields/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (res.ok) loadFormFields();
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      // Load fields when tab is clicked
+      document
+        .querySelector('[data-page="forms"]')
+        .addEventListener("click", loadFormFields);
+
+      // Settings Page Functions
+      async function testJellyfinConnection() {
+        const url = document.getElementById("jellyfinUrl").value;
+        const apiKey = document.getElementById("jellyfinApiKey").value;
+        const resultDiv = document.getElementById("jellyfinTestResult");
+
+        if (!url || !apiKey) {
+          resultDiv.textContent = "Please enter both URL and API Key";
+          resultDiv.style.background = "rgba(239, 68, 68, 0.1)";
+          resultDiv.style.color = "#ef4444";
+          resultDiv.classList.remove("hidden");
+          return;
+        }
+
+        resultDiv.textContent = "Testing connection...";
+        resultDiv.style.background = "rgba(100, 100, 100, 0.1)";
+        resultDiv.style.color = "var(--text-muted)";
+        resultDiv.classList.remove("hidden");
+
+        try {
+          const res = await fetch("/api/admin/test-jellyfin", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ url, apiKey }),
+          });
+          const json = await res.json();
+
+          if (json.success) {
+            resultDiv.textContent = "✓ Connection successful!";
+            resultDiv.style.background = "rgba(16, 185, 129, 0.1)";
+            resultDiv.style.color = "#10b981";
+          } else {
+            resultDiv.textContent =
+              "✗ " + (json.error?.message || "Connection failed");
+            resultDiv.style.background = "rgba(239, 68, 68, 0.1)";
+            resultDiv.style.color = "#ef4444";
+          }
+        } catch (error) {
+          resultDiv.textContent = "✗ Network error";
+          resultDiv.style.background = "rgba(239, 68, 68, 0.1)";
+          resultDiv.style.color = "#ef4444";
+        }
+      }
+
+      document
+        .getElementById("jellyfinForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const url = document.getElementById("jellyfinUrl").value;
+          const apiKey = document.getElementById("jellyfinApiKey").value;
+
+          try {
+            const res = await fetch("/api/admin/update-jellyfin", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ url, apiKey }),
+            });
+            const json = await res.json();
+
+            if (json.success) {
+              alert("Jellyfin configuration updated! Server will restart...");
+              setTimeout(() => location.reload(), 2000);
+            } else {
+              alert(
+                "Failed to update: " + (json.error?.message || "Unknown error")
+              );
+            }
+          } catch (error) {
+            alert("Network error");
+          }
+        });
+
+      async function triggerManualBackup() {
+        const resultDiv = document.getElementById("backupResult");
+        resultDiv.textContent = "Creating backup...";
+        resultDiv.style.background = "rgba(100, 100, 100, 0.1)";
+        resultDiv.style.color = "var(--text-muted)";
+        resultDiv.classList.remove("hidden");
+
+        try {
+          const res = await fetch("/api/admin/backup", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const json = await res.json();
+
+          if (json.success) {
+            resultDiv.textContent = "✓ Backup created: " + json.data.filename;
+            resultDiv.style.background = "rgba(16, 185, 129, 0.1)";
+            resultDiv.style.color = "#10b981";
+            document.getElementById("lastBackupTime").textContent =
+              new Date().toLocaleString();
+          } else {
+            resultDiv.textContent =
+              "✗ Backup failed: " + (json.error?.message || "Unknown error");
+            resultDiv.style.background = "rgba(239, 68, 68, 0.1)";
+            resultDiv.style.color = "#ef4444";
+          }
+        } catch (error) {
+          resultDiv.textContent = "✗ Network error";
+          resultDiv.style.background = "rgba(239, 68, 68, 0.1)";
+          resultDiv.style.color = "#ef4444";
+        }
+      }
+
+      // Load current settings when settings tab is opened
+      document
+        .querySelector('[data-page="settings"]')
+        .addEventListener("click", async () => {
+          try {
+            const res = await fetch("/api/admin/settings", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const json = await res.json();
+
+            if (json.success) {
+              document.getElementById("siteName").value =
+                json.data.siteName || "Rflix";
+              document.getElementById("jellyfinUrl").value =
+                json.data.jellyfinUrl || "";
+              document.getElementById("allowRegistration").checked =
+                json.data.allowRegistration !== false;
+              document.getElementById("autoBackup").checked =
+                json.data.autoBackup !== false;
+              document.getElementById("lastBackupTime").textContent =
+                json.data.lastBackup || "Never";
+            }
+          } catch (error) {
+            console.error("Failed to load settings:", error);
+          }
+        });
+
+      // User Management Functions
+      async function loadUsers() {
+        console.log("Loading users...");
+        try {
+          const res = await fetch("/api/admin/users/jellyfin", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          console.log("Users API response status:", res.status);
+          const json = await res.json();
+          console.log("Users API response data:", json);
+
+          if (json.success) {
+            const tbody = document.getElementById("usersTableBody");
+            if (!json.data || json.data.length === 0) {
+              tbody.innerHTML =
+                '<tr><td colspan="7" class="text-center text-muted">No users found. Click "Sync Jellyfin" to import users.</td></tr>';
+              return;
+            }
+
+            tbody.innerHTML = json.data
+              .map(
+                (user) => `
             <tr id="user-row-${user.Id}">
-              <td><strong>${user.Name || 'N/A'}</strong></td>
-              <td>${user.email && !user.email.includes('@jellyfin.local') ? user.email : '<span class="text-muted">Not set</span>'}</td>
+              <td><strong>${user.Name || "N/A"}</strong></td>
+              <td>${
+                user.email && !user.email.includes("@jellyfin.local")
+                  ? user.email
+                  : '<span class="text-muted">Not set</span>'
+              }</td>
               <td>${user.phone || '<span class="text-muted">-</span>'}</td>
               <td>${user.package || '<span class="text-muted">-</span>'}</td>
               <td>
-                <span class="neu-badge ${user.Policy?.IsDisabled ? '' : 'active'}" style="font-size: 0.75rem;">
-                  ${user.Policy?.IsDisabled ? 'Disabled' : 'Active'}
+                <span class="neu-badge ${
+                  user.Policy?.IsDisabled ? "" : "active"
+                }" style="font-size: 0.75rem;">
+                  ${user.Policy?.IsDisabled ? "Disabled" : "Active"}
                 </span>
               </td>
-              <td style="font-size: 0.85rem;">${user.LastActivityDate ? new Date(user.LastActivityDate).toLocaleDateString() : 'Never'}</td>
+              <td style="font-size: 0.85rem;">${
+                user.LastActivityDate
+                  ? new Date(user.LastActivityDate).toLocaleDateString()
+                  : "Never"
+              }</td>
               <td style="text-align: center;">
                 <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-                  <button onclick="toggleEditRow('${user.Id}', '${user.Name}', '${user.email || 'null'}', '${user.phone || 'null'}', '${user.package || 'null'}', '${user.packageId || ''}')" class="btn-action" style="color: #60a5fa;">Edit</button>
-                  <button onclick="resetPassword('${user.Id}', '${user.Name}')" class="btn-action warning">Reset Password</button>
-                  ${user.Policy?.IsDisabled ? 
-                    `<button onclick="enableUser('${user.Id}')" class="btn-action success">Enable</button>` :
-                    `<button onclick="disableUser('${user.Id}')" class="btn-action danger">Disable</button>`
+                  <button onclick="toggleEditRow('${user.Id}', '${
+                  user.Name
+                }', '${user.email || "null"}', '${user.phone || "null"}', '${
+                  user.package || "null"
+                }', '${
+                  user.packageId || ""
+                }')" class="btn-action" style="color: #60a5fa;">Edit</button>
+                  <button onclick="resetPassword('${user.Id}', '${
+                  user.Name
+                }')" class="btn-action warning">Reset Password</button>
+                  ${
+                    user.Policy?.IsDisabled
+                      ? `<button onclick="enableUser('${user.Id}')" class="btn-action success">Enable</button>`
+                      : `<button onclick="disableUser('${user.Id}')" class="btn-action danger">Disable</button>`
                   }
                 </div>
               </td>
             </tr>
-          `).join('');
-          
-          console.log(`Loaded ${json.data.length} users`);
-        } else {
-          console.error('Failed to load users:', json.error);
-          document.getElementById('usersTableBody').innerHTML = 
-            `<tr><td colspan="7" class="text-center" style="color: #ef4444;">Error: ${json.error?.message || 'Unknown error'}</td></tr>`;
-        }
-      } catch (error) {
-        console.error('Error loading users:', error);
-        document.getElementById('usersTableBody').innerHTML = 
-          '<tr><td colspan="7" class="text-center" style="color: #ef4444;">Network error. Please try again.</td></tr>';
-      }
-    }
+          `
+              )
+              .join("");
 
-    async function syncJellyfinUsers() {
-      if (!confirm('This will sync all users from Jellyfin server. Continue?')) return;
-      
-      try {
-        const res = await fetch('/api/admin/users/sync', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` }
+            console.log(`Loaded ${json.data.length} users`);
+          } else {
+            console.error("Failed to load users:", json.error);
+            document.getElementById(
+              "usersTableBody"
+            ).innerHTML = `<tr><td colspan="7" class="text-center" style="color: #ef4444;">Error: ${
+              json.error?.message || "Unknown error"
+            }</td></tr>`;
+          }
+        } catch (error) {
+          console.error("Error loading users:", error);
+          document.getElementById("usersTableBody").innerHTML =
+            '<tr><td colspan="7" class="text-center" style="color: #ef4444;">Network error. Please try again.</td></tr>';
+        }
+      }
+
+      async function syncJellyfinUsers() {
+        if (
+          !confirm("This will sync all users from Jellyfin server. Continue?")
+        )
+          return;
+
+        try {
+          const res = await fetch("/api/admin/users/sync", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const json = await res.json();
+
+          if (json.success) {
+            alert(`Synced ${json.data.synced} users from Jellyfin`);
+            loadUsers();
+          } else {
+            alert("Sync failed: " + (json.error?.message || "Unknown error"));
+          }
+        } catch (error) {
+          alert("Network error");
+        }
+      }
+
+      function searchUsers() {
+        const query = document
+          .getElementById("searchUsers")
+          .value.toLowerCase();
+        const rows = document.querySelectorAll("#usersTableBody tr");
+
+        rows.forEach((row) => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(query) ? "" : "none";
         });
-        const json = await res.json();
+      }
 
-        if (json.success) {
-          alert(`Synced ${json.data.synced} users from Jellyfin`);
-          loadUsers();
-        } else {
-          alert('Sync failed: ' + (json.error?.message || 'Unknown error'));
+      async function viewUser(userId) {
+        // TODO: Implement user detail modal
+        alert("View user: " + userId);
+      }
+
+      async function disableUser(userId) {
+        if (!confirm("Disable this user?")) return;
+
+        try {
+          const res = await fetch(`/api/admin/users/${userId}/disable`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const json = await res.json();
+
+          if (json.success) {
+            alert("User disabled");
+            loadUsers();
+          } else {
+            alert("Failed: " + (json.error?.message || "Unknown error"));
+          }
+        } catch (error) {
+          alert("Network error");
         }
-      } catch (error) {
-        alert('Network error');
       }
-    }
 
-    function searchUsers() {
-      const query = document.getElementById('searchUsers').value.toLowerCase();
-      const rows = document.querySelectorAll('#usersTableBody tr');
-      
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(query) ? '' : 'none';
-      });
-    }
+      async function enableUser(userId) {
+        if (!confirm("Enable this user?")) return;
 
-    async function viewUser(userId) {
-      // TODO: Implement user detail modal
-      alert('View user: ' + userId);
-    }
+        try {
+          const res = await fetch(`/api/admin/users/${userId}/enable`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const json = await res.json();
 
-    async function disableUser(userId) {
-      if (!confirm('Disable this user?')) return;
-      
-      try {
-        const res = await fetch(`/api/admin/users/${userId}/disable`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const json = await res.json();
-
-        if (json.success) {
-          alert('User disabled');
-          loadUsers();
-        } else {
-          alert('Failed: ' + (json.error?.message || 'Unknown error'));
+          if (json.success) {
+            alert("User enabled");
+            loadUsers();
+          } else {
+            alert("Failed: " + (json.error?.message || "Unknown error"));
+          }
+        } catch (error) {
+          alert("Network error");
         }
-      } catch (error) {
-        alert('Network error');
       }
-    }
 
-    async function enableUser(userId) {
-      if (!confirm('Enable this user?')) return;
-      
-      try {
-        const res = await fetch(`/api/admin/users/${userId}/enable`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const json = await res.json();
+      async function resetPassword(userId, username) {
+        const newPassword = prompt(`Enter new password for ${username}:`);
+        if (!newPassword) return;
 
-        if (json.success) {
-          alert('User enabled');
-          loadUsers();
-        } else {
-          alert('Failed: ' + (json.error?.message || 'Unknown error'));
+        if (newPassword.length < 6) {
+          alert("Password must be at least 6 characters");
+          return;
         }
-      } catch (error) {
-        alert('Network error');
-      }
-    }
 
-    async function resetPassword(userId, username) {
-      const newPassword = prompt(`Enter new password for ${username}:`);
-      if (!newPassword) return;
-      
-      if (newPassword.length < 6) {
-        alert('Password must be at least 6 characters');
-        return;
-      }
-      
-      try {
-        const res = await fetch(`/api/admin/users/${userId}/reset-password`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` 
-          },
-          body: JSON.stringify({ newPassword })
-        });
-        const json = await res.json();
+        try {
+          const res = await fetch(`/api/admin/users/${userId}/reset-password`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ newPassword }),
+          });
+          const json = await res.json();
 
-        if (json.success) {
-          alert(`Password reset successful for ${username}`);
-        } else {
-          alert('Failed: ' + (json.error?.message || 'Unknown error'));
+          if (json.success) {
+            alert(`Password reset successful for ${username}`);
+          } else {
+            alert("Failed: " + (json.error?.message || "Unknown error"));
+          }
+        } catch (error) {
+          alert("Network error");
         }
-      } catch (error) {
-        alert('Network error');
-      }
-    }
-
-    // Inline Edit Functions
-    async function toggleEditRow(userId, username, email, phone, pkg, packageId) {
-      const existingRow = document.getElementById(`edit-row-${userId}`);
-      if (existingRow) {
-        existingRow.remove();
-        return;
       }
 
-      // Close other edit rows
-      document.querySelectorAll('.edit-row').forEach(row => row.remove());
-
-      // Fetch available packages
-      let packagesHTML = '<option value="">Select Package</option>';
-      try {
-        const res = await fetch('/api/packages');
-        const json = await res.json();
-        if (json.success) {
-          packagesHTML = '<option value="">No Package</option>' + json.data.map(p => 
-            `<option value="${p.id}" ${p.id == packageId ? 'selected' : ''}>${p.name} (${p.durationMonths} months)</option>`
-          ).join('');
+      // Inline Edit Functions
+      async function toggleEditRow(
+        userId,
+        username,
+        email,
+        phone,
+        pkg,
+        packageId
+      ) {
+        const existingRow = document.getElementById(`edit-row-${userId}`);
+        if (existingRow) {
+          existingRow.remove();
+          return;
         }
-      } catch (e) {
-        console.error('Failed to fetch packages:', e);
-      }
 
-      const userRow = document.getElementById(`user-row-${userId}`);
-      const editRow = document.createElement('tr');
-      editRow.id = `edit-row-${userId}`;
-      editRow.className = 'edit-row';
-      
-      const safeEmail = email === 'null' || email === 'Not set' || email.includes('@jellyfin.local') ? '' : email;
-      const safePhone = phone === 'null' || phone === '-' ? '' : phone;
+        // Close other edit rows
+        document.querySelectorAll(".edit-row").forEach((row) => row.remove());
 
-      editRow.innerHTML = `
+        // Fetch available packages
+        let packagesHTML = '<option value="">Select Package</option>';
+        try {
+          const res = await fetch("/api/packages");
+          const json = await res.json();
+          if (json.success) {
+            packagesHTML =
+              '<option value="">No Package</option>' +
+              json.data
+                .map(
+                  (p) =>
+                    `<option value="${p.id}" ${
+                      p.id == packageId ? "selected" : ""
+                    }>${p.name} (${p.durationMonths} months)</option>`
+                )
+                .join("");
+          }
+        } catch (e) {
+          console.error("Failed to fetch packages:", e);
+        }
+
+        const userRow = document.getElementById(`user-row-${userId}`);
+        const editRow = document.createElement("tr");
+        editRow.id = `edit-row-${userId}`;
+        editRow.className = "edit-row";
+
+        const safeEmail =
+          email === "null" ||
+          email === "Not set" ||
+          email.includes("@jellyfin.local")
+            ? ""
+            : email;
+        const safePhone = phone === "null" || phone === "-" ? "" : phone;
+
+        editRow.innerHTML = `
         <td colspan="7" style="padding: 0; border: none;">
           <div class="neu-panel p-6 m-4" style="border: 1px solid rgba(255,255,255,0.1); background: #2d3436; margin-top: 0; margin-bottom: 20px; box-shadow: inset 4px 4px 8px #1e2123, inset -4px -4px 8px #3c4649;">
             <div class="flex justify-between items-center mb-6">
@@ -1371,75 +1644,85 @@
         </td>
       `;
 
-      userRow.parentNode.insertBefore(editRow, userRow.nextSibling);
-    }
-
-    async function saveUserChanges(e, userId) {
-      e.preventDefault();
-      
-      const email = document.getElementById(`edit-email-${userId}`).value;
-      const phone = document.getElementById(`edit-phone-${userId}`).value;
-      const packageId = document.getElementById(`edit-package-${userId}`).value;
-      
-      try {
-        const res = await fetch(`/api/admin/users/${userId}`, {
-          method: 'PUT',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` 
-          },
-          body: JSON.stringify({ email, phone, packageId: packageId || null })
-        });
-        
-        const json = await res.json();
-        
-        if (json.success) {
-          loadUsers();
-        } else {
-          alert('Failed: ' + (json.error?.message || 'Unknown error'));
-        }
-      } catch (error) {
-        alert('Network error');
+        userRow.parentNode.insertBefore(editRow, userRow.nextSibling);
       }
-    }
 
-    // Load users when Users tab is clicked
-    document.querySelector('[data-page="users"]').addEventListener('click', loadUsers);
+      async function saveUserChanges(e, userId) {
+        e.preventDefault();
 
-    // Subscriptions Management Functions
-    function loadSubscriptionsContent() {
-      loadSubscriptionDashboard();
-    }
+        const email = document.getElementById(`edit-email-${userId}`).value;
+        const phone = document.getElementById(`edit-phone-${userId}`).value;
+        const packageId = document.getElementById(
+          `edit-package-${userId}`
+        ).value;
 
-    function loadSubscriptionDashboard() {
-      const contentContainer = document.getElementById('subscriptionsContent');
-      
-      // Show loading state
-      contentContainer.innerHTML = `
+        try {
+          const res = await fetch(`/api/admin/users/${userId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              email,
+              phone,
+              packageId: packageId || null,
+            }),
+          });
+
+          const json = await res.json();
+
+          if (json.success) {
+            loadUsers();
+          } else {
+            alert("Failed: " + (json.error?.message || "Unknown error"));
+          }
+        } catch (error) {
+          alert("Network error");
+        }
+      }
+
+      // Load users when Users tab is clicked
+      document
+        .querySelector('[data-page="users"]')
+        .addEventListener("click", loadUsers);
+
+      // Subscriptions Management Functions
+      function loadSubscriptionsContent() {
+        loadSubscriptionDashboard();
+      }
+
+      function loadSubscriptionDashboard() {
+        const contentContainer = document.getElementById(
+          "subscriptionsContent"
+        );
+
+        // Show loading state
+        contentContainer.innerHTML = `
         <div class="text-center text-muted py-8">
           <div class="loading-spinner"></div>
           <p class="mt-4">Loading subscription management interface...</p>
         </div>
       `;
 
-      // Load the subscription dashboard content template
-      fetch('/admin_dashboard/subscription-content.html')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.text();
-        })
-        .then(html => {
-          // Insert the content directly
-          contentContainer.innerHTML = html;
-          
-          // Initialize the subscription dashboard functionality
-          initializeSubscriptionDashboard();
-        })
-        .catch(error => {
-          console.error('Failed to load subscription dashboard:', error);
-          contentContainer.innerHTML = `
+        // Load the subscription dashboard content template
+        fetch("/admin_dashboard/subscription-content.html")
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+          })
+          .then((html) => {
+            // Insert the content directly
+            contentContainer.innerHTML = html;
+
+            // Initialize the subscription dashboard functionality
+            initializeSubscriptionDashboard();
+          })
+          .catch((error) => {
+            console.error("Failed to load subscription dashboard:", error);
+            contentContainer.innerHTML = `
             <div class="text-center text-red-400 py-8">
               <h3 class="text-xl font-bold mb-4">Failed to Load Subscription Dashboard</h3>
               <p class="mb-4">Error: ${error.message}</p>
@@ -1448,243 +1731,275 @@
               </button>
             </div>
           `;
-        });
-    }
+          });
+      }
 
-    function initializeSubscriptionDashboard() {
-      // Initialize Chart.js if not already loaded
-      if (typeof Chart === 'undefined') {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-        script.onload = () => {
+      function initializeSubscriptionDashboard() {
+        // Initialize Chart.js if not already loaded
+        if (typeof Chart === "undefined") {
+          const script = document.createElement("script");
+          script.src = "https://cdn.jsdelivr.net/npm/chart.js";
+          script.onload = () => {
+            initializeSubscriptionCharts();
+            initializeSubscriptionEventListeners();
+          };
+          document.head.appendChild(script);
+        } else {
           initializeSubscriptionCharts();
           initializeSubscriptionEventListeners();
+        }
+
+        // Load initial data
+        loadSubscriptionAnalytics();
+      }
+
+      function initializeSubscriptionEventListeners() {
+        // Tab switching
+        window.switchTab = function (tabName) {
+          // Update tab buttons
+          document
+            .querySelectorAll(".tab-btn")
+            .forEach((btn) => btn.classList.remove("active"));
+          event.target.classList.add("active");
+
+          // Hide all tab contents
+          document
+            .querySelectorAll(".tab-content")
+            .forEach((content) => content.classList.remove("active"));
+
+          // Show selected tab
+          document.getElementById(tabName + "-tab").classList.add("active");
+
+          // Load data for the tab if not already loaded
+          loadSubscriptionTabData(tabName);
         };
-        document.head.appendChild(script);
-      } else {
-        initializeSubscriptionCharts();
-        initializeSubscriptionEventListeners();
-      }
 
-      // Load initial data
-      loadSubscriptionAnalytics();
-    }
-
-    function initializeSubscriptionEventListeners() {
-      // Tab switching
-      window.switchTab = function(tabName) {
-        // Update tab buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-        
-        // Hide all tab contents
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        
-        // Show selected tab
-        document.getElementById(tabName + '-tab').classList.add('active');
-        
-        // Load data for the tab if not already loaded
-        loadSubscriptionTabData(tabName);
-      };
-
-      // Package form submission
-      const packageForm = document.getElementById('packageForm');
-      if (packageForm) {
-        packageForm.addEventListener('submit', handlePackageFormSubmit);
-      }
-
-      // Payment gateway form
-      const paymentGatewayForm = document.getElementById('paymentGatewayForm');
-      if (paymentGatewayForm) {
-        paymentGatewayForm.addEventListener('submit', handlePaymentGatewayFormSubmit);
-      }
-
-      // Subscription settings form
-      const subscriptionSettingsForm = document.getElementById('subscriptionSettingsForm');
-      if (subscriptionSettingsForm) {
-        subscriptionSettingsForm.addEventListener('submit', handleSubscriptionSettingsFormSubmit);
-      }
-    }
-
-    function loadSubscriptionTabData(tabName) {
-      switch(tabName) {
-        case 'analytics':
-          // Analytics data is already loaded
-          break;
-        case 'packages':
-          loadPackages();
-          break;
-        case 'users':
-          loadUserSubscriptions();
-          break;
-        case 'payments':
-          loadPayments();
-          break;
-        case 'settings':
-          loadSubscriptionSettings();
-          break;
-      }
-    }
-
-    function handlePackageFormSubmit(e) {
-      e.preventDefault();
-      
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const packageId = document.getElementById('packageId').value;
-      const featuresText = document.getElementById('packageFeatures').value;
-      const features = {};
-      featuresText.split('\n').forEach(line => {
-        if (line.trim()) {
-          features[line.trim()] = true;
+        // Package form submission
+        const packageForm = document.getElementById("packageForm");
+        if (packageForm) {
+          packageForm.addEventListener("submit", handlePackageFormSubmit);
         }
-      });
-      
-      const limits = {
-        apiCalls: parseInt(document.getElementById('apiCallsLimit').value) || 0,
-        storage: parseInt(document.getElementById('storageLimit').value) || 0,
-        bandwidth: parseInt(document.getElementById('bandwidthLimit').value) || 0,
-        devices: parseInt(document.getElementById('deviceLimit').value) || 0
-      };
-      
-      const packageData = {
-        name: document.getElementById('packageName').value,
-        description: document.getElementById('packageDescription').value,
-        price: parseFloat(document.getElementById('packagePrice').value),
-        duration: parseInt(document.getElementById('packageDuration').value),
-        status: document.getElementById('packageStatus').value,
-        features: features,
-        limits: limits
-      };
-      
-      const method = packageId ? 'PUT' : 'POST';
-      const url = packageId ? `/api/subscriptions/packages/${packageId}` : '/api/subscriptions/packages';
-      
-      fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(packageData)
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showAlert('Package saved successfully', 'success');
-          closePackageModal();
-          loadPackages();
-        } else {
-          showAlert(data.error?.message || 'Failed to save package', 'error');
+
+        // Payment gateway form
+        const paymentGatewayForm =
+          document.getElementById("paymentGatewayForm");
+        if (paymentGatewayForm) {
+          paymentGatewayForm.addEventListener(
+            "submit",
+            handlePaymentGatewayFormSubmit
+          );
         }
-      })
-      .catch(error => {
-        console.error('Failed to save package:', error);
-        showAlert('Failed to save package', 'error');
-      });
-    }
 
-    function handlePaymentGatewayFormSubmit(e) {
-      e.preventDefault();
-      
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const settings = {
-        stripePublishableKey: document.getElementById('stripePublishableKey').value,
-        stripeSecretKey: document.getElementById('stripeSecretKey').value,
-        paypalClientId: document.getElementById('paypalClientId').value
-      };
-      
-      fetch('/api/admin/settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(settings)
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showAlert('Payment settings saved successfully', 'success');
-        } else {
-          showAlert(data.error?.message || 'Failed to save payment settings', 'error');
+        // Subscription settings form
+        const subscriptionSettingsForm = document.getElementById(
+          "subscriptionSettingsForm"
+        );
+        if (subscriptionSettingsForm) {
+          subscriptionSettingsForm.addEventListener(
+            "submit",
+            handleSubscriptionSettingsFormSubmit
+          );
         }
-      })
-      .catch(error => {
-        console.error('Failed to save payment settings:', error);
-        showAlert('Failed to save payment settings', 'error');
-      });
-    }
-
-    function handleSubscriptionSettingsFormSubmit(e) {
-      e.preventDefault();
-      
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const settings = {
-        enableFreeTrials: document.getElementById('enableFreeTrials').checked,
-        autoRenewSubscriptions: document.getElementById('autoRenewSubscriptions').checked,
-        gracePeriodDays: parseInt(document.getElementById('gracePeriodDays').value)
-      };
-      
-      fetch('/api/admin/settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(settings)
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showAlert('Subscription settings saved successfully', 'success');
-        } else {
-          showAlert(data.error?.message || 'Failed to save subscription settings', 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Failed to save subscription settings:', error);
-        showAlert('Failed to save subscription settings', 'error');
-      });
-    }
-
-    // Package management functions
-    function loadPackages() {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      fetch('/api/subscriptions/packages', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          renderPackagesTable(data.data);
-        }
-      })
-      .catch(error => {
-        console.error('Failed to load packages:', error);
-        showAlert('Failed to load packages', 'error');
-      });
-    }
-
-    function renderPackagesTable(packages) {
-      const tbody = document.getElementById('packagesTableBody');
-      if (!tbody) return;
-
-      if (packages.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No packages found</td></tr>';
-        return;
       }
-      
-      let html = '';
-      packages.forEach(pkg => {
-        html += `
+
+      function loadSubscriptionTabData(tabName) {
+        switch (tabName) {
+          case "analytics":
+            // Analytics data is already loaded
+            break;
+          case "packages":
+            loadPackages();
+            break;
+          case "users":
+            loadUserSubscriptions();
+            break;
+          case "payments":
+            loadPayments();
+            break;
+          case "settings":
+            loadSubscriptionSettings();
+            break;
+        }
+      }
+
+      function handlePackageFormSubmit(e) {
+        e.preventDefault();
+
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const packageId = document.getElementById("packageId").value;
+        const featuresText = document.getElementById("packageFeatures").value;
+        const features = {};
+        featuresText.split("\n").forEach((line) => {
+          if (line.trim()) {
+            features[line.trim()] = true;
+          }
+        });
+
+        const limits = {
+          apiCalls:
+            parseInt(document.getElementById("apiCallsLimit").value) || 0,
+          storage: parseInt(document.getElementById("storageLimit").value) || 0,
+          bandwidth:
+            parseInt(document.getElementById("bandwidthLimit").value) || 0,
+          devices: parseInt(document.getElementById("deviceLimit").value) || 0,
+        };
+
+        const packageData = {
+          name: document.getElementById("packageName").value,
+          description: document.getElementById("packageDescription").value,
+          price: parseFloat(document.getElementById("packagePrice").value),
+          duration: parseInt(document.getElementById("packageDuration").value),
+          status: document.getElementById("packageStatus").value,
+          features: features,
+          limits: limits,
+        };
+
+        const method = packageId ? "PUT" : "POST";
+        const url = packageId
+          ? `/api/subscriptions/packages/${packageId}`
+          : "/api/subscriptions/packages";
+
+        fetch(url, {
+          method: method,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(packageData),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              showAlert("Package saved successfully", "success");
+              closePackageModal();
+              loadPackages();
+            } else {
+              showAlert(
+                data.error?.message || "Failed to save package",
+                "error"
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to save package:", error);
+            showAlert("Failed to save package", "error");
+          });
+      }
+
+      function handlePaymentGatewayFormSubmit(e) {
+        e.preventDefault();
+
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const settings = {
+          stripePublishableKey: document.getElementById("stripePublishableKey")
+            .value,
+          stripeSecretKey: document.getElementById("stripeSecretKey").value,
+          paypalClientId: document.getElementById("paypalClientId").value,
+        };
+
+        fetch("/api/admin/settings", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(settings),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              showAlert("Payment settings saved successfully", "success");
+            } else {
+              showAlert(
+                data.error?.message || "Failed to save payment settings",
+                "error"
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to save payment settings:", error);
+            showAlert("Failed to save payment settings", "error");
+          });
+      }
+
+      function handleSubscriptionSettingsFormSubmit(e) {
+        e.preventDefault();
+
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const settings = {
+          enableFreeTrials: document.getElementById("enableFreeTrials").checked,
+          autoRenewSubscriptions: document.getElementById(
+            "autoRenewSubscriptions"
+          ).checked,
+          gracePeriodDays: parseInt(
+            document.getElementById("gracePeriodDays").value
+          ),
+        };
+
+        fetch("/api/admin/settings", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(settings),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              showAlert("Subscription settings saved successfully", "success");
+            } else {
+              showAlert(
+                data.error?.message || "Failed to save subscription settings",
+                "error"
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to save subscription settings:", error);
+            showAlert("Failed to save subscription settings", "error");
+          });
+      }
+
+      // Package management functions
+      function loadPackages() {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        fetch("/api/subscriptions/packages", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              renderPackagesTable(data.data);
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to load packages:", error);
+            showAlert("Failed to load packages", "error");
+          });
+      }
+
+      function renderPackagesTable(packages) {
+        const tbody = document.getElementById("packagesTableBody");
+        if (!tbody) return;
+
+        if (packages.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="text-center text-muted">No packages found</td></tr>';
+          return;
+        }
+
+        let html = "";
+        packages.forEach((pkg) => {
+          html += `
           <tr>
             <td><strong>${pkg.name}</strong></td>
             <td>${formatCurrency(pkg.price)}</td>
@@ -1694,71 +2009,81 @@
             <td>${formatDate(pkg.createdAt)}</td>
             <td>
               <div class="btn-group">
-                <button onclick="editPackage(${pkg.id})" class="btn-action warning" title="Edit">
+                <button onclick="editPackage(${
+                  pkg.id
+                })" class="btn-action warning" title="Edit">
                   ✎
                 </button>
-                <button onclick="togglePackageStatus(${pkg.id})" class="btn-action ${pkg.status === 'active' ? 'danger' : 'success'}" title="${pkg.status === 'active' ? 'Deactivate' : 'Activate'}">
-                  ${pkg.status === 'active' ? '⏸' : '▶'}
+                <button onclick="togglePackageStatus(${
+                  pkg.id
+                })" class="btn-action ${
+            pkg.status === "active" ? "danger" : "success"
+          }" title="${pkg.status === "active" ? "Deactivate" : "Activate"}">
+                  ${pkg.status === "active" ? "⏸" : "▶"}
                 </button>
-                <button onclick="deletePackage(${pkg.id})" class="btn-action danger" title="Delete">
+                <button onclick="deletePackage(${
+                  pkg.id
+                })" class="btn-action danger" title="Delete">
                   🗑
                 </button>
               </div>
             </td>
           </tr>
         `;
-      });
-      
-      tbody.innerHTML = html;
-    }
+        });
 
-    function searchPackages() {
-      // Implementation for package search
-      const query = document.getElementById('packageSearch').value.toLowerCase();
-      const tbody = document.getElementById('packagesTableBody');
-      const rows = tbody.querySelectorAll('tr');
-      
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(query) ? '' : 'none';
-      });
-    }
-
-    function openPackageModal(packageId = null) {
-      const modal = document.getElementById('packageModal');
-      if (!modal) return;
-      
-      const form = document.getElementById('packageForm');
-      const title = document.getElementById('packageModalTitle');
-      
-      form.reset();
-      document.getElementById('packageId').value = '';
-      
-      if (packageId) {
-        title.textContent = 'Edit Package';
-        // Load package data and fill form
-        loadPackageData(packageId);
-      } else {
-        title.textContent = 'Create Package';
+        tbody.innerHTML = html;
       }
-      
-      modal.classList.remove('hidden');
-    }
 
-    function closePackageModal() {
-      const modal = document.getElementById('packageModal');
-      if (modal) {
-        modal.classList.add('hidden');
+      function searchPackages() {
+        // Implementation for package search
+        const query = document
+          .getElementById("packageSearch")
+          .value.toLowerCase();
+        const tbody = document.getElementById("packagesTableBody");
+        const rows = tbody.querySelectorAll("tr");
+
+        rows.forEach((row) => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(query) ? "" : "none";
+        });
       }
-    }
 
-    function openUserSubscriptionModal(userId, subscriptions) {
-      // Create modal content dynamically
-      const modal = document.createElement('div');
-      modal.className = 'modal-overlay';
-      modal.id = 'userSubscriptionModal';
-      
-      let html = `
+      function openPackageModal(packageId = null) {
+        const modal = document.getElementById("packageModal");
+        if (!modal) return;
+
+        const form = document.getElementById("packageForm");
+        const title = document.getElementById("packageModalTitle");
+
+        form.reset();
+        document.getElementById("packageId").value = "";
+
+        if (packageId) {
+          title.textContent = "Edit Package";
+          // Load package data and fill form
+          loadPackageData(packageId);
+        } else {
+          title.textContent = "Create Package";
+        }
+
+        modal.classList.remove("hidden");
+      }
+
+      function closePackageModal() {
+        const modal = document.getElementById("packageModal");
+        if (modal) {
+          modal.classList.add("hidden");
+        }
+      }
+
+      function openUserSubscriptionModal(userId, subscriptions) {
+        // Create modal content dynamically
+        const modal = document.createElement("div");
+        modal.className = "modal-overlay";
+        modal.id = "userSubscriptionModal";
+
+        let html = `
         <div class="modal-content" style="max-width: 500px;">
           <div class="flex justify-between items-center mb-6">
             <h2>Manage Subscription</h2>
@@ -1770,16 +2095,18 @@
             <div class="neu-panel">
               <h4 class="mb-3">Current Subscriptions</h4>
       `;
-      
-      if (subscriptions.length === 0) {
-        html += '<p class="text-muted">No active subscriptions</p>';
-      } else {
-        subscriptions.forEach(sub => {
-          html += `
+
+        if (subscriptions.length === 0) {
+          html += '<p class="text-muted">No active subscriptions</p>';
+        } else {
+          subscriptions.forEach((sub) => {
+            html += `
             <div class="flex justify-between items-center py-2 border-b border-gray-700">
               <div>
                 <div class="font-medium">${sub.packageName}</div>
-                <div class="text-sm text-muted">${formatDate(sub.startDate)} - ${formatDate(sub.endDate)}</div>
+                <div class="text-sm text-muted">${formatDate(
+                  sub.startDate
+                )} - ${formatDate(sub.endDate)}</div>
               </div>
               <div class="text-right">
                 <div>${getStatusBadge(sub.status)}</div>
@@ -1787,10 +2114,10 @@
               </div>
             </div>
           `;
-        });
-      }
-      
-      html += `
+          });
+        }
+
+        html += `
             </div>
             <div class="neu-panel">
               <h4 class="mb-3">Actions</h4>
@@ -1812,537 +2139,623 @@
           </div>
         </div>
       `;
-      
-      modal.innerHTML = html;
-      document.body.appendChild(modal);
-    }
 
-    function closeUserSubscriptionModal() {
-      const modal = document.getElementById('userSubscriptionModal');
-      if (modal) {
-        modal.remove();
+        modal.innerHTML = html;
+        document.body.appendChild(modal);
       }
-    }
 
-    function upgradeUserSubscription(userId) {
-      showAlert('Upgrade functionality will be implemented', 'warning');
-      closeUserSubscriptionModal();
-    }
-
-    function downgradeUserSubscription(userId) {
-      showAlert('Downgrade functionality will be implemented', 'warning');
-      closeUserSubscriptionModal();
-    }
-
-    function renewUserSubscription(userId) {
-      showAlert('Renew functionality will be implemented', 'warning');
-      closeUserSubscriptionModal();
-    }
-
-    function loadPackageData(packageId) {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      fetch(`/api/subscriptions/packages/${packageId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          fillPackageForm(data.data);
+      function closeUserSubscriptionModal() {
+        const modal = document.getElementById("userSubscriptionModal");
+        if (modal) {
+          modal.remove();
         }
-      })
-      .catch(error => {
-        console.error('Failed to load package:', error);
-        showAlert('Failed to load package details', 'error');
-      });
-    }
-
-    function fillPackageForm(pkg) {
-      document.getElementById('packageId').value = pkg.id;
-      document.getElementById('packageName').value = pkg.name;
-      document.getElementById('packagePrice').value = pkg.price;
-      document.getElementById('packageDuration').value = pkg.duration;
-      document.getElementById('packageStatus').value = pkg.status;
-      document.getElementById('packageDescription').value = pkg.description || '';
-      
-      // Parse features
-      if (pkg.features) {
-        const features = typeof pkg.features === 'string' ? JSON.parse(pkg.features) : pkg.features;
-        const featuresText = Object.keys(features).join('\n');
-        document.getElementById('packageFeatures').value = featuresText;
       }
-      
-      // Parse limits
-      if (pkg.limits) {
-        const limits = typeof pkg.limits === 'string' ? JSON.parse(pkg.limits) : pkg.limits;
-        document.getElementById('apiCallsLimit').value = limits.apiCalls || '';
-        document.getElementById('storageLimit').value = limits.storage || '';
-        document.getElementById('bandwidthLimit').value = limits.bandwidth || '';
-        document.getElementById('deviceLimit').value = limits.devices || '';
+
+      function upgradeUserSubscription(userId) {
+        showAlert("Upgrade functionality will be implemented", "warning");
+        closeUserSubscriptionModal();
       }
-    }
 
-    function editPackage(packageId) {
-      openPackageModal(packageId);
-    }
+      function downgradeUserSubscription(userId) {
+        showAlert("Downgrade functionality will be implemented", "warning");
+        closeUserSubscriptionModal();
+      }
 
-    function togglePackageStatus(packageId) {
-      const token = localStorage.getItem('token');
-      if (!token) return;
+      function renewUserSubscription(userId) {
+        showAlert("Renew functionality will be implemented", "warning");
+        closeUserSubscriptionModal();
+      }
 
-      fetch(`/api/subscriptions/packages/${packageId}/toggle`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showAlert('Package status updated successfully', 'success');
-          loadPackages();
-        } else {
-          showAlert(data.error?.message || 'Failed to update package status', 'error');
+      function loadPackageData(packageId) {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        fetch(`/api/subscriptions/packages/${packageId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              fillPackageForm(data.data);
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to load package:", error);
+            showAlert("Failed to load package details", "error");
+          });
+      }
+
+      function fillPackageForm(pkg) {
+        document.getElementById("packageId").value = pkg.id;
+        document.getElementById("packageName").value = pkg.name;
+        document.getElementById("packagePrice").value = pkg.price;
+        document.getElementById("packageDuration").value = pkg.duration;
+        document.getElementById("packageStatus").value = pkg.status;
+        document.getElementById("packageDescription").value =
+          pkg.description || "";
+
+        // Parse features
+        if (pkg.features) {
+          const features =
+            typeof pkg.features === "string"
+              ? JSON.parse(pkg.features)
+              : pkg.features;
+          const featuresText = Object.keys(features).join("\n");
+          document.getElementById("packageFeatures").value = featuresText;
         }
-      })
-      .catch(error => {
-        console.error('Failed to toggle package status:', error);
-        showAlert('Failed to update package status', 'error');
-      });
-    }
 
-    function deletePackage(packageId) {
-      if (!confirm('Are you sure you want to delete this package? This action cannot be undone.')) {
-        return;
-      }
-      
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      fetch(`/api/subscriptions/packages/${packageId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showAlert('Package deleted successfully', 'success');
-          loadPackages();
-        } else {
-          showAlert(data.error?.message || 'Failed to delete package', 'error');
+        // Parse limits
+        if (pkg.limits) {
+          const limits =
+            typeof pkg.limits === "string"
+              ? JSON.parse(pkg.limits)
+              : pkg.limits;
+          document.getElementById("apiCallsLimit").value =
+            limits.apiCalls || "";
+          document.getElementById("storageLimit").value = limits.storage || "";
+          document.getElementById("bandwidthLimit").value =
+            limits.bandwidth || "";
+          document.getElementById("deviceLimit").value = limits.devices || "";
         }
-      })
-      .catch(error => {
-        console.error('Failed to delete package:', error);
-        showAlert('Failed to delete package', 'error');
-      });
-    }
-
-    // User subscription functions
-    function loadUserSubscriptions() {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      fetch('/api/subscriptions/admin/users', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          renderUserSubscriptionsTable(data.data.users);
-        }
-      })
-      .catch(error => {
-        console.error('Failed to load user subscriptions:', error);
-        showAlert('Failed to load user subscriptions', 'error');
-      });
-    }
-
-    function renderUserSubscriptionsTable(users) {
-      const tbody = document.getElementById('usersTableBody');
-      if (!tbody) return;
-
-      if (users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No user subscriptions found</td></tr>';
-        return;
       }
-      
-      let html = '';
-      users.forEach(user => {
-        html += `
+
+      function editPackage(packageId) {
+        openPackageModal(packageId);
+      }
+
+      function togglePackageStatus(packageId) {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        fetch(`/api/subscriptions/packages/${packageId}/toggle`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              showAlert("Package status updated successfully", "success");
+              loadPackages();
+            } else {
+              showAlert(
+                data.error?.message || "Failed to update package status",
+                "error"
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to toggle package status:", error);
+            showAlert("Failed to update package status", "error");
+          });
+      }
+
+      function deletePackage(packageId) {
+        if (
+          !confirm(
+            "Are you sure you want to delete this package? This action cannot be undone."
+          )
+        ) {
+          return;
+        }
+
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        fetch(`/api/subscriptions/packages/${packageId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              showAlert("Package deleted successfully", "success");
+              loadPackages();
+            } else {
+              showAlert(
+                data.error?.message || "Failed to delete package",
+                "error"
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to delete package:", error);
+            showAlert("Failed to delete package", "error");
+          });
+      }
+
+      // User subscription functions
+      function loadUserSubscriptions() {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        fetch("/api/subscriptions/admin/users", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              renderUserSubscriptionsTable(data.data.users);
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to load user subscriptions:", error);
+            showAlert("Failed to load user subscriptions", "error");
+          });
+      }
+
+      function renderUserSubscriptionsTable(users) {
+        const tbody = document.getElementById("usersTableBody");
+        if (!tbody) return;
+
+        if (users.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="text-center text-muted">No user subscriptions found</td></tr>';
+          return;
+        }
+
+        let html = "";
+        users.forEach((user) => {
+          html += `
           <tr>
-            <td><strong>${user.username || 'N/A'}</strong></td>
+            <td><strong>${user.username || "N/A"}</strong></td>
             <td>${user.email}</td>
-            <td>${user.packageName || '<span class="text-muted">No Package</span>'}</td>
-            <td>${getStatusBadge(user.subscriptionStatus || 'free')}</td>
-            <td>${user.startDate ? formatDate(user.startDate) : '<span class="text-muted">-</span>'}</td>
-            <td>${user.endDate ? formatDate(user.endDate) : '<span class="text-muted">-</span>'}</td>
+            <td>${
+              user.packageName || '<span class="text-muted">No Package</span>'
+            }</td>
+            <td>${getStatusBadge(user.subscriptionStatus || "free")}</td>
+            <td>${
+              user.startDate
+                ? formatDate(user.startDate)
+                : '<span class="text-muted">-</span>'
+            }</td>
+            <td>${
+              user.endDate
+                ? formatDate(user.endDate)
+                : '<span class="text-muted">-</span>'
+            }</td>
             <td>
               <div class="btn-group">
-                <button onclick="manageUserSubscription(${user.id})" class="btn-action warning" title="Manage">
+                <button onclick="manageUserSubscription(${
+                  user.id
+                })" class="btn-action warning" title="Manage">
                   ⚙️
                 </button>
-                ${user.subscriptionStatus === 'active' ? `
+                ${
+                  user.subscriptionStatus === "active"
+                    ? `
                   <button onclick="cancelUserSubscription(${user.id})" class="btn-action danger" title="Cancel">
                     ✕
                   </button>
-                ` : ''}
+                `
+                    : ""
+                }
               </div>
             </td>
           </tr>
         `;
-      });
-      
-      tbody.innerHTML = html;
-    }
+        });
 
-    function searchUsers() {
-      const query = document.getElementById('userSearch').value.toLowerCase();
-      const tbody = document.getElementById('usersTableBody');
-      if (!tbody) return;
-      
-      const rows = tbody.querySelectorAll('tr');
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(query) ? '' : 'none';
-      });
-    }
-
-    function filterUserSubscriptions() {
-      const status = document.getElementById('statusFilter').value;
-      // Implementation for filtering user subscriptions
-      loadUserSubscriptions(); // Reload with filter
-    }
-
-    function manageUserSubscription(userId) {
-      // Implementation for managing user subscription
-      showAlert('User subscription management will be implemented', 'info');
-    }
-
-    function cancelUserSubscription(userId) {
-      if (!confirm('Are you sure you want to cancel this user\'s subscription?')) {
-        return;
+        tbody.innerHTML = html;
       }
-      
-      const token = localStorage.getItem('token');
-      if (!token) return;
 
-      fetch('/api/subscriptions/cancel', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          userId: userId,
-          immediate: true,
-          reason: 'Cancelled by admin'
+      function searchUsers() {
+        const query = document.getElementById("userSearch").value.toLowerCase();
+        const tbody = document.getElementById("usersTableBody");
+        if (!tbody) return;
+
+        const rows = tbody.querySelectorAll("tr");
+        rows.forEach((row) => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(query) ? "" : "none";
+        });
+      }
+
+      function filterUserSubscriptions() {
+        const status = document.getElementById("statusFilter").value;
+        // Implementation for filtering user subscriptions
+        loadUserSubscriptions(); // Reload with filter
+      }
+
+      function manageUserSubscription(userId) {
+        // Implementation for managing user subscription
+        showAlert("User subscription management will be implemented", "info");
+      }
+
+      function cancelUserSubscription(userId) {
+        if (
+          !confirm("Are you sure you want to cancel this user's subscription?")
+        ) {
+          return;
+        }
+
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        fetch("/api/subscriptions/cancel", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: userId,
+            immediate: true,
+            reason: "Cancelled by admin",
+          }),
         })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showAlert('Subscription cancelled successfully', 'success');
-          loadUserSubscriptions();
-        } else {
-          showAlert(data.error?.message || 'Failed to cancel subscription', 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Failed to cancel subscription:', error);
-        showAlert('Failed to cancel subscription', 'error');
-      });
-    }
-
-    // Payment functions
-    function loadPayments() {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      fetch('/api/subscriptions/payments/history', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          renderPaymentsTable(data.data.payments);
-        }
-      })
-      .catch(error => {
-        console.error('Failed to load payments:', error);
-        showAlert('Failed to load payments', 'error');
-      });
-    }
-
-    function renderPaymentsTable(payments) {
-      const tbody = document.getElementById('paymentsTableBody');
-      if (!tbody) return;
-
-      if (payments.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No payments found</td></tr>';
-        return;
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              showAlert("Subscription cancelled successfully", "success");
+              loadUserSubscriptions();
+            } else {
+              showAlert(
+                data.error?.message || "Failed to cancel subscription",
+                "error"
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to cancel subscription:", error);
+            showAlert("Failed to cancel subscription", "error");
+          });
       }
-      
-      let html = '';
-      payments.forEach(payment => {
-        html += `
+
+      // Payment functions
+      function loadPayments() {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        fetch("/api/subscriptions/payments/history", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              renderPaymentsTable(data.data.payments);
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to load payments:", error);
+            showAlert("Failed to load payments", "error");
+          });
+      }
+
+      function renderPaymentsTable(payments) {
+        const tbody = document.getElementById("paymentsTableBody");
+        if (!tbody) return;
+
+        if (payments.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="8" class="text-center text-muted">No payments found</td></tr>';
+          return;
+        }
+
+        let html = "";
+        payments.forEach((payment) => {
+          html += `
           <tr>
             <td><code>${payment.id}</code></td>
-            <td>${payment.userEmail || 'N/A'}</td>
+            <td>${payment.userEmail || "N/A"}</td>
             <td>${formatCurrency(payment.amount)}</td>
             <td>${payment.paymentMethod}</td>
-            <td>${payment.packageName || '<span class="text-muted">N/A</span>'}</td>
+            <td>${
+              payment.packageName || '<span class="text-muted">N/A</span>'
+            }</td>
             <td>${getStatusBadge(payment.status)}</td>
             <td>${formatDateTime(payment.createdAt)}</td>
             <td>
               <div class="btn-group">
-                <button onclick="viewPaymentDetails(${payment.id})" class="btn-action warning" title="View Details">
+                <button onclick="viewPaymentDetails(${
+                  payment.id
+                })" class="btn-action warning" title="View Details">
                   👁
                 </button>
-                ${payment.status === 'completed' ? `
+                ${
+                  payment.status === "completed"
+                    ? `
                   <button onclick="processRefund(${payment.id})" class="btn-action danger" title="Refund">
                     ↩
                   </button>
-                ` : ''}
+                `
+                    : ""
+                }
               </div>
             </td>
           </tr>
         `;
-      });
-      
-      tbody.innerHTML = html;
-    }
+        });
 
-    function searchPayments() {
-      const query = document.getElementById('paymentSearch').value.toLowerCase();
-      const tbody = document.getElementById('paymentsTableBody');
-      if (!tbody) return;
-      
-      const rows = tbody.querySelectorAll('tr');
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(query) ? '' : 'none';
-      });
-    }
+        tbody.innerHTML = html;
+      }
 
-    function filterPayments() {
-      const status = document.getElementById('paymentStatusFilter').value;
-      // Implementation for filtering payments
-      loadPayments(); // Reload with filter
-    }
+      function searchPayments() {
+        const query = document
+          .getElementById("paymentSearch")
+          .value.toLowerCase();
+        const tbody = document.getElementById("paymentsTableBody");
+        if (!tbody) return;
 
-    function viewPaymentDetails(paymentId) {
-      showAlert('Payment details view will be implemented', 'info');
-    }
+        const rows = tbody.querySelectorAll("tr");
+        rows.forEach((row) => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(query) ? "" : "none";
+        });
+      }
 
-    function processRefund(paymentId) {
-      const reason = prompt('Enter refund reason:');
-      if (!reason) return;
-      
-      const token = localStorage.getItem('token');
-      if (!token) return;
+      function filterPayments() {
+        const status = document.getElementById("paymentStatusFilter").value;
+        // Implementation for filtering payments
+        loadPayments(); // Reload with filter
+      }
 
-      fetch('/api/subscriptions/refund', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          paymentId: paymentId,
-          reason: reason
+      function viewPaymentDetails(paymentId) {
+        showAlert("Payment details view will be implemented", "info");
+      }
+
+      function processRefund(paymentId) {
+        const reason = prompt("Enter refund reason:");
+        if (!reason) return;
+
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        fetch("/api/subscriptions/refund", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            paymentId: paymentId,
+            reason: reason,
+          }),
         })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showAlert('Refund processed successfully', 'success');
-          loadPayments();
-        } else {
-          showAlert(data.error?.message || 'Failed to process refund', 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Failed to process refund:', error);
-        showAlert('Failed to process refund', 'error');
-      });
-    }
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              showAlert("Refund processed successfully", "success");
+              loadPayments();
+            } else {
+              showAlert(
+                data.error?.message || "Failed to process refund",
+                "error"
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to process refund:", error);
+            showAlert("Failed to process refund", "error");
+          });
+      }
 
-    // Settings functions
-    function loadSubscriptionSettings() {
-      const token = localStorage.getItem('token');
-      if (!token) return;
+      // Settings functions
+      function loadSubscriptionSettings() {
+        const token = localStorage.getItem("token");
+        if (!token) return;
 
-      // Load current payment gateway settings
-      fetch('/api/admin/settings', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && data.data) {
-          document.getElementById('stripePublishableKey').value = data.data.stripePublishableKey || '';
-          document.getElementById('stripeSecretKey').value = data.data.stripeSecretKey || '';
-          document.getElementById('paypalClientId').value = data.data.paypalClientId || '';
-          document.getElementById('enableFreeTrials').checked = data.data.enableFreeTrials !== false;
-          document.getElementById('autoRenewSubscriptions').checked = data.data.autoRenewSubscriptions !== false;
-          document.getElementById('gracePeriodDays').value = data.data.gracePeriodDays || 7;
-        }
-      })
-      .catch(error => {
-        console.error('Failed to load settings:', error);
-        showAlert('Failed to load settings', 'error');
-      });
-    }
+        // Load current payment gateway settings
+        fetch("/api/admin/settings", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success && data.data) {
+              document.getElementById("stripePublishableKey").value =
+                data.data.stripePublishableKey || "";
+              document.getElementById("stripeSecretKey").value =
+                data.data.stripeSecretKey || "";
+              document.getElementById("paypalClientId").value =
+                data.data.paypalClientId || "";
+              document.getElementById("enableFreeTrials").checked =
+                data.data.enableFreeTrials !== false;
+              document.getElementById("autoRenewSubscriptions").checked =
+                data.data.autoRenewSubscriptions !== false;
+              document.getElementById("gracePeriodDays").value =
+                data.data.gracePeriodDays || 7;
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to load settings:", error);
+            showAlert("Failed to load settings", "error");
+          });
+      }
 
-    function getStatusBadge(status) {
-      const statusClass = status.toLowerCase().replace('_', '-');
-      return `<span class="status-badge status-${statusClass}">${status.replace('_', ' ').toUpperCase()}</span>`;
-    }
+      function getStatusBadge(status) {
+        const statusClass = status.toLowerCase().replace("_", "-");
+        return `<span class="status-badge status-${statusClass}">${status
+          .replace("_", " ")
+          .toUpperCase()}</span>`;
+      }
 
-    function formatDateTime(dateString) {
-      return new Date(dateString).toLocaleString();
-    }
+      function formatDateTime(dateString) {
+        return new Date(dateString).toLocaleString();
+      }
 
-    function initializeSubscriptionCharts() {
-      // Revenue Chart
-      const revenueCtx = document.getElementById('revenueChart');
-      if (revenueCtx) {
-        window.revenueChart = new Chart(revenueCtx, {
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [{
-              label: 'Revenue',
-              data: [],
-              borderColor: '#ffd700',
-              backgroundColor: 'rgba(255, 215, 0, 0.1)',
-              tension: 0.4
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false }
+      function initializeSubscriptionCharts() {
+        // Revenue Chart
+        const revenueCtx = document.getElementById("revenueChart");
+        if (revenueCtx) {
+          window.revenueChart = new Chart(revenueCtx, {
+            type: "line",
+            data: {
+              labels: [],
+              datasets: [
+                {
+                  label: "Revenue",
+                  data: [],
+                  borderColor: "#ffd700",
+                  backgroundColor: "rgba(255, 215, 0, 0.1)",
+                  tension: 0.4,
+                },
+              ],
             },
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  callback: function(value) {
-                    return '$' + value;
-                  }
-                }
-              }
-            }
-          }
-        });
-      }
-
-      // Package Chart
-      const packageCtx = document.getElementById('packageChart');
-      if (packageCtx) {
-        window.packageChart = new Chart(packageCtx, {
-          type: 'doughnut',
-          data: {
-            labels: [],
-            datasets: [{
-              data: [],
-              backgroundColor: [
-                '#ffd700',
-                '#00fa9a',
-                '#ff4757',
-                '#6366f1',
-                '#fbbf24'
-              ]
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'bottom'
-              }
-            }
-          }
-        });
-      }
-    }
-
-    function loadSubscriptionAnalytics() {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      // Load dashboard metrics
-      fetch('/api/subscriptions/admin/dashboard', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          updateSubscriptionMetrics(data.data);
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    callback: function (value) {
+                      return "$" + value;
+                    },
+                  },
+                },
+              },
+            },
+          });
         }
-      })
-      .catch(error => console.error('Failed to load subscription metrics:', error));
 
-      // Load analytics data
-      fetch('/api/subscriptions/analytics/performance', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          updateSubscriptionAnalytics(data.data);
+        // Package Chart
+        const packageCtx = document.getElementById("packageChart");
+        if (packageCtx) {
+          window.packageChart = new Chart(packageCtx, {
+            type: "doughnut",
+            data: {
+              labels: [],
+              datasets: [
+                {
+                  data: [],
+                  backgroundColor: [
+                    "#ffd700",
+                    "#00fa9a",
+                    "#ff4757",
+                    "#6366f1",
+                    "#fbbf24",
+                  ],
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: "bottom",
+                },
+              },
+            },
+          });
         }
-      })
-      .catch(error => console.error('Failed to load subscription analytics:', error));
-    }
-
-    function updateSubscriptionMetrics(data) {
-      // Update metric cards
-      const metrics = data.metrics;
-      if (metrics) {
-        document.getElementById('totalRevenue').textContent = formatCurrency(metrics.totalRevenue?.total || 0);
-        document.getElementById('activeSubscriptions').textContent = metrics.activeSubscriptions?.count || 0;
-        document.getElementById('totalUsers').textContent = metrics.totalUsers?.count || 0;
-        
-        // Calculate churn rate
-        const churnRate = metrics.churnRateThisMonth?.count || 0;
-        const totalSubs = metrics.activeSubscriptions?.count || 1;
-        const churnPercentage = ((churnRate / totalSubs) * 100).toFixed(1);
-        document.getElementById('churnRate').textContent = churnPercentage + '%';
       }
-    }
 
-    function updateSubscriptionAnalytics(data) {
-      // Update MRR and ARPU
-      document.getElementById('mrrValue').textContent = formatCurrency(data.mrr?.mrr || 0);
-      document.getElementById('arpuValue').textContent = formatCurrency(data.arpu?.arpu || 0);
-      
-      // Update conversion rate
-      if (data.conversionRates && data.conversionRates.length > 0) {
-        const latestRate = data.conversionRates[0];
-        const conversionRate = latestRate.conversionRate || 0;
-        document.getElementById('freeToPaidRate').textContent = conversionRate + '%';
-        document.getElementById('freeToPaidProgress').style.width = Math.min(conversionRate, 100) + '%';
-      }
-      
-      // Update recent activity
-      updateSubscriptionRecentActivity(data);
-    }
+      function loadSubscriptionAnalytics() {
+        const token = localStorage.getItem("token");
+        if (!token) return;
 
-    function updateSubscriptionRecentActivity(data) {
-      const container = document.getElementById('recentActivity');
-      if (!container) return;
-      
-      if (!data.recentSubscriptions || data.recentSubscriptions.length === 0) {
-        container.innerHTML = '<div class="text-muted">No recent activity</div>';
-        return;
+        // Load dashboard metrics
+        fetch("/api/subscriptions/admin/dashboard", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              updateSubscriptionMetrics(data.data);
+            }
+          })
+          .catch((error) =>
+            console.error("Failed to load subscription metrics:", error)
+          );
+
+        // Load analytics data
+        fetch("/api/subscriptions/analytics/performance", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              updateSubscriptionAnalytics(data.data);
+            }
+          })
+          .catch((error) =>
+            console.error("Failed to load subscription analytics:", error)
+          );
       }
-      
-      let html = '';
-      data.recentSubscriptions.slice(0, 5).forEach(sub => {
-        html += `
+
+      function updateSubscriptionMetrics(data) {
+        // Update metric cards
+        const metrics = data.metrics;
+        if (metrics) {
+          document.getElementById("totalRevenue").textContent = formatCurrency(
+            metrics.totalRevenue?.total || 0
+          );
+          document.getElementById("activeSubscriptions").textContent =
+            metrics.activeSubscriptions?.count || 0;
+          document.getElementById("totalUsers").textContent =
+            metrics.totalUsers?.count || 0;
+
+          // Calculate churn rate
+          const churnRate = metrics.churnRateThisMonth?.count || 0;
+          const totalSubs = metrics.activeSubscriptions?.count || 1;
+          const churnPercentage = ((churnRate / totalSubs) * 100).toFixed(1);
+          document.getElementById("churnRate").textContent =
+            churnPercentage + "%";
+        }
+      }
+
+      function updateSubscriptionAnalytics(data) {
+        // Update MRR and ARPU
+        document.getElementById("mrrValue").textContent = formatCurrency(
+          data.mrr?.mrr || 0
+        );
+        document.getElementById("arpuValue").textContent = formatCurrency(
+          data.arpu?.arpu || 0
+        );
+
+        // Update conversion rate
+        if (data.conversionRates && data.conversionRates.length > 0) {
+          const latestRate = data.conversionRates[0];
+          const conversionRate = latestRate.conversionRate || 0;
+          document.getElementById("freeToPaidRate").textContent =
+            conversionRate + "%";
+          document.getElementById("freeToPaidProgress").style.width =
+            Math.min(conversionRate, 100) + "%";
+        }
+
+        // Update recent activity
+        updateSubscriptionRecentActivity(data);
+      }
+
+      function updateSubscriptionRecentActivity(data) {
+        const container = document.getElementById("recentActivity");
+        if (!container) return;
+
+        if (
+          !data.recentSubscriptions ||
+          data.recentSubscriptions.length === 0
+        ) {
+          container.innerHTML =
+            '<div class="text-muted">No recent activity</div>';
+          return;
+        }
+
+        let html = "";
+        data.recentSubscriptions.slice(0, 5).forEach((sub) => {
+          html += `
           <div class="flex justify-between items-center py-2 border-b border-gray-700">
             <div>
               <div class="font-medium">${sub.userEmail}</div>
@@ -2354,91 +2767,94 @@
             </div>
           </div>
         `;
-      });
-      container.innerHTML = html;
-    }
-
-    function exportSubscriptionAnalytics() {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      fetch('/api/subscriptions/analytics/export?format=csv', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      .then(response => {
-        if (!response.ok) throw new Error('Export failed');
-        return response.blob();
-      })
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'subscription-analytics.csv';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        showAlert('Analytics data exported successfully', 'success');
-      })
-      .catch(error => {
-        console.error('Export failed:', error);
-        showAlert('Failed to export analytics data', 'error');
-      });
-    }
-
-    // Utility functions for subscription management
-    function formatCurrency(amount) {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-      }).format(amount);
-    }
-
-    function formatDate(dateString) {
-      return new Date(dateString).toLocaleDateString();
-    }
-
-    // Add event listener for subscriptions tab
-    document.querySelector('[data-page="subscriptions"]').addEventListener('click', () => {
-      loadSubscriptionDashboard();
-    });
-
-    // Utility function to show alerts
-    function showAlert(message, type = 'info') {
-      const alertDiv = document.createElement('div');
-      alertDiv.className = 'neu-panel';
-      alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; padding: 1rem; border-left: 4px solid;';
-      
-      switch(type) {
-        case 'success':
-          alertDiv.style.borderColor = '#10b981';
-          alertDiv.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
-          alertDiv.style.color = '#10b981';
-          break;
-        case 'error':
-          alertDiv.style.borderColor = '#ef4444';
-          alertDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-          alertDiv.style.color = '#ef4444';
-          break;
-        case 'warning':
-          alertDiv.style.borderColor = '#fbbf24';
-          alertDiv.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
-          alertDiv.style.color = '#fbbf24';
-          break;
-        default:
-          alertDiv.style.borderColor = '#6366f1';
-          alertDiv.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
-          alertDiv.style.color = '#6366f1';
+        });
+        container.innerHTML = html;
       }
-      
-      alertDiv.textContent = message;
-      document.body.appendChild(alertDiv);
-      
-      // Auto-remove after 5 seconds
-      setTimeout(() => {
-        alertDiv.remove();
-      }, 5000);
-    }
-  </script>
-</body>
+
+      function exportSubscriptionAnalytics() {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        fetch("/api/subscriptions/analytics/export?format=csv", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((response) => {
+            if (!response.ok) throw new Error("Export failed");
+            return response.blob();
+          })
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "subscription-analytics.csv";
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showAlert("Analytics data exported successfully", "success");
+          })
+          .catch((error) => {
+            console.error("Export failed:", error);
+            showAlert("Failed to export analytics data", "error");
+          });
+      }
+
+      // Utility functions for subscription management
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        }).format(amount);
+      }
+
+      function formatDate(dateString) {
+        return new Date(dateString).toLocaleDateString();
+      }
+
+      // Add event listener for subscriptions tab
+      document
+        .querySelector('[data-page="subscriptions"]')
+        .addEventListener("click", () => {
+          loadSubscriptionDashboard();
+        });
+
+      // Utility function to show alerts
+      function showAlert(message, type = "info") {
+        const alertDiv = document.createElement("div");
+        alertDiv.className = "neu-panel";
+        alertDiv.style.cssText =
+          "position: fixed; top: 20px; right: 20px; z-index: 1000; padding: 1rem; border-left: 4px solid;";
+
+        switch (type) {
+          case "success":
+            alertDiv.style.borderColor = "#10b981";
+            alertDiv.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
+            alertDiv.style.color = "#10b981";
+            break;
+          case "error":
+            alertDiv.style.borderColor = "#ef4444";
+            alertDiv.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
+            alertDiv.style.color = "#ef4444";
+            break;
+          case "warning":
+            alertDiv.style.borderColor = "#fbbf24";
+            alertDiv.style.backgroundColor = "rgba(251, 191, 36, 0.1)";
+            alertDiv.style.color = "#fbbf24";
+            break;
+          default:
+            alertDiv.style.borderColor = "#6366f1";
+            alertDiv.style.backgroundColor = "rgba(99, 102, 241, 0.1)";
+            alertDiv.style.color = "#6366f1";
+        }
+
+        alertDiv.textContent = message;
+        document.body.appendChild(alertDiv);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+          alertDiv.remove();
+        }, 5000);
+      }
+    </script>
+  </body>
 </html>
