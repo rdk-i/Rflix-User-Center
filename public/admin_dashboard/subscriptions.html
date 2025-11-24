@@ -844,7 +844,7 @@
       window.location.href = '/admin';
     }
 
-    // Navigation Logic
+    // Navigation Logic - Updated to work with parent dashboard
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', (e) => {
         e.preventDefault();
@@ -854,8 +854,18 @@
         item.classList.add('active');
         
         const href = item.querySelector('a').getAttribute('href');
+        const page = item.dataset.page;
+        
+        // Handle navigation to other sections
         if (href !== '#' && href !== '/admin_dashboard/subscriptions.html') {
-          window.location.href = href;
+          // Check if we're in an iframe (embedded in main dashboard)
+          if (window.parent !== window) {
+            // We're in an iframe, navigate parent window
+            window.parent.location.href = href;
+          } else {
+            // We're standalone, navigate normally
+            window.location.href = href;
+          }
         }
       });
     });
@@ -2203,6 +2213,16 @@
       
       // Set up notification system
       setupNotifications();
+      
+      // Check for export request from URL parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      const exportRequest = urlParams.get('export');
+      if (exportRequest === 'analytics') {
+        // Handle export request from parent dashboard
+        setTimeout(() => {
+          exportAnalytics();
+        }, 1000);
+      }
     });
 
     function setupNotifications() {
