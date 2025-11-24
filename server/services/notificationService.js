@@ -362,6 +362,8 @@ class NotificationService {
       logger.error('Failed to get notification stats:', error);
       return { success: false, error: error.message };
     }
+  }
+
   /**
    * Send usage alert for high usage
    */
@@ -450,8 +452,7 @@ class NotificationService {
       logger.error(`Upgrade suggestion failed for ${recipient}:`, error);
       return { success: false, error: error.message };
     }
-  }
-  }
+}
 }
 
 module.exports = new NotificationService();

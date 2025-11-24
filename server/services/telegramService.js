@@ -86,6 +86,8 @@ Please review and approve/reject.
     `.trim();
 
     return this.sendMessage(adminChatId, text);
+  }
+
   async sendUsageAlertMessage(chatId, alertMessage) {
     const text = `
 ⚠️ <b>Usage Alert</b>
@@ -146,7 +148,6 @@ Upgrade now: /user_dashboard.html
     `.trim();
 
     return this.sendMessage(chatId, text);
-  }
   }
 }
 
