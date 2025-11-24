@@ -104,8 +104,7 @@ router.post('/check-threshold', auth, async (req, res) => {
     const userId = req.user.id;
     const { threshold = 80 } = req.body;
     
-    const usageLimits = require('../middlewares/usageLimits');
-    const thresholdExceeded = await usageLimits.usageLimitsMiddleware.checkUsageThreshold(userId, threshold);
+    const thresholdExceeded = await usageLimits.checkUsageThreshold(userId, threshold);
     
     res.json({
       success: true,

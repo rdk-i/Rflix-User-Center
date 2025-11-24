@@ -1287,8 +1287,5 @@ module.exports = {
         error: 'Failed to suggest upgrade'
       });
     }
-  },
-
-  // Utility methods
-  usageLimitsMiddleware
+  }
 };
