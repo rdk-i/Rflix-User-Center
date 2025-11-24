@@ -33,4 +33,10 @@ const logger = pino({
   },
 });
 
+// Ensure all standard log levels are available
+// Pino should have these by default, but let's make sure
+if (!logger.warn) {
+  logger.warn = logger.warning || logger.info;
+}
+
 module.exports = logger;

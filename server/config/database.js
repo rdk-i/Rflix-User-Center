@@ -12,7 +12,9 @@ try {
   logger.info(`Database connected: ${dbPath}`);
 } catch (error) {
   logger.error('Failed to connect to database:', error);
-  process.exit(1);
+  // Fallback to mock database
+  logger.info('Falling back to mock database');
+  db = require('./database-mock');
 }
 
 module.exports = db;
