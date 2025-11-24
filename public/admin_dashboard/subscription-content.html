@@ -1,0 +1,344 @@
+<!-- Subscription Management Content Template -->
+<div id="subscription-management-content">
+  <!-- Key Metrics -->
+  <div class="metrics-grid mb-8" id="metricsGrid">
+    <div class="metric-card">
+      <div class="metric-value" id="totalRevenue">$0</div>
+      <div class="metric-label">Monthly Revenue</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value" id="activeSubscriptions">0</div>
+      <div class="metric-label">Active Subscriptions</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value" id="totalUsers">0</div>
+      <div class="metric-label">Total Users</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value" id="churnRate">0%</div>
+      <div class="metric-label">Churn Rate</div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button class="tab-btn active" onclick="switchTab('analytics')">📊 Analytics</button>
+    <button class="tab-btn" onclick="switchTab('packages')">📦 Packages</button>
+    <button class="tab-btn" onclick="switchTab('users')">👥 User Subscriptions</button>
+    <button class="tab-btn" onclick="switchTab('payments')">💳 Payments</button>
+    <button class="tab-btn" onclick="switchTab('settings')">⚙️ Settings</button>
+  </div>
+
+  <!-- Analytics Tab -->
+  <div id="analytics-tab" class="tab-content active">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div class="neu-panel">
+        <h3 class="mb-4">Revenue Trends</h3>
+        <div class="chart-container">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </div>
+      <div class="neu-panel">
+        <h3 class="mb-4">Package Performance</h3>
+        <div class="chart-container">
+          <canvas id="packageChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="neu-panel">
+        <h3 class="mb-4">Conversion Rates</h3>
+        <div id="conversionRates" class="space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-muted">Free to Paid</span>
+            <span class="font-bold" id="freeToPaidRate">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="freeToPaidProgress" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="neu-panel">
+        <h3 class="mb-4">MRR & ARPU</h3>
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-muted">Monthly Recurring Revenue</span>
+            <span class="font-bold" id="mrrValue">$0</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-muted">Average Revenue Per User</span>
+            <span class="font-bold" id="arpuValue">$0</span>
+          </div>
+        </div>
+      </div>
+      <div class="neu-panel">
+        <h3 class="mb-4">Recent Activity</h3>
+        <div id="recentActivity" class="space-y-2 text-sm">
+          <div class="text-muted">Loading recent activity...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Packages Tab -->
+  <div id="packages-tab" class="tab-content">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold">Package Management</h2>
+      <button onclick="openPackageModal()" class="neu-btn neu-btn-sm">
+        ➕ Create Package
+      </button>
+    </div>
+
+    <div class="search-box mb-4">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="packageSearch" class="search-input" placeholder="Search packages..." onkeyup="searchPackages()">
+    </div>
+
+    <div class="data-table-container">
+      <table class="neu-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Duration</th>
+            <th>Active Subs</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="packagesTableBody">
+          <tr><td colspan="7" class="text-center text-muted">Loading packages...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div id="packagesPagination" class="pagination"></div>
+  </div>
+
+  <!-- User Subscriptions Tab -->
+  <div id="users-tab" class="tab-content">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold">User Subscriptions</h2>
+      <div class="btn-group">
+        <select id="statusFilter" class="neu-input" style="width: auto; margin: 0;" onchange="filterUserSubscriptions()">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="cancel_pending">Cancelling</option>
+          <option value="downgrade_pending">Downgrading</option>
+          <option value="expiring">Expiring</option>
+        </select>
+        <button onclick="loadUserSubscriptions()" class="theme-btn btn-icon" title="Refresh">
+          🔄
+        </button>
+      </div>
+    </div>
+
+    <div class="search-box mb-4">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="userSearch" class="search-input" placeholder="Search users..." onkeyup="searchUsers()">
+    </div>
+
+    <div class="data-table-container">
+      <table class="neu-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Email</th>
+            <th>Package</th>
+            <th>Status</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody">
+          <tr><td colspan="7" class="text-center text-muted">Loading user subscriptions...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div id="usersPagination" class="pagination"></div>
+  </div>
+
+  <!-- Payments Tab -->
+  <div id="payments-tab" class="tab-content">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold">Payment Management</h2>
+      <div class="btn-group">
+        <select id="paymentStatusFilter" class="neu-input" style="width: auto; margin: 0;" onchange="filterPayments()">
+          <option value="">All Status</option>
+          <option value="completed">Completed</option>
+          <option value="pending">Pending</option>
+          <option value="failed">Failed</option>
+          <option value="refund_pending">Refund Pending</option>
+        </select>
+        <button onclick="loadPayments()" class="theme-btn btn-icon" title="Refresh">
+          🔄
+        </button>
+      </div>
+    </div>
+
+    <div class="search-box mb-4">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="paymentSearch" class="search-input" placeholder="Search payments..." onkeyup="searchPayments()">
+    </div>
+
+    <div class="data-table-container">
+      <table class="neu-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Package</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="paymentsTableBody">
+          <tr><td colspan="8" class="text-center text-muted">Loading payments...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div id="paymentsPagination" class="pagination"></div>
+  </div>
+
+  <!-- Settings Tab -->
+  <div id="settings-tab" class="tab-content">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="neu-panel">
+        <h3 class="mb-4">Payment Gateway Configuration</h3>
+        <form id="paymentGatewayForm" class="space-y-4">
+          <div class="neu-input-group">
+            <label class="block text-sm font-bold mb-2">Stripe Publishable Key</label>
+            <input type="text" id="stripePublishableKey" class="neu-input" placeholder="pk_test_...">
+          </div>
+          <div class="neu-input-group">
+            <label class="block text-sm font-bold mb-2">Stripe Secret Key</label>
+            <input type="password" id="stripeSecretKey" class="neu-input" placeholder="sk_test_...">
+          </div>
+          <div class="neu-input-group">
+            <label class="block text-sm font-bold mb-2">PayPal Client ID</label>
+            <input type="text" id="paypalClientId" class="neu-input" placeholder="PayPal Client ID">
+          </div>
+          <button type="submit" class="neu-btn">Save Payment Settings</button>
+        </form>
+      </div>
+      
+      <div class="neu-panel">
+        <h3 class="mb-4">Subscription Settings</h3>
+        <form id="subscriptionSettingsForm" class="space-y-4">
+          <div class="flex items-center justify-between py-2">
+            <span class="text-sm font-medium">Enable Free Trials</span>
+            <label class="neu-toggle">
+              <input type="checkbox" id="enableFreeTrials" checked>
+              <span class="neu-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="flex items-center justify-between py-2">
+            <span class="text-sm font-medium">Auto-renew Subscriptions</span>
+            <label class="neu-toggle">
+              <input type="checkbox" id="autoRenewSubscriptions" checked>
+              <span class="neu-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="neu-input-group">
+            <label class="block text-sm font-bold mb-2">Grace Period (days)</label>
+            <input type="number" id="gracePeriodDays" class="neu-input" value="7" min="1" max="30">
+          </div>
+          <button type="submit" class="neu-btn">Save Subscription Settings</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Package Modal -->
+<div id="packageModal" class="modal-overlay hidden">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="flex justify-between items-center mb-6">
+      <h2 id="packageModalTitle">Create Package</h2>
+      <button onclick="closePackageModal()" class="theme-btn btn-icon" style="color: #ef4444;">
+        ✕
+      </button>
+    </div>
+    
+    <form id="packageForm" class="space-y-4">
+      <input type="hidden" id="packageId">
+      
+      <div class="form-grid">
+        <div class="neu-input-group">
+          <label class="block text-sm font-bold mb-2">Package Name *</label>
+          <input type="text" id="packageName" class="neu-input" required placeholder="Premium Plan">
+        </div>
+        
+        <div class="neu-input-group">
+          <label class="block text-sm font-bold mb-2">Price (USD) *</label>
+          <input type="number" id="packagePrice" class="neu-input" required min="0" step="0.01" placeholder="19.99">
+        </div>
+        
+        <div class="neu-input-group">
+          <label class="block text-sm font-bold mb-2">Duration (days) *</label>
+          <input type="number" id="packageDuration" class="neu-input" required min="1" placeholder="30">
+        </div>
+        
+        <div class="neu-input-group">
+          <label class="block text-sm font-bold mb-2">Status</label>
+          <select id="packageStatus" class="neu-select">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="neu-input-group">
+        <label class="block text-sm font-bold mb-2">Description</label>
+        <textarea id="packageDescription" class="neu-input" rows="3" placeholder="Package description..."></textarea>
+      </div>
+      
+      <div class="neu-input-group">
+        <label class="block text-sm font-bold mb-2">Features (one per line)</label>
+        <textarea id="packageFeatures" class="neu-input" rows="4" placeholder="Unlimited streaming&#10;HD Quality&#10;Multi-device support"></textarea>
+      </div>
+      
+      <div class="neu-panel">
+        <h4 class="mb-4">Usage Limits</h4>
+        <div class="form-grid">
+          <div class="neu-input-group">
+            <label class="block text-sm font-bold mb-2">API Calls Limit</label>
+            <input type="number" id="apiCallsLimit" class="neu-input" placeholder="1000" min="0">
+          </div>
+          
+          <div class="neu-input-group">
+            <label class="block text-sm font-bold mb-2">Storage Limit (MB)</label>
+            <input type="number" id="storageLimit" class="neu-input" placeholder="1024" min="0">
+          </div>
+          
+          <div class="neu-input-group">
+            <label class="block text-sm font-bold mb-2">Bandwidth Limit (GB)</label>
+            <input type="number" id="bandwidthLimit" class="neu-input" placeholder="10" min="0">
+          </div>
+          
+          <div class="neu-input-group">
+            <label class="block text-sm font-bold mb-2">Device Limit</label>
+            <input type="number" id="deviceLimit" class="neu-input" placeholder="5" min="0">
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex gap-4">
+        <button type="button" onclick="closePackageModal()" class="neu-btn" style="background: transparent; box-shadow: none; border: 1px solid var(--text-muted);">
+          Cancel
+        </button>
+        <button type="submit" class="neu-btn">
+          Save Package
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
