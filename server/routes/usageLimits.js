@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../config/database');
 const usageLimits = require('../middlewares/usageLimits');
 const auth = require('../middlewares/auth');
 const auditLogger = require('../middlewares/auditLogger');
@@ -33,7 +34,6 @@ router.get('/history', auth, usageLimits.getUsageHistory);
 router.get('/dashboard', auth, async (req, res) => {
   try {
     const userId = req.user.id;
-    const db = require('../config/database');
     
     const dashboardData = db.prepare(`
       SELECT 
@@ -135,7 +135,6 @@ router.post('/suggest-upgrade', auth, usageLimits.suggestUpgrade, auditLogger('S
 router.get('/admin/users', auth, async (req, res) => {
   try {
     // Check if user is admin
-    const db = require('../config/database');
     const user = db.prepare('SELECT isAdmin FROM api_users WHERE id = ?').get(req.user.id);
     
     if (!user || !user.isAdmin) {
@@ -207,7 +206,6 @@ router.get('/admin/users', auth, async (req, res) => {
 // Get usage violations (admin only)
 router.get('/admin/violations', auth, async (req, res) => {
   try {
-    const db = require('../config/database');
     const user = db.prepare('SELECT isAdmin FROM api_users WHERE id = ?').get(req.user.id);
     
     if (!user || !user.isAdmin) {
@@ -263,7 +261,6 @@ router.get('/admin/violations', auth, async (req, res) => {
 // Resolve usage violation (admin only)
 router.patch('/admin/violations/:id/resolve', auth, async (req, res) => {
   try {
-    const db = require('../config/database');
     const user = db.prepare('SELECT isAdmin FROM api_users WHERE id = ?').get(req.user.id);
     
     if (!user || !user.isAdmin) {
@@ -307,7 +304,6 @@ router.patch('/admin/violations/:id/resolve', auth, async (req, res) => {
 // Update custom usage limits for a user (admin only)
 router.patch('/admin/users/:userId/limits', auth, async (req, res) => {
   try {
-    const db = require('../config/database');
     const user = db.prepare('SELECT isAdmin FROM api_users WHERE id = ?').get(req.user.id);
     
     if (!user || !user.isAdmin) {
@@ -389,7 +385,6 @@ router.patch('/admin/users/:userId/limits', auth, async (req, res) => {
 // Reset user usage statistics (admin only)
 router.post('/admin/users/:userId/reset-usage', auth, async (req, res) => {
   try {
-    const db = require('../config/database');
     const user = db.prepare('SELECT isAdmin FROM api_users WHERE id = ?').get(req.user.id);
     
     if (!user || !user.isAdmin) {
@@ -401,8 +396,6 @@ router.post('/admin/users/:userId/reset-usage', auth, async (req, res) => {
 
     const userId = req.params.userId;
     const { resetType = 'all' } = req.body;
-
-    const db = require('../config/database');
     
     // Start transaction
     db.prepare('BEGIN TRANSACTION').run();
@@ -425,7 +418,7 @@ router.post('/admin/users/:userId/reset-usage', auth, async (req, res) => {
       }
       
       if (resetType === 'all') {
-        db.prepare('UPDATE usage_tracking SET last_updated = datetime('now') WHERE userId = ?').run(userId);
+        db.prepare('UPDATE usage_tracking SET last_updated = datetime("now") WHERE userId = ?').run(userId);
       }
       
       // Log the reset action
@@ -456,7 +449,6 @@ router.post('/admin/users/:userId/reset-usage', auth, async (req, res) => {
 // Get usage analytics (admin only)
 router.get('/admin/analytics', auth, async (req, res) => {
   try {
-    const db = require('../config/database');
     const user = db.prepare('SELECT isAdmin FROM api_users WHERE id = ?').get(req.user.id);
     
     if (!user || !user.isAdmin) {
