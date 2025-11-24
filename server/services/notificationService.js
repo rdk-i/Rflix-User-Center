@@ -362,6 +362,95 @@ class NotificationService {
       logger.error('Failed to get notification stats:', error);
       return { success: false, error: error.message };
     }
+  /**
+   * Send usage alert for high usage
+   */
+  async sendUsageAlert(recipient, alertMessage) {
+    try {
+      logger.info(`Sending usage alert to ${recipient}`);
+      
+      // For email
+      if (recipient.includes('@')) {
+        return await emailService.sendUsageAlertEmail(recipient, alertMessage);
+      }
+      
+      // For Telegram
+      return await telegramService.sendUsageAlertMessage(recipient, alertMessage);
+      
+    } catch (error) {
+      logger.error(`Usage alert failed for ${recipient}:`, error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Send limit warning
+   */
+  async sendLimitWarning(recipient, limitType, limitValue) {
+    try {
+      logger.info(`Sending limit warning to ${recipient} for ${limitType}`);
+      
+      const message = `⚠️ Usage Limit Warning\n\nYou have reached your ${limitType} limit of ${limitValue}.\nPlease consider upgrading your subscription to avoid service interruption.`;
+      
+      // For email
+      if (recipient.includes('@')) {
+        return await emailService.sendLimitWarningEmail(recipient, limitType, limitValue, message);
+      }
+      
+      // For Telegram
+      return await telegramService.sendLimitWarningMessage(recipient, limitType, limitValue, message);
+      
+    } catch (error) {
+      logger.error(`Limit warning failed for ${recipient}:`, error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Send over-limit notification
+   */
+  async sendOverLimitNotification(recipient, limitType, limitValue) {
+    try {
+      logger.info(`Sending over-limit notification to ${recipient} for ${limitType}`);
+      
+      const message = `❌ Service Limited\n\nYour account has been restricted because you exceeded your ${limitType} limit of ${limitValue}.\nPlease upgrade your subscription to restore full access.`;
+      
+      // For email
+      if (recipient.includes('@')) {
+        return await emailService.sendOverLimitEmail(recipient, limitType, limitValue, message);
+      }
+      
+      // For Telegram
+      return await telegramService.sendOverLimitMessage(recipient, limitType, limitValue, message);
+      
+    } catch (error) {
+      logger.error(`Over-limit notification failed for ${recipient}:`, error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Send upgrade suggestion
+   */
+  async sendUpgradeSuggestion(recipient, suggestionMessage) {
+    try {
+      logger.info(`Sending upgrade suggestion to ${recipient}`);
+      
+      const message = `💡 Upgrade Suggestion\n\n${suggestionMessage}\n\nUpgrade now: /user_dashboard.html`;
+      
+      // For email
+      if (recipient.includes('@')) {
+        return await emailService.sendUpgradeSuggestionEmail(recipient, suggestionMessage);
+      }
+      
+      // For Telegram
+      return await telegramService.sendUpgradeSuggestionMessage(recipient, suggestionMessage);
+      
+    } catch (error) {
+      logger.error(`Upgrade suggestion failed for ${recipient}:`, error);
+      return { success: false, error: error.message };
+    }
+  }
   }
 }
 

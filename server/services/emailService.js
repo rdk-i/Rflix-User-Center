@@ -275,6 +275,93 @@ class EmailService {
     `;
 
     return this.sendEmail(email, 'Subscription Expired', html);
+  async sendUsageAlertEmail(email, alertMessage) {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #FFA726;">Usage Alert</h2>
+        <p>Hello,</p>
+        <p>We noticed high usage on your account:</p>
+        <div style="background-color: #FFF3E0; padding: 15px; border-radius: 5px; margin: 15px 0;">
+          <pre style="font-family: monospace; white-space: pre-wrap;">${alertMessage}</pre>
+        </div>
+        <p>Please monitor your usage to avoid service interruption.</p>
+        <p>View usage: <a href="${process.env.APP_URL || 'http://localhost:3000'}/user_dashboard.html">Usage Dashboard</a></p>
+        <p style="color: #888; font-size: 12px;">This is an automated message. Please do not reply.</p>
+      </div>
+    `;
+
+    return this.sendEmail(email, 'Usage Alert - High Usage Detected', html);
+  }
+
+  async sendLimitWarningEmail(email, limitType, limitValue, message) {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #FF9800;">Usage Limit Warning</h2>
+        <p>Hello,</p>
+        <p><strong>Warning:</strong> You have reached your ${limitType} limit of ${limitValue}.</p>
+        <div style="background-color: #FFF8E1; padding: 15px; border-radius: 5px; margin: 15px 0;">
+          <p>${message}</p>
+        </div>
+        <p>Please consider upgrading your subscription to avoid service interruption.</p>
+        <p>Upgrade now: <a href="${process.env.APP_URL || 'http://localhost:3000'}/user_dashboard.html">Upgrade Subscription</a></p>
+        <p style="color: #888; font-size: 12px;">This is an automated message. Please do not reply.</p>
+      </div>
+    `;
+
+    return this.sendEmail(email, `Limit Warning - ${limitType} Limit Reached`, html);
+  }
+
+  async sendOverLimitEmail(email, limitType, limitValue, message) {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #F44336;">Service Limited - Limit Exceeded</h2>
+        <p>Hello,</p>
+        <p><strong>Important:</strong> Your account has been restricted.</p>
+        <div style="background-color: #FFEBEE; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #F44336;">
+          <p>${message}</p>
+          <p><strong>Exceeded Limit:</strong> ${limitType} (${limitValue})</p>
+        </div>
+        <p>To restore full access, please upgrade your subscription.</p>
+        <p style="text-align: center; margin: 20px 0;">
+          <a href="${process.env.APP_URL || 'http://localhost:3000'}/user_dashboard.html" 
+             style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            Upgrade Now
+          </a>
+        </p>
+        <p style="color: #888; font-size: 12px;">This is an automated message. Please do not reply.</p>
+      </div>
+    `;
+
+    return this.sendEmail(email, `Service Limited - ${limitType} Limit Exceeded`, html);
+  }
+
+  async sendUpgradeSuggestionEmail(email, suggestionMessage) {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2196F3;">Upgrade Suggestion</h2>
+        <p>Hello,</p>
+        <div style="background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 15px 0;">
+          <p>${suggestionMessage}</p>
+        </div>
+        <p>Upgrading your subscription will provide you with:</p>
+        <ul>
+          <li>Higher usage limits</li>
+          <li>Priority support</li>
+          <li>Advanced features</li>
+          <li>Better performance</li>
+        </ul>
+        <p style="text-align: center; margin: 20px 0;">
+          <a href="${process.env.APP_URL || 'http://localhost:3000'}/user_dashboard.html" 
+             style="background-color: #2196F3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            View Upgrade Options
+          </a>
+        </p>
+        <p style="color: #888; font-size: 12px;">This is an automated message. Please do not reply.</p>
+      </div>
+    `;
+
+    return this.sendEmail(email, 'Upgrade Your Rflix Subscription', html);
+  }
   }
 }
 

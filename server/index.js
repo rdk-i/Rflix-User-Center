@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const http = require('http');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const path = require('path');
@@ -7,6 +8,7 @@ const logger = require('./utils/logger');
 const db = require('./config/database');
 const errorHandler = require('./middlewares/errorHandler');
 const rateLimiters = require('./middlewares/rateLimiter');
+const SubscriptionWebSocketServer = require('./websocket');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -16,14 +18,26 @@ const configRoutes = require('./routes/config');
 const registrationRoutes = require('./routes/registration');
 const notificationRoutes = require('./routes/notifications');
 const couponRoutes = require('./routes/coupons');
+const subscriptionRoutes = require('./routes/subscriptions');
 const packageRoutes = require('./routes/packages');
+const usageLimitsRoutes = require('./routes/usageLimits');
 const healthRoutes = require('./routes/health');
 
 // Import scheduler
 const scheduler = require('./scheduler');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
+
+// Initialize WebSocket server
+const wsServer = new SubscriptionWebSocketServer(server);
+
+// Make WebSocket server available to routes
+app.use((req, res, next) => {
+  req.wsServer = wsServer;
+  next();
+});
 
 // CORS configuration
 const corsOptions = {
@@ -85,7 +99,9 @@ if (!process.env.SETUP_COMPLETED) {
   app.use('/api/config', configRoutes);
   app.use('/api/registration', registrationRoutes);
   app.use('/api/notifications', notificationRoutes);
+  app.use('/api/subscriptions', subscriptionRoutes);
   app.use('/api/coupons', couponRoutes);
+  app.use('/api/usage-limits', usageLimitsRoutes);
   app.use('/api/packages', packageRoutes);
   app.use('/api/form-fields', require('./routes/formFields'));
 }
@@ -97,10 +113,11 @@ app.use(errorHandler);
 scheduler.start();
 
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   logger.info(`Rflix-User-Center server running on port ${PORT}`);
   logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`Health check: http://localhost:${PORT}/health`);
+  logger.info(`WebSocket server: ws://localhost:${PORT}/ws/subscriptions`);
 });
 
 // Graceful shutdown
