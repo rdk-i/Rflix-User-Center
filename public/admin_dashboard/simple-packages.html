@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Package Management - Rflix API</title>
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    body {
+      display: block;
+      align-items: unset;
+      justify-content: unset;
+      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .dashboard-grid {
+      display: flex;
+      min-height: 100vh;
+    }
+    
+    .neu-sidebar {
+      width: 280px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 40;
+      overflow-y: auto;
+    }
+    
+    main {
+      flex: 1;
+      margin-left: 280px;
+      padding: 2rem;
+      width: calc(100% - 280px);
+    }
+    
+    @media (max-width: 768px) {
+      .neu-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+      
+      .neu-sidebar.open {
+        transform: translateX(0);
+      }
+      
+      main {
+        margin-left: 0;
+        width: 100%;
+        padding: 1rem;
+      }
+    }
+    
+    .neu-card {
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-out);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .neu-btn {
+      background: var(--bg);
+      border: none;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-out);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      padding: 0.75rem 1.5rem;
+      transition: var(--transition);
+    }
+    
+    .neu-btn:hover {
+      box-shadow: var(--shadow-in);
+    }
+    
+    .neu-btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+    
+    .neu-btn-danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+    
+    .neu-input {
+      width: 100%;
+      height: 46px;
+      border: none;
+      outline: none;
+      border-radius: 13px;
+      font-size: 16px;
+      padding: 0 20px;
+      background: var(--bg);
+      color: var(--input-text);
+      font-weight: 500;
+      box-shadow: var(--shadow-in);
+    }
+    
+    .neu-input::placeholder {
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+    
+    .text-muted {
+      color: var(--text-muted);
+    }
+    
+    .text-center {
+      text-align: center;
+    }
+    
+    .mb-4 {
+      margin-bottom: 1rem;
+    }
+    
+    .mb-6 {
+      margin-bottom: 1.5rem;
+    }
+    
+    .mb-8 {
+      margin-bottom: 2rem;
+    }
+    
+    .flex {
+      display: flex;
+    }
+    
+    .justify-between {
+      justify-content: space-between;
+    }
+    
+    .items-center {
+      align-items: center;
+    }
+    
+    .gap-4 {
+      gap: 1rem;
+    }
+    
+    .grid {
+      display: grid;
+    }
+    
+    .grid-cols-1 {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+    
+    @media (min-width: 768px) {
+      .md\:grid-cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+    
+    .gap-6 {
+      gap: 1.5rem;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top: 4px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Status badges */
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .status-active {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+    }
+    
+    .status-inactive {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+    
+    /* Toggle switch */
+    .neu-toggle {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+    
+    .neu-toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .neu-toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--bg);
+      transition: .4s;
+      border-radius: 34px;
+      box-shadow: var(--shadow-in);
+    }
+    
+    .neu-toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: var(--text-muted);
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    .neu-toggle input:checked + .neu-toggle-slider {
+      background-color: var(--accent);
+    }
+    
+    .neu-toggle input:checked + .neu-toggle-slider:before {
+      transform: translateX(26px);
+      background-color: var(--bg);
+    }
+    
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+    
+    .modal-content {
+      background: var(--bg);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-deep);
+      padding: 2rem;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      width: 100%;
+    }
+    
+    /* Form styling */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    
+    /* Table styling */
+    .neu-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .neu-table th {
+      text-align: left;
+      padding: 1rem;
+      color: var(--accent);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      border-bottom: 2px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.2);
+    }
+    
+    .neu-table td {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: var(--text);
+    }
+    
+    .neu-table tr:hover {
+      background: rgba(255,255,255,0.02);
+    }
+    
+    /* Action buttons */
+    .btn-action {
+      background: var(--bg);
+      color: var(--text);
+      border: none;
+      border-radius: 50px;
+      padding: 8px 16px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow-out);
+      transition: var(--transition);
+      margin: 0 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .btn-action:hover {
+      box-shadow: var(--shadow-in);
+      transform: translateY(1px);
+    }
+    
+    .btn-action.warning { color: var(--accent); }
+    .btn-action.danger { color: #ef4444; }
+    .btn-action.success { color: #10b981; }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .neu-table {
+        font-size: 0.875rem;
+      }
+      
+      .neu-table th,
+      .neu-table td {
+        padding: 0.75rem 0.5rem;
+      }
+      
+      .btn-action {
+        padding: 6px 12px;
+        font-size: 0.7rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-grid">
+    <!-- Sidebar -->
+    <aside class="neu-sidebar p-6 flex flex-col">
+      <div class="mb-10 text-center">
+        <h2 class="text-2xl font-bold mb-1">Rflix Admin</h2>
+        <p class="text-muted text-sm" id="adminEmail"></p>
+      </div>
+      
+      <ul class="space-y-2 flex-1" style="list-style: none; padding: 0;">
+        <li class="nav-item active mb-2" data-page="packages">
+          <a href="#" class="neu-btn w-full justify-start" style="text-align: left;">
+            📦 Package Management
+          </a>
+        </li>
+        <li class="nav-item mb-2" data-page="users">
+          <a href="#" class="neu-btn w-full justify-start" style="text-align: left;">
+            👥 Users
+          </a>
+        </li>
+        <li class="nav-item mb-2" data-page="pending">
+          <a href="#" class="neu-btn w-full justify-start" style="text-align: left;">
+            ⏳ Pending
+          </a>
+        </li>
+        <li class="nav-item mb-2" data-page="logs">
+          <a href="#" class="neu-btn w-full justify-start" style="text-align: left;">
+            📜 Logs
+          </a>
+        </li>
+      </ul>
+
+      <button onclick="logout()" class="neu-btn neu-btn-danger mt-auto">
+        Logout
+      </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="p-8 overflow-y-auto h-screen">
+      <!-- Package Management View -->
+      <div id="packages-view" class="view-section">
+        <div class="flex justify-between items-center mb-8">
+          <div>
+            <h1 class="text-3xl font-bold mb-2">Package Management</h1>
+            <p class="text-muted">Manage subscription packages with just 3 fields: Name, Duration, and Price</p>
+          </div>
+          <button onclick="openPackageModal()" class="neu-btn neu-btn-primary">
+            ➕ Add Package
+          </button>
+        </div>
+
+        <!-- Package List -->
+        <div class="neu-card">
+          <h2 class="text-xl font-bold mb-4">Packages</h2>
+          <div class="overflow-x-auto">
+            <table class="neu-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Duration (days)</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="packagesTableBody">
+                <tr>
+                  <td colspan="5" class="text-center text-muted">
+                    <span class="loading-spinner"></span> Loading packages...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users View -->
+      <div id="users-view" class="view-section hidden">
+        <h1 class="text-3xl font-bold mb-6">User Management</h1>
+        <div class="neu-card">
+          <p class="text-muted">User management functionality will be implemented here</p>
+        </div>
+      </div>
+
+      <!-- Pending View -->
+      <div id="pending-view" class="view-section hidden">
+        <h1 class="text-3xl font-bold mb-6">Pending Approvals</h1>
+        <div class="neu-card">
+          <p class="text-muted">Pending user approvals will be shown here</p>
+        </div>
+      </div>
+
+      <!-- Logs View -->
+      <div id="logs-view" class="view-section hidden">
+        <h1 class="text-3xl font-bold mb-6">System Logs</h1>
+        <div class="neu-card">
+          <p class="text-muted">System logs will be displayed here</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Package Modal -->
+  <div id="packageModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="flex justify-between items-center mb-6">
+        <h2 id="modalTitle">Add Package</h2>
+        <button onclick="closePackageModal()" class="neu-btn" style="background: transparent; box-shadow: none; border: 1px solid var(--text-muted);">
+          ✕
+        </button>
+      </div>
+      
+      <form id="packageForm" class="space-y-4">
+        <input type="hidden" id="packageId">
+        
+        <div class="form-group">
+          <label for="packageName" class="form-label">Package Name *</label>
+          <input type="text" id="packageName" class="neu-input" required placeholder="e.g., 1 Month">
+        </div>
+        
+        <div class="form-group">
+          <label for="packageDuration" class="form-label">Duration (Days) *</label>
+          <input type="number" id="packageDuration" class="neu-input" required min="1" placeholder="e.g., 30">
+        </div>
+        
+        <div class="form-group">
+          <label for="packagePrice" class="form-label">Price *</label>
+          <input type="number" id="packagePrice" class="neu-input" required min="0" step="1000" placeholder="e.g., 50000">
+        </div>
+        
+        <div class="flex gap-4 mt-6">
+          <button type="button" onclick="closePackageModal()" class="neu-btn" style="background: transparent; box-shadow: none; border: 1px solid var(--text-muted);">
+            Cancel
+          </button>
+          <button type="submit" class="neu-btn neu-btn-primary">
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Theme detection
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (!prefersDark) {
+      document.body.classList.add('light-mode');
+    }
+
+    // Check Auth
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/admin';
+    }
+
+    // Navigation Logic
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // Update active state
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        item.classList.add('active');
+        
+        // Show target view
+        const targetId = item.dataset.page + '-view';
+        document.querySelectorAll('.view-section').forEach(view => view.classList.add('hidden'));
+        document.getElementById(targetId).classList.remove('hidden');
+        
+        // Load data for the view
+        if (targetId === 'packages-view') {
+          loadPackages();
+        }
+      });
+    });
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/admin';
+    }
+
+    // Load admin email from token
+    function parseJwt (token) {
+      try {
+        var base64Url = token.split('.')[1];
+        var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        return {};
+      }
+    }
+    
+    const user = parseJwt(token);
+    if (user.email) {
+      document.getElementById('adminEmail').textContent = user.email;
+    }
+
+    // Package Management Functions
+    async function loadPackages() {
+      try {
+        const response = await fetch('/api/simple-packages', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+          renderPackages(result.data);
+        } else {
+          showAlert('Failed to load packages', 'error');
+        }
+      } catch (error) {
+        console.error('Error loading packages:', error);
+        showAlert('Network error while loading packages', 'error');
+      }
+    }
+
+    function renderPackages(packages) {
+      const tbody = document.getElementById('packagesTableBody');
+      
+      if (!packages || packages.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No packages found</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = packages.map(pkg => `
+        <tr>
+          <td><strong>${pkg.name}</strong></td>
+          <td>${pkg.duration_days}</td>
+          <td>Rp ${pkg.price.toLocaleString('id-ID')}</td>
+          <td>
+            <span class="status-badge ${pkg.is_active ? 'status-active' : 'status-inactive'}">
+              ${pkg.is_active ? 'Active' : 'Inactive'}
+            </span>
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <button onclick="editPackage(${pkg.id}, '${pkg.name}', ${pkg.duration_days}, ${pkg.price})" 
+                      class="btn-action warning" title="Edit">
+                ✎
+              </button>
+              <button onclick="deletePackage(${pkg.id})" 
+                      class="btn-action danger" title="Delete">
+                🗑
+              </button>
+              <button onclick="togglePackageStatus(${pkg.id}, ${pkg.is_active})" 
+                      class="btn-action ${pkg.is_active ? 'danger' : 'success'}" 
+                      title="${pkg.is_active ? 'Deactivate' : 'Activate'}">
+                ${pkg.is_active ? '⏸' : '▶'}
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Modal functions
+    function openPackageModal() {
+      document.getElementById('packageModal').style.display = 'flex';
+      document.getElementById('modalTitle').textContent = 'Add Package';
+      document.getElementById('packageForm').reset();
+      document.getElementById('packageId').value = '';
+    }
+
+    function closePackageModal() {
+      document.getElementById('packageModal').style.display = 'none';
+    }
+
+    function editPackage(id, name, duration, price) {
+      document.getElementById('packageModal').style.display = 'flex';
+      document.getElementById('modalTitle').textContent = 'Edit Package';
+      document.getElementById('packageId').value = id;
+      document.getElementById('packageName').value = name;
+      document.getElementById('packageDuration').value = duration;
+      document.getElementById('packagePrice').value = price;
+    }
+
+    // Form submission
+    document.getElementById('packageForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const packageId = document.getElementById('packageId').value;
+      const data = {
+        name: document.getElementById('packageName').value,
+        duration_days: parseInt(document.getElementById('packageDuration').value),
+        price: parseInt(document.getElementById('packagePrice').value)
+      };
+      
+      const method = packageId ? 'PUT' : 'POST';
+      const url = packageId ? `/api/simple-packages/${packageId}` : '/api/simple-packages';
+      
+      try {
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showAlert(`Package ${packageId ? 'updated' : 'created'} successfully`, 'success');
+          closePackageModal();
+          loadPackages();
+        } else {
+          showAlert(result.error?.message || 'Failed to save package', 'error');
+        }
+      } catch (error) {
+        console.error('Error saving package:', error);
+        showAlert('Network error while saving package', 'error');
+      }
+    });
+
+    // Toggle package status
+    async function togglePackageStatus(id, currentStatus) {
+      if (!confirm(`${currentStatus ? 'Deactivate' : 'Activate'} this package?`)) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/simple-packages/${id}/toggle`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showAlert(`Package ${result.data.is_active ? 'activated' : 'deactivated'} successfully`, 'success');
+          loadPackages();
+        } else {
+          showAlert(result.error?.message || 'Failed to toggle package status', 'error');
+        }
+      } catch (error) {
+        console.error('Error toggling package status:', error);
+        showAlert('Network error while toggling package status', 'error');
+      }
+    }
+
+    // Delete package
+    async function deletePackage(id) {
+      if (!confirm('Are you sure you want to delete this package? This action cannot be undone.')) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/simple-packages/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showAlert('Package deleted successfully', 'success');
+          loadPackages();
+        } else {
+          showAlert(result.error?.message || 'Failed to delete package', 'error');
+        }
+      } catch (error) {
+        console.error('Error deleting package:', error);
+        showAlert('Network error while deleting package', 'error');
+      }
+    }
+
+    // Close modal on outside click
+    document.getElementById('packageModal').addEventListener('click', (e) => {
+      if (e.target.id === 'packageModal') {
+        closePackageModal();
+      }
+    });
+
+    // Alert function
+    function showAlert(message, type = 'info') {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'neu-card';
+      alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; padding: 1rem; border-left: 4px solid; max-width: 300px;';
+      
+      switch(type) {
+        case 'success':
+          alertDiv.style.borderColor = '#10b981';
+          alertDiv.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+          alertDiv.style.color = '#10b981';
+          break;
+        case 'error':
+          alertDiv.style.borderColor = '#ef4444';
+          alertDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+          alertDiv.style.color = '#ef4444';
+          break;
+        case 'warning':
+          alertDiv.style.borderColor = '#fbbf24';
+          alertDiv.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
+          alertDiv.style.color = '#fbbf24';
+          break;
+        default:
+          alertDiv.style.borderColor = '#6366f1';
+          alertDiv.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
+          alertDiv.style.color = '#6366f1';
+      }
+      
+      alertDiv.textContent = message;
+      document.body.appendChild(alertDiv);
+      
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        alertDiv.remove();
+      }, 5000);
+    }
+
+    // Load packages on page load
+    loadPackages();
+  </script>
+</body>
+</html>

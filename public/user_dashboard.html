@@ -137,23 +137,29 @@
         
         // Status Badge
         const statusBadge = document.getElementById('statusBadge');
-        const expiryDate = new Date(user.expiry_date);
-        const now = new Date();
-        const isExpired = expiryDate < now;
-
-        if (!user.is_active) {
-          statusBadge.textContent = 'Disabled';
+        const subscription = user.subscription;
+        
+        if (!subscription) {
+          statusBadge.textContent = 'No Subscription';
           statusBadge.className = 'neu-badge expired';
-        } else if (isExpired) {
-          statusBadge.textContent = 'Expired';
-          statusBadge.className = 'neu-badge expired';
+          document.getElementById('expiryDate').textContent = '---';
+          document.getElementById('planType').textContent = '---';
         } else {
-          statusBadge.textContent = 'Active';
-          statusBadge.className = 'neu-badge active';
-        }
+          if (!subscription.isActive) {
+            statusBadge.textContent = 'Disabled';
+            statusBadge.className = 'neu-badge expired';
+          } else if (subscription.isExpired) {
+            statusBadge.textContent = 'Expired';
+            statusBadge.className = 'neu-badge expired';
+          } else {
+            statusBadge.textContent = 'Active';
+            statusBadge.className = 'neu-badge active';
+          }
 
-        document.getElementById('expiryDate').textContent = expiryDate.toLocaleDateString();
-        document.getElementById('planType').textContent = 'Premium'; // Placeholder
+          // Display countdown text instead of just date
+          document.getElementById('expiryDate').textContent = subscription.countdownText;
+          document.getElementById('planType').textContent = 'Premium'; // Placeholder - could be enhanced with package name
+        }
 
       } catch (error) {
         console.error(error);

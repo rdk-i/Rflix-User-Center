@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Registration - Rflix API</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .package-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .package-card {
+      background: var(--bg);
+      border: 2px solid transparent;
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: var(--shadow-out);
+      position: relative;
+    }
+    
+    .package-card:hover {
+      box-shadow: var(--shadow-in);
+      transform: translateY(-2px);
+    }
+    
+    .package-card.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    
+    .package-card.inactive {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .package-name {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    
+    .package-duration {
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    
+    .package-price {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--accent);
+    }
+    
+    .package-radio {
+      position: absolute;
+      opacity: 0;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .loading-overlay.active {
+      display: flex;
+    }
+    
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255, 255, 255, 0.1);
+      border-top: 5px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-3xl font-bold text-center mb-2">Create Your Account</h1>
+    <p class="text-center text-muted mb-8">Choose a package and register to get started</p>
+
+    <div class="neu-card" style="max-width: 600px; margin: 0 auto;">
+      <form id="registrationForm" class="space-y-6">
+        <!-- Basic Info -->
+        <div>
+          <h3 class="text-lg font-bold mb-4">Account Information</h3>
+          <div class="space-y-4">
+            <div class="neu-input-group">
+              <label class="block text-sm font-bold mb-2">Username *</label>
+              <input type="text" id="username" class="neu-input" required placeholder="johndoe">
+            </div>
+            
+            <div class="neu-input-group">
+              <label class="block text-sm font-bold mb-2">Email *</label>
+              <input type="email" id="email" class="neu-input" required placeholder="john@example.com">
+            </div>
+            
+            <div class="neu-input-group">
+              <label class="block text-sm font-bold mb-2">Password *</label>
+              <input type="password" id="password" class="neu-input" required placeholder="••••••••" minlength="8">
+            </div>
+            
+            <div class="neu-input-group">
+              <label class="block text-sm font-bold mb-2">Confirm Password *</label>
+              <input type="password" id="confirmPassword" class="neu-input" required placeholder="••••••••">
+            </div>
+          </div>
+        </div>
+
+        <!-- Package Selection -->
+        <div>
+          <h3 class="text-lg font-bold mb-4">Choose Your Package</h3>
+          <div id="packageSelector" class="package-selector">
+            <div class="text-center text-muted">
+              <span class="loading-spinner" style="width: 30px; height: 30px; border-width: 3px;"></span>
+              <p class="mt-2">Loading packages...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="neu-btn neu-btn-primary w-full">
+          Create Account
+        </button>
+      </form>
+
+      <div class="text-center mt-6">
+        <p class="text-muted">Already have an account?</p>
+        <a href="/user_login.html" class="text-accent hover:underline">Login here</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="text-center">
+      <div class="loading-spinner"></div>
+      <p class="mt-4">Creating your account...</p>
+    </div>
+  </div>
+
+  <script>
+    // Theme detection
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (!prefersDark) {
+      document.body.classList.add('light-mode');
+    }
+
+    // Load packages on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadPackages();
+    });
+
+    // Load available packages
+    async function loadPackages() {
+      try {
+        const response = await fetch('/api/packages');
+        const result = await response.json();
+        
+        if (result.success && result.data.length > 0) {
+          renderPackages(result.data);
+        } else {
+          showPackageError('No packages available at the moment');
+        }
+      } catch (error) {
+        console.error('Error loading packages:', error);
+        showPackageError('Failed to load packages');
+      }
+    }
+
+    // Render packages
+    function renderPackages(packages) {
+      const selector = document.getElementById('packageSelector');
+      
+      selector.innerHTML = packages.map(pkg => `
+        <div class="package-card ${!pkg.is_active ? 'inactive' : ''}" 
+             onclick="selectPackage(${pkg.id}, ${pkg.is_active})">
+          <input type="radio" name="package" value="${pkg.id}" 
+                 id="pkg-${pkg.id}" class="package-radio">
+          <div class="package-name">${pkg.name}</div>
+          <div class="package-duration">${pkg.duration_days} days</div>
+          <div class="package-price">Rp ${pkg.price.toLocaleString('id-ID')}</div>
+        </div>
+      `).join('');
+      
+      // Auto-select first active package
+      const firstActive = packages.find(p => p.is_active);
+      if (firstActive) {
+        selectPackage(firstActive.id, true);
+      }
+    }
+
+    // Select package
+    function selectPackage(id, isActive) {
+      if (!isActive) return;
+      
+      // Remove previous selections
+      document.querySelectorAll('.package-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      
+      // Select new package
+      const card = document.querySelector(`[onclick="selectPackage(${id}, ${isActive})"]`);
+      const radio = document.getElementById(`pkg-${id}`);
+      
+      if (card && radio) {
+        card.classList.add('selected');
+        radio.checked = true;
+      }
+    }
+
+    // Show package error
+    function showPackageError(message) {
+      document.getElementById('packageSelector').innerHTML = `
+        <div class="text-center text-red-400">
+          <p>${message}</p>
+          <p class="text-sm mt-2">Please try again later or contact support</p>
+        </div>
+      `;
+    }
+
+    // Form submission
+    document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const selectedPackage = document.querySelector('input[name="package"]:checked');
+      
+      // Validation
+      if (!username || !email || !password || !confirmPassword) {
+        alert('Please fill in all required fields');
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+      }
+      
+      if (password.length < 8) {
+        alert('Password must be at least 8 characters');
+        return;
+      }
+      
+      if (!selectedPackage) {
+        alert('Please select a package');
+        return;
+      }
+      
+      // Show loading
+      document.getElementById('loadingOverlay').classList.add('active');
+      
+      // Prepare registration data
+      const registrationData = {
+        username,
+        email,
+        password,
+        packageId: parseInt(selectedPackage.value)
+      };
+      
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(registrationData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Show success message
+          alert(result.data.message);
+          // Redirect to login
+          setTimeout(() => {
+            window.location.href = '/user_login.html';
+          }, 2000);
+        } else {
+          alert(result.error?.message || 'Registration failed');
+        }
+      } catch (error) {
+        console.error('Registration error:', error);
+        alert('Network error during registration. Please try again.');
+      } finally {
+        document.getElementById('loadingOverlay').classList.remove('active');
+      }
+    });
+
+    // Auto-capitalize username
+    document.getElementById('username').addEventListener('input', (e) => {
+      e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+    });
+  </script>
+</body>
+</html>

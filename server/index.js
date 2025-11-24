@@ -19,6 +19,8 @@ const registrationRoutes = require('./routes/registration');
 const notificationRoutes = require('./routes/notifications');
 const couponRoutes = require('./routes/coupons');
 const subscriptionRoutes = require('./routes/subscriptions');
+const simplePackageRoutes = require('./routes/simplePackages');
+const simpleRegistrationRoutes = require('./routes/simpleRegistration');
 const packageRoutes = require('./routes/packages');
 const usageLimitsRoutes = require('./routes/usageLimits');
 const healthRoutes = require('./routes/health');
@@ -86,6 +88,12 @@ if (!process.env.SETUP_COMPLETED) {
 
   app.get('/registration', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/registration.html'));
+  app.get('/registration-simple', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/registration-simple.html'));
+  app.get('/admin-simple', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/admin_dashboard/simple-admin.html'));
+  });
+  });
   });
 
   // Health check endpoint (must be before auth middleware)
@@ -102,6 +110,8 @@ if (!process.env.SETUP_COMPLETED) {
   app.use('/api/subscriptions', subscriptionRoutes);
   app.use('/api/coupons', couponRoutes);
   app.use('/api/usage-limits', usageLimitsRoutes);
+  app.use('/api/simple-packages', simplePackageRoutes);
+  app.use('/api/simple-registration', simpleRegistrationRoutes);
   app.use('/api/packages', packageRoutes);
   app.use('/api/form-fields', require('./routes/formFields'));
 }

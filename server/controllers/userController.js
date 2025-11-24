@@ -30,6 +30,29 @@ class UserController {
         });
       }
 
+      // Calculate countdown
+      let daysRemaining = null;
+      let countdownText = null;
+      let isExpired = false;
+      
+      if (user.expirationDate) {
+        const expiration = new Date(user.expirationDate);
+        const now = new Date();
+        const timeDiff = expiration - now;
+        daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        isExpired = timeDiff < 0;
+        
+        if (isExpired) {
+          countdownText = 'Expired';
+        } else if (daysRemaining === 0) {
+          countdownText = 'Expires Today';
+        } else if (daysRemaining === 1) {
+          countdownText = 'Expires Tomorrow';
+        } else {
+          countdownText = `Sisa ${daysRemaining} hari`;
+        }
+      }
+
       // Format response
       const response = {
         id: user.id,
@@ -41,6 +64,9 @@ class UserController {
           expirationDate: user.expirationDate,
           packageMonths: user.packageMonths,
           isActive: Boolean(user.isActive),
+          daysRemaining: daysRemaining,
+          countdownText: countdownText,
+          isExpired: isExpired,
           // DEBUG: Add calculated status for validation
           calculatedStatus: new Date(user.expirationDate) < new Date() ? 'expired' : 'active',
           statusMismatch: Boolean(user.isActive) !== (new Date(user.expirationDate) >= new Date())
