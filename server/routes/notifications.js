@@ -4,7 +4,30 @@ const logger = require('../utils/logger');
 const emailService = require('../services/emailService');
 const telegramService = require('../services/telegramService');
 const db = require('../config/database');
-const auth = require('../middlewares/auth');
+
+// DIAGNOSTIC: Log middleware import status
+let authenticateToken, requireAdmin;
+try {
+  const authMiddleware = require('../middlewares/auth');
+  logger.info('DIAGNOSTIC: Auth middleware module loaded', {
+    module: authMiddleware,
+    typeofModule: typeof authMiddleware,
+    keys: Object.keys(authMiddleware || {})
+  });
+  
+  authenticateToken = authMiddleware.authenticateToken;
+  requireAdmin = authMiddleware.requireAdmin;
+  
+  logger.info('DIAGNOSTIC: Middleware functions extracted', {
+    authenticateToken: typeof authenticateToken,
+    requireAdmin: typeof requireAdmin,
+    authenticateTokenDefined: !!authenticateToken,
+    requireAdminDefined: !!requireAdmin
+  });
+} catch (error) {
+  logger.error('DIAGNOSTIC: Failed to load auth middleware', error);
+  throw error;
+}
 
 /**
  * Get notification system status and health
@@ -48,7 +71,7 @@ router.get('/status', async (req, res) => {
 /**
  * Test email delivery (admin only)
  */
-router.post('/test/email', auth.requireAuth, auth.requireAdmin, async (req, res) => {
+router.post('/test/email', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { to, subject, html } = req.body;
     
@@ -95,7 +118,7 @@ router.post('/test/email', auth.requireAuth, auth.requireAdmin, async (req, res)
 /**
  * Test telegram delivery (admin only)
  */
-router.post('/test/telegram', auth.requireAuth, auth.requireAdmin, async (req, res) => {
+router.post('/test/telegram', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { chatId, message } = req.body;
     
@@ -140,7 +163,7 @@ router.post('/test/telegram', auth.requireAuth, auth.requireAdmin, async (req, r
 /**
  * Get user's notification preferences
  */
-router.get('/preferences', auth.requireAuth, async (req, res) => {
+router.get('/preferences', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
     
@@ -180,7 +203,7 @@ router.get('/preferences', auth.requireAuth, async (req, res) => {
 /**
  * Send manual notification (admin only)
  */
-router.post('/send', auth.requireAuth, auth.requireAdmin, async (req, res) => {
+router.post('/send', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { userId, type, subject, message, html } = req.body;
     
