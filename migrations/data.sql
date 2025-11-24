@@ -1,4 +1,4 @@
--- Rflix-API Database Schema
+-- Rflix-User-Center Database Schema
 -- Combined Schema (data.sql)
 
 -- Table: api_users (Dashboard accounts for admin & users)

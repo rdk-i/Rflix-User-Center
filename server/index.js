@@ -87,7 +87,7 @@ scheduler.start();
 
 // Start server
 app.listen(PORT, () => {
-  logger.info(`Rflix-API server running on port ${PORT}`);
+  logger.info(`Rflix-User-Center server running on port ${PORT}`);
   logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`Health check: http://localhost:${PORT}/health`);
 });

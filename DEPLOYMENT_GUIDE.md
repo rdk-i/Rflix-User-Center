@@ -1,6 +1,6 @@
-# Rflix-API Deployment Guide
+# Rflix-User-Center Deployment Guide
 
-This guide details how to deploy Rflix-API on a Debian-based Linux server (e.g., Ubuntu, Debian).
+This guide details how to deploy Rflix-User-Center on a Debian-based Linux server (e.g., Ubuntu, Debian).
 
 ## 1. Server Preparation
 
@@ -29,8 +29,8 @@ sudo npm install -g pm2
 Clone the repository:
 
 ```bash
-git clone https://github.com/rdk-i/Rflix-API
-cd Rflix-API
+git clone https://github.com/rdk-i/Rflix-User-Center
+cd Rflix-User-Center
 ```
 
 Install dependencies:
@@ -129,7 +129,7 @@ sudo certbot --nginx -d yourdomain.com
 To update the application in the future:
 
 ```bash
-cd Rflix-API
+cd Rflix-User-Center
 git pull
 npm install
 npm run migrate

@@ -1,6 +1,6 @@
-# Rflix-API
+# Rflix-User-Center
 
-Rflix-API is a robust user management and automation system designed for Jellyfin media servers. It provides a seamless interface for user registration, subscription management, and automated account provisioning.
+Rflix-User-Center is a robust user management and automation system designed for Jellyfin media servers. It provides a seamless interface for user registration, subscription management, and automated account provisioning.
 
 ## 🚀 Key Features
 
@@ -31,8 +31,8 @@ Rflix-API is a robust user management and automation system designed for Jellyfi
 1.  **Clone the repository**
 
     ```bash
-    git clone https://github.com/rdk-i/Rflix-API
-    cd Rflix-API
+    git clone https://github.com/rdk-i/Rflix-User-Center
+    cd Rflix-User-Center
     ```
 
 2.  **Install dependencies**
