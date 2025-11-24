@@ -17,6 +17,7 @@ const registrationRoutes = require('./routes/registration');
 const notificationRoutes = require('./routes/notifications');
 const couponRoutes = require('./routes/coupons');
 const packageRoutes = require('./routes/packages');
+const healthRoutes = require('./routes/health');
 
 // Import scheduler
 const scheduler = require('./scheduler');
@@ -30,6 +31,12 @@ const corsOptions = {
   credentials: true,
 };
 app.use(cors(corsOptions));
+
+// Request timing middleware for health monitoring
+app.use((req, res, next) => {
+  req.startTime = Date.now();
+  next();
+});
 
 // Middleware
 app.use(express.json());
@@ -66,6 +73,10 @@ if (!process.env.SETUP_COMPLETED) {
   app.get('/registration', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/registration.html'));
   });
+
+  // Health check endpoint (must be before auth middleware)
+  app.use('/health', healthRoutes);
+  app.use('/api/health', healthRoutes);
 
   // API Routes
   app.use('/api/auth', authRoutes);

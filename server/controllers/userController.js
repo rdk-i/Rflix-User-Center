@@ -41,6 +41,9 @@ class UserController {
           expirationDate: user.expirationDate,
           packageMonths: user.packageMonths,
           isActive: Boolean(user.isActive),
+          // DEBUG: Add calculated status for validation
+          calculatedStatus: new Date(user.expirationDate) < new Date() ? 'expired' : 'active',
+          statusMismatch: Boolean(user.isActive) !== (new Date(user.expirationDate) >= new Date())
         } : null,
         notifications: {
           emailEnabled: Boolean(user.emailEnabled),
@@ -49,6 +52,17 @@ class UserController {
           telegramChatId: user.telegramChatId,
         },
       };
+      
+      // DEBUG: Log status mismatches
+      if (response.subscription && response.subscription.statusMismatch) {
+        logger.warn(`User subscription status mismatch detected`, {
+          userId: user.id,
+          email: user.email,
+          isActive: user.isActive,
+          expirationDate: user.expirationDate,
+          calculatedStatus: response.subscription.calculatedStatus
+        });
+      }
 
       res.json({
         success: true,

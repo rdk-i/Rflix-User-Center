@@ -1,6 +1,7 @@
 const logger = require('../utils/logger');
 const disableExpiredUsers = require('./disable_expired');
 const backupDatabase = require('./backup_db');
+const sendExpirationWarnings = require('./send_expiration_warnings');
 const authService = require('../services/authService');
 
 class Scheduler {
@@ -28,6 +29,14 @@ class Scheduler {
     });
     logger.info(`Scheduled disable_expired_users every ${disableExpiredInterval}ms`);
 
+    // Send expiration warnings task
+    const expirationWarningInterval = parseInt(process.env.EXPIRATION_WARNING_INTERVAL) || 86400000; // 24 hours
+    this.intervals.push({
+      name: 'send_expiration_warnings',
+      interval: setInterval(() => sendExpirationWarnings(), expirationWarningInterval),
+    });
+    logger.info(`Scheduled send_expiration_warnings every ${expirationWarningInterval}ms`);
+
     // Backup database task
     const backupInterval = parseInt(process.env.BACKUP_DB_INTERVAL) || 86400000; // 24 hours
     this.intervals.push({
@@ -41,12 +50,30 @@ class Scheduler {
       name: 'clean_token_blacklist',
       interval: setInterval(() => {
         const now = new Date();
-        if (now.getHours() === 0 && now.getMinutes() === 0) {
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        
+        // CRITICAL DIAGNOSTIC: Log the flawed midnight execution logic
+        if (currentHour === 0 && currentMinute === 0) {
+          logger.info('CRITICAL_ISSUE_2: Token cleanup executing at midnight', {
+            currentTime: now.toISOString(),
+            hour: currentHour,
+            minute: currentMinute,
+            issue: 'Exact minute dependency - can miss execution',
+            riskLevel: 'HIGH'
+          });
           authService.cleanExpiredBlacklist();
+        } else if (currentHour === 0) {
+          // Log how many times we check but don't execute in the midnight hour
+          logger.debug('CRITICAL_ISSUE_2: Midnight hour but not exact minute', {
+            currentMinute: currentMinute,
+            willExecute: 'NO - Exact minute dependency',
+            risk: 'Can miss cleanup if server down at 00:00'
+          });
         }
       }, 60000), // Check every minute
     });
-    logger.info('Scheduled clean_token_blacklist daily at midnight');
+    logger.info('Scheduled clean_token_blacklist daily at midnight - CRITICAL_ISSUE_2: Flawed exact-minute dependency');
 
     this.isRunning = true;
     logger.info('Scheduler started successfully');

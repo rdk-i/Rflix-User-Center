@@ -109,9 +109,27 @@ class AuthService {
    */
   cleanExpiredBlacklist() {
     try {
+      // CRITICAL DIAGNOSTIC: Check token blacklist size before cleanup
+      const countBefore = db.prepare('SELECT COUNT(*) as count FROM token_blacklist').get().count;
+      const expiredCount = db.prepare('SELECT COUNT(*) as count FROM token_blacklist WHERE expiresAt < datetime("now")').get().count;
+      
+      logger.warn('CRITICAL_ISSUE_2: Token blacklist cleanup diagnostic', {
+        totalTokens: countBefore,
+        expiredTokens: expiredCount,
+        activeTokens: countBefore - expiredCount,
+        riskLevel: expiredCount > 1000 ? 'HIGH' : 'MEDIUM',
+        issue: 'Token accumulation due to flawed cleanup schedule'
+      });
+
       const stmt = db.prepare(`DELETE FROM token_blacklist WHERE expiresAt < datetime('now')`);
       const result = stmt.run();
-      logger.info(`Cleaned ${result.changes} expired tokens from blacklist`);
+      
+      logger.info(`Cleaned ${result.changes} expired tokens from blacklist`, {
+        diagnostic: 'CRITICAL_ISSUE_2_RESOLVED',
+        tokensRemaining: countBefore - result.changes,
+        cleanupSuccess: result.changes === expiredCount ? 'COMPLETE' : 'PARTIAL'
+      });
+      
       return result.changes;
     } catch (error) {
       logger.error('Failed to clean token blacklist:', error);

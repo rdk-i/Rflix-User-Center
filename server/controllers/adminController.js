@@ -351,23 +351,33 @@ class AdminController {
       let jellyfinConnected = false;
       let recentActivity = [];
 
+      logger.info('Dashboard stats calculation started');
+
       // Try to fetch real data from Jellyfin
       try {
+        logger.debug('Attempting to ping Jellyfin service');
         // Ping Jellyfin
         await jellyfinService.client.get('/System/Info/Public', { timeout: 2000 });
         jellyfinConnected = true;
+        logger.info('Jellyfin connection successful');
 
         // Get all users from Jellyfin
+        logger.debug('Fetching users from Jellyfin');
         const usersResponse = await jellyfinService.getAllUsers();
         if (usersResponse.success) {
           totalUsers = usersResponse.data.length;
+          logger.info(`Jellyfin users count: ${totalUsers}`);
+        } else {
+          logger.warn('Failed to fetch Jellyfin users:', usersResponse.error);
         }
 
         // Get active sessions (Now Playing)
+        logger.debug('Fetching active sessions from Jellyfin');
         const sessionsResponse = await jellyfinService.client.get('/Sessions');
         if (sessionsResponse.data) {
           const activeSessions = sessionsResponse.data.filter(s => s.NowPlayingItem);
           nowPlaying = activeSessions.length;
+          logger.info(`Active sessions count: ${nowPlaying}`);
 
           // Build recent activity from active sessions
           recentActivity = activeSessions.slice(0, 5).map(session => ({
@@ -375,27 +385,44 @@ class AdminController {
             action: `watching ${session.NowPlayingItem?.Name || 'content'}`,
             time: 'Now'
           }));
+          logger.debug(`Generated ${recentActivity.length} recent activity items from sessions`);
         }
+
+        // Get pending registrations count
+        logger.debug('Counting pending registrations');
+        const pendingCount = db.prepare('SELECT COUNT(*) as count FROM user_expiration WHERE isActive = 0').get().count;
+        pendingRequests = pendingCount;
+        logger.info(`Pending registrations count: ${pendingRequests}`);
 
         // If no active sessions, get recent activity from audit log
         if (recentActivity.length === 0) {
+          logger.debug('No active sessions, fetching recent activity from audit log');
           const auditLogs = db.prepare('SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT 5').all();
           recentActivity = auditLogs.map(log => ({
             user: log.adminId ? `Admin #${log.adminId}` : 'System',
             action: log.action,
             time: new Date(log.timestamp).toLocaleTimeString()
           }));
+          logger.debug(`Generated ${recentActivity.length} recent activity items from audit log`);
         }
       } catch (error) {
         logger.warn('Failed to fetch Jellyfin stats:', error.message);
+        logger.debug('Jellyfin error details:', {
+          code: error.code,
+          status: error.response?.status,
+          url: error.config?.url
+        });
         jellyfinConnected = false;
       }
 
       // Fallback: Get stats from local database if Jellyfin is unavailable
       if (!jellyfinConnected) {
+        logger.info('Using fallback local database stats');
         totalUsers = db.prepare("SELECT COUNT(*) as count FROM api_users WHERE role != 'admin'").get().count;
         nowPlaying = 0;
+        pendingRequests = db.prepare('SELECT COUNT(*) as count FROM user_expiration WHERE isActive = 0').get().count;
         recentActivity = [];
+        logger.info(`Fallback stats - Users: ${totalUsers}, Pending: ${pendingRequests}`);
       }
 
       res.json({
@@ -604,39 +631,58 @@ class AdminController {
    */
   async getAllJellyfinUsers(req, res, next) {
     try {
+      logger.info('Fetching all Jellyfin users');
+      
       const jellyfinUsers = await jellyfinService.getAllUsers();
       
       if (!jellyfinUsers.success) {
+        logger.error('Failed to fetch users from Jellyfin:', jellyfinUsers.error);
         return res.status(500).json({
           success: false,
           error: {
             code: 'JELLYFIN_ERROR',
-            message: 'Failed to fetch users from Jellyfin'
+            message: 'Failed to fetch users from Jellyfin',
+            details: jellyfinUsers.error
           }
         });
       }
 
+      logger.info(`Fetched ${jellyfinUsers.data.length} users from Jellyfin`);
+
       // Merge with local database data (email, expiration, etc)
       const users = jellyfinUsers.data.map(jfUser => {
+        logger.debug(`Processing Jellyfin user: ${jfUser.Id} - ${jfUser.Name}`);
+        
         const dbUser = db.prepare('SELECT * FROM api_users WHERE jellyfinUserId = ?').get(jfUser.Id);
+        logger.debug(`Local database user found: ${dbUser ? 'Yes' : 'No'}`);
+        
         let profile = {};
         try {
           profile = dbUser?.profile_data ? JSON.parse(dbUser.profile_data) : {};
         } catch (e) {
+          logger.warn(`Failed to parse profile data for user ${jfUser.Id}:`, e.message);
           profile = {};
         }
 
         // Get expiration and package info
-        const expiration = dbUser ? db.prepare(`
-          SELECT ue.*, p.name as packageName, p.durationMonths 
-          FROM user_expiration ue
-          LEFT JOIN packages p ON ue.packageId = p.id
-          WHERE ue.userId = ?
-          ORDER BY ue.created_at DESC
-          LIMIT 1
-        `).get(dbUser.id) : null;
+        let expiration = null;
+        if (dbUser) {
+          try {
+            expiration = db.prepare(`
+              SELECT ue.*, p.name as packageName, p.durationMonths
+              FROM user_expiration ue
+              LEFT JOIN packages p ON ue.packageId = p.id
+              WHERE ue.userId = ?
+              ORDER BY ue.created_at DESC
+              LIMIT 1
+            `).get(dbUser.id);
+            logger.debug(`Expiration data for user ${jfUser.Id}: ${expiration ? 'Found' : 'Not found'}`);
+          } catch (e) {
+            logger.error(`Error fetching expiration for user ${jfUser.Id}:`, e.message);
+          }
+        }
 
-        return {
+        const mergedUser = {
           ...jfUser,
           email: dbUser?.email || null,
           phone: profile.phone || null,
@@ -644,7 +690,17 @@ class AdminController {
           packageId: expiration?.packageId || null,
           expirationDate: expiration?.expirationDate || null
         };
+
+        logger.debug(`Merged user data for ${jfUser.Id}:`, {
+          hasEmail: !!mergedUser.email,
+          hasPhone: !!mergedUser.phone,
+          hasPackage: !!mergedUser.package
+        });
+
+        return mergedUser;
       });
+
+      logger.info(`Successfully merged data for ${users.length} users`);
 
       res.json({
         success: true,
