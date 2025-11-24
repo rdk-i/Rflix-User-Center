@@ -18,10 +18,10 @@ const configRoutes = require('./routes/config');
 const registrationRoutes = require('./routes/registration');
 const notificationRoutes = require('./routes/notifications');
 const couponRoutes = require('./routes/coupons');
-const subscriptionRoutes = require('./routes/subscriptions');
+
 const simplePackageRoutes = require('./routes/simplePackages');
 const simpleRegistrationRoutes = require('./routes/simpleRegistration');
-const packageRoutes = require('./routes/packages');
+
 const usageLimitsRoutes = require('./routes/usageLimits');
 const healthRoutes = require('./routes/health');
 
@@ -107,12 +107,12 @@ if (!process.env.SETUP_COMPLETED) {
   app.use('/api/config', configRoutes);
   app.use('/api/registration', registrationRoutes);
   app.use('/api/notifications', notificationRoutes);
-  app.use('/api/subscriptions', subscriptionRoutes);
+  
   app.use('/api/coupons', couponRoutes);
   app.use('/api/usage-limits', usageLimitsRoutes);
   app.use('/api/simple-packages', simplePackageRoutes);
   app.use('/api/simple-registration', simpleRegistrationRoutes);
-  app.use('/api/packages', packageRoutes);
+  
   app.use('/api/form-fields', require('./routes/formFields'));
 }
 
