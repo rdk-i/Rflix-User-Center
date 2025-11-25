@@ -22,70 +22,121 @@ async function loadForms() {
     
     <!-- Add/Edit Field Modal -->
     <div id="fieldModal" class="modal-overlay" style="display: none;">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 class="modal-title" id="modalTitle">Add Form Field</h3>
-          <button class="modal-close" onclick="closeFieldModal()">×</button>
+      <div class="modal-content neu-panel" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <h3 class="modal-title" id="modalTitle" style="font-size: 1.5rem; font-weight: 600; margin: 0;">Add Form Field</h3>
+          <button class="neu-btn neu-btn-sm" onclick="closeFieldModal()" style="padding: 8px 12px;">✕</button>
         </div>
-        <div class="modal-body">
-          <form id="fieldForm">
-            <input type="hidden" id="fieldId">
-            
-            <div class="form-group">
-              <label class="form-label">Field Name *</label>
-              <input type="text" id="fieldName" class="neu-input" placeholder="e.g., phone, address" required>
-              <small class="text-muted">Internal name (lowercase, no spaces)</small>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">Label *</label>
-              <input type="text" id="fieldLabel" class="neu-input" placeholder="e.g., Phone Number" required>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">Type *</label>
-              <select id="fieldType" class="neu-input" required>
-                <option value="text">Text</option>
-                <option value="email">Email</option>
-                <option value="tel">Phone</option>
-                <option value="number">Number</option>
-                <option value="textarea">Textarea</option>
-                <option value="select">Dropdown</option>
-                <option value="checkbox">Checkbox</option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">Placeholder</label>
-              <input type="text" id="fieldPlaceholder" class="neu-input" placeholder="Optional placeholder text">
-            </div>
-            
-            <div class="form-group" id="optionsGroup" style="display: none;">
-              <label class="form-label">Options (comma-separated)</label>
-              <input type="text" id="fieldOptions" class="neu-input" placeholder="Option 1, Option 2, Option 3">
-              <small class="text-muted">For dropdown fields</small>
-            </div>
-            
-            <div class="form-group">
-              <label class="flex items-center gap-2">
-                <input type="checkbox" id="fieldRequired" class="neu-toggle">
-                <span>Required Field</span>
-              </label>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">Display Order</label>
-              <input type="number" id="fieldOrder" class="neu-input" value="0" min="0">
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button class="neu-btn" onclick="closeFieldModal()">Cancel</button>
-          <button class="neu-btn primary" onclick="saveField()">Save Field</button>
-        </div>
+        
+        <form id="fieldForm" onsubmit="saveField(event)">
+          <input type="hidden" id="fieldId">
+          
+          <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; color: var(--text); font-weight: 500; margin-bottom: 0.5rem;">
+              Field Name <span style="color: var(--danger);">*</span>
+            </label>
+            <input type="text" id="fieldName" class="neu-input" placeholder="e.g., phone, address" required>
+            <small style="display: block; color: var(--text-muted); margin-top: 0.5rem; font-size: 0.85rem;">
+              Internal name (lowercase, no spaces)
+            </small>
+          </div>
+          
+          <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; color: var(--text); font-weight: 500; margin-bottom: 0.5rem;">
+              Label <span style="color: var(--danger);">*</span>
+            </label>
+            <input type="text" id="fieldLabel" class="neu-input" placeholder="e.g., Phone Number" required>
+          </div>
+          
+          <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; color: var(--text); font-weight: 500; margin-bottom: 0.5rem;">
+              Type <span style="color: var(--danger);">*</span>
+            </label>
+            <select id="fieldType" class="neu-input" required>
+              <option value="text">Text</option>
+              <option value="email">Email</option>
+              <option value="tel">Phone</option>
+              <option value="number">Number</option>
+              <option value="textarea">Textarea</option>
+              <option value="select">Dropdown</option>
+              <option value="checkbox">Checkbox</option>
+            </select>
+          </div>
+          
+          <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; color: var(--text); font-weight: 500; margin-bottom: 0.5rem;">
+              Placeholder
+            </label>
+            <input type="text" id="fieldPlaceholder" class="neu-input" placeholder="Optional placeholder text">
+          </div>
+          
+          <div id="optionsGroup" style="margin-bottom: 1.5rem; display: none;">
+            <label style="display: block; color: var(--text); font-weight: 500; margin-bottom: 0.5rem;">
+              Options (comma-separated)
+            </label>
+            <input type="text" id="fieldOptions" class="neu-input" placeholder="Option 1, Option 2, Option 3">
+            <small style="display: block; color: var(--text-muted); margin-top: 0.5rem; font-size: 0.85rem;">
+              For dropdown fields
+            </small>
+          </div>
+          
+          <div style="margin-bottom: 1.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; user-select: none;">
+              <input type="checkbox" id="fieldRequired" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent);">
+              <span style="color: var(--text); font-weight: 500;">Required Field</span>
+            </label>
+          </div>
+          
+          <div style="margin-bottom: 2rem;">
+            <label style="display: block; color: var(--text); font-weight: 500; margin-bottom: 0.5rem;">
+              Display Order
+            </label>
+            <input type="number" id="fieldOrder" class="neu-input" value="0" min="0">
+          </div>
+          
+          <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <button type="button" class="neu-btn" onclick="closeFieldModal()">Cancel</button>
+            <button type="submit" class="neu-btn primary">Save Field</button>
+          </div>
+        </form>
       </div>
     </div>
   `;
+  
+  // Add modal styles
+  const style = document.createElement('style');
+  style.textContent = `
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 2rem;
+      backdrop-filter: blur(4px);
+    }
+    
+    .modal-content {
+      animation: modalSlideIn 0.3s ease-out;
+    }
+    
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  `;
+  document.head.appendChild(style);
   
   // Show/hide options field based on type
   document.getElementById('fieldType').addEventListener('change', (e) => {
@@ -135,22 +186,27 @@ function renderFormFields(fields) {
   }
   
   // Sort by order
-  fields.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+  fields.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
   
   container.innerHTML = `
     <div style="display: grid; gap: 1.5rem;">
-      ${fields.map(field => `
+      ${fields.map(field => {
+        // Use field_key from API
+        const fieldName = field.field_key || field.name || 'unnamed';
+        const isRequired = field.required || field.isRequired;
+        
+        return `
         <div class="neu-panel" style="padding: 1.5rem;">
           <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem;">
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
                 <h4 style="font-weight: 600; font-size: 1.1rem; margin: 0;">${field.label}</h4>
-                ${field.isRequired ? '<span class="neu-badge" style="background: rgba(239, 68, 68, 0.2); color: var(--danger); font-size: 0.7rem;">Required</span>' : ''}
+                ${isRequired ? '<span class="neu-badge" style="background: rgba(239, 68, 68, 0.2); color: var(--danger); font-size: 0.7rem;">Required</span>' : ''}
                 <span class="neu-badge" style="font-size: 0.7rem;">${field.type}</span>
               </div>
               <div style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
                 <div style="margin-bottom: 0.5rem;">
-                  <strong>Field name:</strong> <code style="background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">${field.name}</code>
+                  <strong>Field name:</strong> <code style="background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">${fieldName}</code>
                 </div>
                 ${field.placeholder ? `
                   <div style="margin-bottom: 0.5rem;">
@@ -159,11 +215,11 @@ function renderFormFields(fields) {
                 ` : ''}
                 ${field.options ? `
                   <div style="margin-bottom: 0.5rem;">
-                    <strong>Options:</strong> ${field.options}
+                    <strong>Options:</strong> ${typeof field.options === 'string' ? field.options : JSON.stringify(field.options)}
                   </div>
                 ` : ''}
                 <div>
-                  <strong>Order:</strong> ${field.displayOrder || 0}
+                  <strong>Order:</strong> ${field.sort_order || 0}
                 </div>
               </div>
             </div>
@@ -173,7 +229,7 @@ function renderFormFields(fields) {
             </div>
           </div>
         </div>
-      `).join('')}
+      `}).join('')}
     </div>
   `;
 }
@@ -182,6 +238,7 @@ function openAddFieldModal() {
   document.getElementById('modalTitle').textContent = 'Add Form Field';
   document.getElementById('fieldForm').reset();
   document.getElementById('fieldId').value = '';
+  document.getElementById('optionsGroup').style.display = 'none';
   document.getElementById('fieldModal').style.display = 'flex';
 }
 
@@ -199,13 +256,26 @@ async function editField(id) {
       if (field) {
         document.getElementById('modalTitle').textContent = 'Edit Form Field';
         document.getElementById('fieldId').value = field.id;
-        document.getElementById('fieldName').value = field.name;
-        document.getElementById('fieldLabel').value = field.label;
-        document.getElementById('fieldType').value = field.type;
+        
+        // Use field_key from API
+        document.getElementById('fieldName').value = field.field_key || field.name || '';
+        document.getElementById('fieldLabel').value = field.label || '';
+        document.getElementById('fieldType').value = field.type || 'text';
         document.getElementById('fieldPlaceholder').value = field.placeholder || '';
-        document.getElementById('fieldOptions').value = field.options || '';
-        document.getElementById('fieldRequired').checked = field.isRequired;
-        document.getElementById('fieldOrder').value = field.displayOrder;
+        
+        // Handle options (could be string or array)
+        if (field.options) {
+          if (typeof field.options === 'string') {
+            document.getElementById('fieldOptions').value = field.options;
+          } else if (Array.isArray(field.options)) {
+            document.getElementById('fieldOptions').value = field.options.join(', ');
+          }
+        } else {
+          document.getElementById('fieldOptions').value = '';
+        }
+        
+        document.getElementById('fieldRequired').checked = field.required || field.isRequired || false;
+        document.getElementById('fieldOrder').value = field.sort_order || field.displayOrder || 0;
         
         // Show options if select type
         document.getElementById('optionsGroup').style.display = 
@@ -215,20 +285,22 @@ async function editField(id) {
       }
     }
   } catch (error) {
-    showAlert('Error loading field data', 'error');
+    showAlert('Error loading field data: ' + error.message, 'error');
   }
 }
 
-async function saveField() {
+async function saveField(event) {
+  if (event) event.preventDefault();
+  
   const id = document.getElementById('fieldId').value;
   const data = {
-    name: document.getElementById('fieldName').value,
+    field_key: document.getElementById('fieldName').value,
     label: document.getElementById('fieldLabel').value,
     type: document.getElementById('fieldType').value,
     placeholder: document.getElementById('fieldPlaceholder').value,
     options: document.getElementById('fieldOptions').value,
-    isRequired: document.getElementById('fieldRequired').checked,
-    displayOrder: parseInt(document.getElementById('fieldOrder').value)
+    required: document.getElementById('fieldRequired').checked ? 1 : 0,
+    sort_order: parseInt(document.getElementById('fieldOrder').value)
   };
   
   try {
