@@ -135,27 +135,42 @@ function renderFormFields(fields) {
   }
   
   // Sort by order
-  fields.sort((a, b) => a.displayOrder - b.displayOrder);
+  fields.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
   
   container.innerHTML = `
-    <div class="space-y-4">
+    <div style="display: grid; gap: 1.5rem;">
       ${fields.map(field => `
-        <div class="flex items-center justify-between p-4 border-b border-gray-700">
-          <div class="flex-1">
-            <div class="flex items-center gap-3 mb-2">
-              <h4 class="font-bold">${field.label}</h4>
-              ${field.isRequired ? '<span class="neu-badge text-danger">Required</span>' : ''}
-              <span class="neu-badge">${field.type}</span>
+        <div class="neu-panel" style="padding: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                <h4 style="font-weight: 600; font-size: 1.1rem; margin: 0;">${field.label}</h4>
+                ${field.isRequired ? '<span class="neu-badge" style="background: rgba(239, 68, 68, 0.2); color: var(--danger); font-size: 0.7rem;">Required</span>' : ''}
+                <span class="neu-badge" style="font-size: 0.7rem;">${field.type}</span>
+              </div>
+              <div style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
+                <div style="margin-bottom: 0.5rem;">
+                  <strong>Field name:</strong> <code style="background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">${field.name}</code>
+                </div>
+                ${field.placeholder ? `
+                  <div style="margin-bottom: 0.5rem;">
+                    <strong>Placeholder:</strong> "${field.placeholder}"
+                  </div>
+                ` : ''}
+                ${field.options ? `
+                  <div style="margin-bottom: 0.5rem;">
+                    <strong>Options:</strong> ${field.options}
+                  </div>
+                ` : ''}
+                <div>
+                  <strong>Order:</strong> ${field.displayOrder || 0}
+                </div>
+              </div>
             </div>
-            <p class="text-sm text-muted">
-              Field name: <code>${field.name}</code>
-              ${field.placeholder ? ` • Placeholder: "${field.placeholder}"` : ''}
-            </p>
-            ${field.options ? `<p class="text-sm text-muted">Options: ${field.options}</p>` : ''}
-          </div>
-          <div class="flex gap-2">
-            <button onclick="editField(${field.id})" class="neu-btn neu-btn-sm" title="Edit">✏️</button>
-            <button onclick="deleteField(${field.id})" class="neu-btn neu-btn-sm text-danger" title="Delete">🗑️</button>
+            <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+              <button onclick="editField(${field.id})" class="neu-btn neu-btn-sm" title="Edit" style="padding: 8px 12px;">✏️</button>
+              <button onclick="deleteField(${field.id})" class="neu-btn neu-btn-sm" title="Delete" style="padding: 8px 12px; color: var(--danger);">🗑️</button>
+            </div>
           </div>
         </div>
       `).join('')}

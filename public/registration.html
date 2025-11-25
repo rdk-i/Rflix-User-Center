@@ -248,8 +248,8 @@
         const container = document.getElementById('dynamicFields');
         container.innerHTML = '';
 
-        // Sort by display order
-        const fields = json.data.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+        // Sort by sort_order (API uses sort_order, not displayOrder)
+        const fields = json.data.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
         fields.forEach(field => {
           const fieldHtml = createFieldHtml(field);
@@ -264,38 +264,55 @@
     }
 
     function createFieldHtml(field) {
-      const requiredAttr = field.isRequired ? 'required' : '';
-      const icon = getFieldIcon(field);
+      // Map API field names to our usage
+      const fieldName = field.field_key || field.name;
+      const fieldLabel = field.label;
+      const fieldType = field.type;
+      const isRequired = field.required || field.isRequired;
+      const placeholder = field.placeholder;
       
-      if (field.type === 'select') {
-        const options = field.options ? field.options.split(',').map(o => o.trim()) : [];
+      const requiredAttr = isRequired ? 'required' : '';
+      const icon = getFieldIcon({ name: fieldName, type: fieldType });
+      
+      if (fieldType === 'select') {
+        // Parse options if it's a string
+        let options = [];
+        if (typeof field.options === 'string') {
+          options = field.options.split(',').map(o => o.trim());
+        } else if (Array.isArray(field.options)) {
+          options = field.options.map(opt => {
+            if (typeof opt === 'object') return opt.label || opt.value || opt;
+            return opt;
+          });
+        }
+        
         return `
           <div class="input-wrapper">
-            ${field.label ? `<label class="field-label">${field.label}${field.isRequired ? ' *' : ''}</label>` : ''}
+            ${fieldLabel ? `<label class="field-label">${fieldLabel}${isRequired ? ' *' : ''}</label>` : ''}
             <span class="input-icon">📋</span>
             <select 
-              id="${field.name}" 
-              name="${field.name}" 
+              id="${fieldName}" 
+              name="${fieldName}" 
               ${requiredAttr}
               class="neu-input input-with-icon"
             >
-              <option value="">${field.placeholder || 'Select ' + field.label}</option>
+              <option value="">${placeholder || 'Select ' + fieldLabel}</option>
               ${options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
             </select>
           </div>
         `;
       }
       
-      if (field.type === 'textarea') {
+      if (fieldType === 'textarea') {
         return `
           <div class="input-wrapper">
-            ${field.label ? `<label class="field-label">${field.label}${field.isRequired ? ' *' : ''}</label>` : ''}
+            ${fieldLabel ? `<label class="field-label">${fieldLabel}${isRequired ? ' *' : ''}</label>` : ''}
             <textarea 
-              id="${field.name}" 
-              name="${field.name}" 
+              id="${fieldName}" 
+              name="${fieldName}" 
               ${requiredAttr}
               class="neu-input"
-              placeholder="${field.placeholder || field.label}"
+              placeholder="${placeholder || fieldLabel}"
               rows="3"
             ></textarea>
           </div>
@@ -304,15 +321,15 @@
 
       return `
         <div class="input-wrapper">
-          ${field.label ? `<label class="field-label">${field.label}${field.isRequired ? ' *' : ''}</label>` : ''}
+          ${fieldLabel ? `<label class="field-label">${fieldLabel}${isRequired ? ' *' : ''}</label>` : ''}
           <span class="input-icon">${icon}</span>
           <input 
-            type="${field.type}" 
-            id="${field.name}" 
-            name="${field.name}" 
+            type="${fieldType}" 
+            id="${fieldName}" 
+            name="${fieldName}" 
             ${requiredAttr}
             class="neu-input input-with-icon"
-            placeholder="${field.placeholder || field.label}"
+            placeholder="${placeholder || fieldLabel}"
           />
         </div>
       `;
