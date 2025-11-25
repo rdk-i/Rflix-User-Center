@@ -6,15 +6,32 @@
     <title>Admin Dashboard - Rflix API</title>
     <link rel="stylesheet" href="/styles.css" />
     <link rel="stylesheet" href="/admin_dashboard/dashboard-styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
     <div class="theme-toggle">
-      <button class="neu-btn neu-btn-sm" onclick="toggleTheme()">Dark</button>
+      <button class="neu-btn btn-icon" onclick="toggleTheme()">🌙</button>
     </div>
 
-    <div class="dashboard-grid">
+    <!-- Mobile Header -->
+    <div class="mobile-header md:hidden flex justify-between items-center px-4 py-3 bg-bg shadow-soft z-50 relative">
+      <h2 class="text-lg font-bold text-accent m-0 pl-2">Rflix Admin</h2>
+      <div class="flex items-center gap-3">
+        <button class="neu-btn btn-icon" onclick="toggleTheme()" id="mobileThemeBtn">
+          🌙
+        </button>
+        <button id="mobile-menu-btn" class="neu-btn neu-btn-sm w-10 h-10 flex items-center justify-center p-0 rounded-full" onclick="toggleSidebar()">
+          <span class="text-xl">☰</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="dashboard-grid relative">
+      <!-- Sidebar Overlay -->
+      <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden transition-opacity" onclick="toggleSidebar()"></div>
+
       <!-- Sidebar -->
-      <aside class="neu-sidebar">
+      <aside class="neu-sidebar" id="sidebar">
         <div class="mb-8 text-center px-4 pt-4">
           <h2 class="text-2xl font-bold mb-1 text-accent">Rflix Admin</h2>
           <p class="text-muted text-sm" id="adminEmail">Loading...</p>
@@ -69,21 +86,52 @@
       <main>
         <!-- Dashboard View -->
         <div id="dashboard-view" class="view-section">
-          <h1 class="text-3xl font-bold mb-8">Dashboard Overview</h1>
+          <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold m-0">Dashboard Overview</h1>
+          </div>
+
+          <!-- Chart Section -->
+          <div class="neu-panel mb-8">
+            <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+              <h3 class="text-lg font-semibold">Now Playing History</h3>
+              <select id="chartTimeRange" class="neu-input" style="width: auto; padding: 8px 16px;">
+                <optgroup label="Hourly">
+                  <option value="1h">Last 1 Hour</option>
+                  <option value="2h">Last 2 Hours</option>
+                  <option value="3h">Last 3 Hours</option>
+                  <option value="6h">Last 6 Hours</option>
+                  <option value="12h">Last 12 Hours</option>
+                  <option value="24h" selected>Last 24 Hours</option>
+                </optgroup>
+                <optgroup label="Daily">
+                  <option value="2d">Last 2 Days</option>
+                  <option value="3d">Last 3 Days</option>
+                  <option value="7d">Last 7 Days</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="chart-container" style="position: relative; height: 300px; width: 100%; box-shadow: var(--shadow-in); border-radius: var(--radius-md); padding: 1rem;">
+              <canvas id="nowPlayingChart"></canvas>
+            </div>
+          </div>
           
           <!-- Stats Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div class="neu-panel text-center">
-              <p class="stat-header">Total Users</p>
+              <h3 class="text-lg font-semibold mb-2">Total Users</h3>
               <p class="text-4xl font-bold text-accent" id="totalUsers">-</p>
             </div>
             <div class="neu-panel text-center">
-              <p class="stat-header">Now Playing</p>
-              <p class="text-4xl font-bold text-input-text" id="nowPlaying">-</p>
+              <h3 class="text-lg font-semibold mb-2">Total Online</h3>
+              <p class="text-4xl font-bold text-success" id="totalOnline">-</p>
             </div>
             <div class="neu-panel text-center">
-              <p class="stat-header">Pending Requests</p>
-              <p class="text-4xl font-bold text-yellow-500" id="pendingReqs">-</p>
+              <h3 class="text-lg font-semibold mb-2">Now Playing</h3>
+              <p class="text-4xl font-bold text-accent" id="nowPlaying">-</p>
+            </div>
+            <div class="neu-panel text-center">
+              <h3 class="text-lg font-semibold mb-2">Pending Requests</h3>
+              <p class="text-4xl font-bold text-danger" id="pendingReqs">-</p>
             </div>
           </div>
 
@@ -137,5 +185,6 @@
     <script src="dashboard-logs.js"></script>
     <script src="dashboard-settings.js"></script>
     <script src="dashboard-forms.js"></script>
+    <script src="dashboard-chart.js"></script>
   </body>
 </html>

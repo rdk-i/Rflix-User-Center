@@ -8,7 +8,7 @@
 </head>
 <body>
   <div class="theme-toggle">
-    <button class="theme-btn" onclick="toggleTheme()">Dark</button>
+    <button class="neu-btn btn-icon" onclick="toggleTheme()">🌙</button>
   </div>
 
   <div style="max-width: 1024px; margin: 0 auto; padding: 2rem;">
@@ -20,7 +20,7 @@
       </div>
       <div class="flex items-center gap-4">
         <span id="userEmail" class="text-muted hidden md:block"></span>
-        <button onclick="logout()" class="neu-btn neu-btn-sm">Logout</button>
+        <button onclick="logout()" class="neu-btn neu-btn-sm danger">Logout</button>
       </div>
     </div>
 
@@ -58,7 +58,7 @@
         <div class="neu-input-group">
           <input type="text" id="extendCoupon" class="neu-input" placeholder="Coupon Code (Optional)" />
         </div>
-        <button type="submit" class="neu-btn" style="margin-top: 0;">Extend Now</button>
+        <button type="submit" class="neu-btn primary" style="margin-top: 0;">Extend Now</button>
       </form>
     </div>
 
@@ -87,25 +87,27 @@
 
   <script>
     // Theme Toggle Logic
+    // Theme Toggle Logic
     function toggleTheme() {
       const body = document.body;
-      const btn = document.querySelector('.theme-btn');
+      const btn = document.querySelector('.theme-toggle button');
       
       body.classList.toggle('light-mode');
       
       if (body.classList.contains('light-mode')) {
-        btn.textContent = 'Light';
+        btn.textContent = '☀️';
         localStorage.setItem('theme', 'light');
       } else {
-        btn.textContent = 'Dark';
+        btn.textContent = '🌙';
         localStorage.setItem('theme', 'dark');
       }
     }
 
     // Init Theme
+    // Init Theme
     if (localStorage.getItem('theme') === 'light') {
       document.body.classList.add('light-mode');
-      document.querySelector('.theme-btn').textContent = 'Light';
+      document.querySelector('.theme-toggle button').textContent = '☀️';
     }
 
     // Check authentication

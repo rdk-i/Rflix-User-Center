@@ -201,7 +201,7 @@ function renderFormFields(fields) {
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
                 <h4 style="font-weight: 600; font-size: 1.1rem; margin: 0;">${field.label}</h4>
-                ${isRequired ? '<span class="neu-badge" style="background: rgba(239, 68, 68, 0.2); color: var(--danger); font-size: 0.7rem;">Required</span>' : ''}
+                ${isRequired ? '<span class="neu-badge danger" style="font-size: 0.7rem;">Required</span>' : ''}
                 <span class="neu-badge" style="font-size: 0.7rem;">${field.type}</span>
               </div>
               <div style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
@@ -225,7 +225,7 @@ function renderFormFields(fields) {
             </div>
             <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
               <button onclick="editField(${field.id})" class="neu-btn neu-btn-sm" title="Edit" style="padding: 8px 12px;">✏️</button>
-              <button onclick="deleteField(${field.id})" class="neu-btn neu-btn-sm" title="Delete" style="padding: 8px 12px; color: var(--danger);">🗑️</button>
+              <button onclick="deleteField(${field.id})" class="neu-btn neu-btn-sm danger" title="Delete" style="padding: 8px 12px;">🗑️</button>
             </div>
           </div>
         </div>

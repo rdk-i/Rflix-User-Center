@@ -5,23 +5,30 @@
 function toggleTheme() {
   const body = document.body;
   const btn = document.querySelector('.theme-toggle button');
+  const mobileBtn = document.getElementById('mobileThemeBtn');
   
   body.classList.toggle('light-mode');
   
-  if (body.classList.contains('light-mode')) {
-    btn.textContent = 'Light';
-    localStorage.setItem('theme', 'light');
-  } else {
-    btn.textContent = 'Dark';
-    localStorage.setItem('theme', 'dark');
-  }
+  const isLight = body.classList.contains('light-mode');
+  const theme = isLight ? 'light' : 'dark';
+  
+  localStorage.setItem('theme', theme);
+  
+  // Update Desktop Button Icon
+  if (btn) btn.textContent = isLight ? '☀️' : '🌙';
+  
+  // Update Mobile Icon
+  if (mobileBtn) mobileBtn.textContent = isLight ? '☀️' : '🌙';
 }
 
 // Initialize Theme
 if (localStorage.getItem('theme') === 'light') {
   document.body.classList.add('light-mode');
   const btn = document.querySelector('.theme-toggle button');
-  if (btn) btn.textContent = 'Light';
+  if (btn) btn.textContent = '☀️';
+  
+  const mobileBtn = document.getElementById('mobileThemeBtn');
+  if (mobileBtn) mobileBtn.textContent = '☀️';
 }
 
 // Check Authentication
@@ -102,6 +109,12 @@ async function loadDashboardData() {
       document.getElementById('nowPlaying').textContent = json.data.nowPlaying;
       document.getElementById('pendingReqs').textContent = json.data.pendingRequests;
       
+      // Update Total Online if available
+      const totalOnlineEl = document.getElementById('totalOnline');
+      if (totalOnlineEl) {
+        totalOnlineEl.textContent = json.data.totalOnline !== undefined ? json.data.totalOnline : '0';
+      }
+      
       // Update Jellyfin Status
       const jfStatus = document.getElementById('jellyfinStatus');
       if (json.data.jellyfinConnected) {
@@ -129,14 +142,26 @@ function loadRecentActivity(activities) {
   }
   
   container.innerHTML = activities.slice(0, 5).map(activity => {
-    const message = activity.message || activity.action || 'Unknown Activity';
+    // Determine the message to display
+    let message = activity.message || activity.action || 'Unknown Activity';
+    
+    // If there's a user associated, prepend it (e.g., "User123: watching The Meg")
+    const username = activity.user || activity.username; // Backend sends 'user' or 'username'
+    
+    if (username && username !== 'Unknown') {
+      message = `<span class="text-accent font-semibold">${username}</span>: ${message}`;
+    } else if (activity.user_id) {
+       // Fallback if username isn't directly available but ID is
+       message = `User #${activity.user_id}: ${message}`;
+    }
+
     const time = activity.timestamp || activity.createdAt || new Date();
     const dateStr = new Date(time).toLocaleString();
     
     return `
-    <div class="flex justify-between items-center py-3 border-b border-gray-700 last:border-0">
-      <span class="text-sm">${message}</span>
-      <span class="text-xs text-muted">${dateStr}</span>
+    <div class="flex justify-between items-start py-3 border-b border-gray-700 last:border-0" style="gap: 1rem;">
+      <span class="text-sm" style="flex: 1; min-width: 0;">${message}</span>
+      <span class="text-xs text-muted" style="white-space: nowrap; min-width: 140px; text-align: right;">${dateStr}</span>
     </div>
   `}).join('');
 }
@@ -182,6 +207,33 @@ function showAlert(message, type = 'info') {
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
   loadDashboardData();
+  
+  // Close sidebar when clicking a nav item on mobile
+  document.querySelectorAll('.nav-item').forEach((item) => {
+    item.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && sidebar.classList.contains('open')) {
+          toggleSidebar();
+        }
+      }
+    });
+  });
 });
+
+// Mobile Sidebar Toggle
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  
+  if (sidebar && overlay) {
+    sidebar.classList.toggle('open');
+    if (sidebar.classList.contains('open')) {
+      overlay.classList.remove('hidden');
+    } else {
+      overlay.classList.add('hidden');
+    }
+  }
+}
 
 console.log('Dashboard Core loaded');

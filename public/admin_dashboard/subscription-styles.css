@@ -346,6 +346,9 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  body {
+    padding: 1rem;
+  }
   .package-actions {
     grid-template-columns: 1fr;
   }

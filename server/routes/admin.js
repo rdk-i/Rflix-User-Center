@@ -32,6 +32,8 @@ router.put('/users/:userId', auditLogger('UPDATE_USER'), adminController.updateU
 
 // Settings
 router.get('/settings', adminController.getSettings);
+router.post('/settings', auditLogger('UPDATE_SETTINGS'), adminController.updateSettings);
+router.post('/change-password', auditLogger('CHANGE_PASSWORD'), adminController.updateAdminPassword);
 router.post('/test-jellyfin', adminController.testJellyfinConnection);
 router.post('/update-jellyfin', auditLogger('UPDATE_JELLYFIN_CONFIG'), adminController.updateJellyfinConfig);
 router.post('/backup', adminController.createBackup);

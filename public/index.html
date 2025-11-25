@@ -1,52 +1,153 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rflix API - Home</title>
+  <title>Rflix - Home</title>
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      padding: 2rem;
+    }
+    
+    .home-container {
+      width: 100%;
+      max-width: 420px;
+    }
+    
+    .neu-login-card {
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      padding: 3rem 2.5rem;
+      box-shadow: 14px 14px 40px var(--shadow-dark), -14px -14px 40px var(--shadow-light);
+      border: 1px solid rgba(255,255,255,0.02);
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      z-index: 100;
+    }
+
+    .nav-btn {
+      width: 100%;
+      padding: 0.875rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: var(--bg);
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-soft);
+      transition: var(--transition);
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-2px);
+      color: var(--accent);
+      box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
+    }
+
+    .nav-btn:active {
+      transform: translateY(0);
+      box-shadow: var(--shadow-inset);
+    }
+
+    .admin-link {
+      text-align: center;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .admin-link a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .admin-link a:hover {
+      color: var(--accent);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+      
+      .neu-login-card {
+        padding: 2rem 1.5rem;
+      }
+      
+      .theme-toggle {
+        top: 1rem;
+        right: 1rem;
+      }
+    }
+  </style>
 </head>
-<body class="centered">
+<body>
   <div class="theme-toggle">
-    <button class="theme-btn" onclick="toggleTheme()">Dark</button>
+    <button class="neu-btn btn-icon" onclick="toggleTheme()">🌙</button>
   </div>
 
-  <div class="neu-card text-center" style="max-width: 500px;">
-    <h1 class="text-4xl mb-2">Rflix</h1>
-    <p class="text-muted mb-8">Premium Media Streaming Management</p>
+  <div class="home-container">
+    <div class="neu-login-card">
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 2.5rem;">
+        <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; letter-spacing: 0.5px;">Rflix</h1>
+        <p style="color: var(--text-muted); font-size: 0.875rem; font-weight: 400;">Premium Media Streaming Management</p>
+      </div>
 
-    <div class="grid grid-cols-1 gap-4 w-full">
-      <a href="/user" class="neu-btn">
-        User Login
-      </a>
-      <a href="/registration" class="neu-btn" style="color: var(--text);">
-        Create Account
-      </a>
-      <a href="/admin" class="neu-btn" style="font-size: 0.8rem; height: 40px; margin-top: 2rem; color: var(--text-muted); box-shadow: none; background: transparent;">
-        Admin Portal
-      </a>
+      <!-- Navigation Buttons -->
+      <div>
+        <a href="/user" class="nav-btn">User Login</a>
+        <a href="/registration" class="nav-btn">Create Account</a>
+      </div>
+
+      <!-- Admin Portal Link -->
+      <div class="admin-link">
+        <a href="/admin">Admin Portal</a>
+      </div>
     </div>
   </div>
 
   <script>
     function toggleTheme() {
       const body = document.body;
-      const btn = document.querySelector('.theme-btn');
+      const btn = document.querySelector('.theme-toggle button');
       
       body.classList.toggle('light-mode');
       
       if (body.classList.contains('light-mode')) {
-        btn.textContent = 'Light';
+        btn.textContent = '☀️';
         localStorage.setItem('theme', 'light');
       } else {
-        btn.textContent = 'Dark';
+        btn.textContent = '🌙';
         localStorage.setItem('theme', 'dark');
       }
     }
 
+    // Init Theme
     if (localStorage.getItem('theme') === 'light') {
       document.body.classList.add('light-mode');
-      document.querySelector('.theme-btn').textContent = 'Light';
+      document.querySelector('.theme-toggle button').textContent = '☀️';
     }
   </script>
 </body>

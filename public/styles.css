@@ -1,11 +1,19 @@
-/* Rflix Premium Neumorphism - Dark Edition */
+/* Rflix Premium Neumorphism - Dual Theme Edition */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Base Colors - Dark Matte Theme */
+  /* Default to Dark Mode */
   --bg: #212121;
   --text: #ecf0f1;
   --text-muted: #95a5a6;
+  
+  /* Shadows - Dark Mode */
+  --shadow-light: #2a2a2a;
+  --shadow-dark: #181818;
+  
+  /* Borders */
+  --border-opacity: 0.05;
+  --border-color: rgba(255,255,255, var(--border-opacity));
   
   /* Accent Colors - Electric Cyan */
   --accent: #00e5ff;
@@ -14,29 +22,67 @@
   --success: #2ed573;
   --warning: #ffa502;
 
-  /* Neumorphic Shadows - Soft & Diffused */
-  --shadow-light: #2a2a2a;
-  --shadow-dark: #181818;
-  
-  --shadow-out: 
-    8px 8px 16px var(--shadow-dark), 
-    -8px -8px 16px var(--shadow-light);
-    
-  --shadow-in: 
-    inset 6px 6px 12px var(--shadow-dark), 
-    inset -6px -6px 12px var(--shadow-light);
-    
-  --shadow-deep: 
-    15px 15px 30px var(--shadow-dark), 
-    -15px -15px 30px var(--shadow-light);
-
-  /* Spacing & Radius */
-  --radius-sm: 12px;
-  --radius-md: 20px;
-  --radius-lg: 30px;
+  /* Spacing & Radius - Tighter Aesthetic */
+  --radius-sm: 0.375rem; /* 6px */
+  --radius-md: 0.55rem;  /* 8.8px - Matches reference */
+  --radius-lg: 1.25rem;  /* 20px */
   --radius-pill: 50px;
   
+  /* Refined Shadows */
+  --shadow-out: 
+    6px 6px 12px var(--shadow-dark), 
+    -6px -6px 12px var(--shadow-light);
+    
+  --shadow-out-sm: 
+    3px 3px 6px var(--shadow-dark), 
+    -3px -3px 6px var(--shadow-light);
+
+  --shadow-in: 
+    inset 2px 2px 5px var(--shadow-dark), 
+    inset -3px -3px 7px var(--shadow-light);
+    
+  --shadow-deep: 
+    8px 8px 16px var(--shadow-dark), 
+    -8px -8px 16px var(--shadow-light);
+
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Light Mode Theme */
+/* Light Mode Theme */
+body.light-mode {
+  --bg: #e6e7ee;
+  --text: #44476A;
+  --text-muted: #93a5be;
+  
+  /* Shadows - Light Mode */
+  --shadow-light: #ffffff;
+  --shadow-dark: #b8b9be;
+  
+  /* Borders */
+  --border-opacity: 1;
+  --border-color: #d1d9e6;
+  
+  /* Adjust Accent for Light Mode contrast if needed */
+  --accent: #0056B3; /* Blue from neumorphism.css */
+  --accent-glow: rgba(0, 86, 179, 0.4);
+
+  /* REDEFINE SHADOWS for Light Mode Scope */
+  --shadow-out: 
+    6px 6px 12px var(--shadow-dark), 
+    -6px -6px 12px var(--shadow-light);
+    
+  --shadow-out-sm: 
+    3px 3px 6px var(--shadow-dark), 
+    -3px -3px 6px var(--shadow-light);
+
+  --shadow-in: 
+    inset 2px 2px 5px var(--shadow-dark), 
+    inset -3px -3px 7px var(--shadow-light);
+    
+  --shadow-deep: 
+    8px 8px 16px var(--shadow-dark), 
+    -8px -8px 16px var(--shadow-light);
 }
 
 /* Reset & Base */
@@ -53,6 +99,7 @@ body {
   color: var(--text);
   min-height: 100vh;
   line-height: 1.6;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Typography */
@@ -82,14 +129,16 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--bg);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-out);
-  border: 1px solid rgba(255,255,255,0.02);
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
 }
 
 .neu-sidebar {
   background: var(--bg);
   box-shadow: var(--shadow-out);
-  border-right: 1px solid rgba(255,255,255,0.02);
+  border-right: 1px solid var(--border-color);
   border-radius: 0;
+  transition: var(--transition);
 }
 
 .neu-panel { padding: 2rem; }
@@ -100,8 +149,8 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text);
   border: none;
   padding: 12px 24px;
-  border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-out);
+  border-radius: var(--radius-pill); /* Can be var(--radius-sm) for square look */
+  box-shadow: var(--shadow-out-sm);
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
   letter-spacing: 1px;
@@ -120,8 +169,8 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-2px);
   color: var(--accent);
   box-shadow: 
-    10px 10px 20px var(--shadow-dark), 
-    -10px -10px 20px var(--shadow-light);
+    6px 6px 12px var(--shadow-dark), 
+    -6px -6px 12px var(--shadow-light);
 }
 
 .neu-btn:active {
@@ -138,13 +187,14 @@ h1, h2, h3, h4, h5, h6 {
 .neu-btn-sm {
   padding: 8px 16px;
   font-size: 0.75rem;
+  border-radius: var(--radius-sm);
 }
 
 /* Inputs - Inset Style */
 .neu-input {
   width: 100%;
   background: var(--bg);
-  border: none;
+  border: 1px solid transparent;
   padding: 15px 20px;
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-in);
@@ -155,10 +205,11 @@ h1, h2, h3, h4, h5, h6 {
 
 .neu-input:focus {
   box-shadow: 
-    inset 8px 8px 16px var(--shadow-dark), 
-    inset -8px -8px 16px var(--shadow-light),
+    inset 5px 5px 10px var(--shadow-dark), 
+    inset -5px -5px 10px var(--shadow-light),
     0 0 5px var(--accent-glow);
   color: var(--accent);
+  border-color: rgba(255,255,255,0.05);
 }
 
 .neu-input::placeholder {
@@ -182,14 +233,23 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 500;
 }
 
+/* Override for neu-btn links (e.g., Subscriptions) */
+.nav-item a.neu-btn,
+.nav-item .neu-btn {
+  color: var(--text) !important;
+  font-weight: 500 !important;
+}
+
 .nav-item a:hover {
   color: var(--text);
-  background: linear-gradient(145deg, #232323, #1e1e1e);
-  box-shadow: var(--shadow-out);
+  /* Subtle lift for nav items */
+  background: var(--bg);
+  box-shadow: var(--shadow-out-sm);
 }
 
 .nav-item.active a {
   color: var(--accent);
+  box-shadow: var(--shadow-in); /* Active state is pressed in */
 }
 
 /* Tables */
@@ -216,19 +276,30 @@ h1, h2, h3, h4, h5, h6 {
 .neu-table td {
   padding: 15px;
   background: var(--bg);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .neu-table tbody tr {
-  box-shadow: var(--shadow-out);
-  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-out-sm);
+  border-radius: var(--radius-sm);
 }
 
 .neu-table tbody tr:hover {
-  transform: scale(1.01);
+  transform: scale(1.005);
+  box-shadow: var(--shadow-out);
 }
 
-.neu-table td:first-child { border-top-left-radius: var(--radius-md); border-bottom-left-radius: var(--radius-md); }
-.neu-table td:last-child { border-top-right-radius: var(--radius-md); border-bottom-right-radius: var(--radius-md); }
+.neu-table td:first-child { 
+  border-top-left-radius: var(--radius-sm); 
+  border-bottom-left-radius: var(--radius-sm); 
+  border-left: 1px solid var(--border-color);
+}
+.neu-table td:last-child { 
+  border-top-right-radius: var(--radius-sm); 
+  border-bottom-right-radius: var(--radius-sm); 
+  border-right: 1px solid var(--border-color);
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar {
@@ -240,7 +311,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333; 
+  background: var(--shadow-dark); 
   border-radius: 10px;
 }
 
@@ -301,6 +372,21 @@ h1, h2, h3, h4, h5, h6 {
 .mt-4 { margin-top: 1rem; }
 .w-full { width: 100%; }
 .text-center { text-align: center; }
+
+/* Text Colors */
+.text-danger { color: var(--danger); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+
+/* Grid System */
+.grid { display: grid; }
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 
 /* Animations */
 @keyframes pulse-glow {

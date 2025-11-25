@@ -1,333 +1,376 @@
 <!DOCTYPE html>
 <html lang="id" class="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User Login - Rflix</title>
-  <link rel="stylesheet" href="/styles.css" />
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-  <style>
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg);
-      padding: 2rem;
-    }
-    
-    .login-container {
-      width: 100%;
-      max-width: 420px;
-    }
-    
-    .login-card {
-      background: var(--bg);
-      border-radius: var(--radius-lg);
-      padding: 3rem 2.5rem;
-      box-shadow: var(--shadow-out);
-      border: 1px solid rgba(255,255,255,0.02);
-    }
-    
-    .login-header {
-      text-align: center;
-      margin-bottom: 2.5rem;
-    }
-    
-    .login-title {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--accent);
-      margin-bottom: 0.5rem;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-    
-    .login-subtitle {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-    
-    .input-wrapper {
-      position: relative;
-      margin-bottom: 1.5rem;
-    }
-    
-    .input-icon {
-      position: absolute;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: 1.1rem;
-      pointer-events: none;
-      z-index: 1;
-    }
-    
-    .input-with-icon {
-      padding-left: 50px !important;
-    }
-    
-    .forgot-link {
-      text-align: right;
-      margin-bottom: 1.5rem;
-    }
-    
-    .forgot-link a {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      text-decoration: none;
-      transition: var(--transition);
-    }
-    
-    .forgot-link a:hover {
-      color: var(--accent);
-    }
-    
-    .submit-btn {
-      width: 100%;
-      padding: 15px;
-      font-size: 1rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: 1rem;
-    }
-    
-    .divider {
-      text-align: center;
-      margin: 2rem 0;
-      position: relative;
-    }
-    
-    .divider::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 50%;
-      height: 1px;
-      background: rgba(255,255,255,0.1);
-    }
-    
-    .divider span {
-      background: var(--bg);
-      padding: 0 1rem;
-      position: relative;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-    }
-    
-    .signup-link {
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-    
-    .signup-link a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 600;
-      transition: var(--transition);
-    }
-    
-    .signup-link a:hover {
-      text-shadow: 0 0 10px var(--accent-glow);
-    }
-    
-    .theme-toggle {
-      position: fixed;
-      top: 2rem;
-      right: 2rem;
-      z-index: 100;
-    }
-    
-    .error-message {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: var(--radius-sm);
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-      color: var(--danger);
-      font-size: 0.9rem;
-      text-align: center;
-      display: none;
-    }
-  </style>
-</head>
-<body>
-  <div class="theme-toggle">
-    <button class="neu-btn neu-btn-sm" onclick="toggleTheme()">Dark</button>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Login - Rflix</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+      async
+      defer
+    ></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg);
+        padding: 2rem;
+      }
 
-  <div class="login-container">
-    <div class="login-card">
-      <!-- Header -->
-      <div class="login-header">
-        <h1 class="login-title">Login Form</h1>
-        <p class="login-subtitle">Welcome back! Please login to your account</p>
-      </div>
+      .login-container {
+        width: 100%;
+        max-width: 420px;
+      }
 
-      <!-- Error Message -->
-      <div id="errorMsg" class="error-message"></div>
+      .neu-login-card {
+        background: var(--bg);
+        border-radius: var(--radius-lg);
+        padding: 3rem 2.5rem;
+        box-shadow: var(--shadow-out);
+        border: 1px solid var(--border-color);
+        transition: var(--transition);
+      }
 
-      <!-- Form -->
-      <form id="userLoginForm">
-        <!-- Username/Email -->
-        <div class="input-wrapper">
-          <span class="input-icon">📧</span>
-          <input 
-            type="email" 
-            id="email" 
-            name="email" 
-            required 
-            class="neu-input input-with-icon"
-            placeholder="Email Address"
-          />
+      .error-message {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        color: var(--danger);
+        font-size: 0.9rem;
+        text-align: center;
+        display: none;
+      }
+
+      .theme-toggle {
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        z-index: 100;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        body {
+          padding: 1rem;
+        }
+
+        .neu-login-card {
+          padding: 2rem 1.5rem;
+        }
+
+        .theme-toggle {
+          top: 1rem;
+          right: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="theme-toggle">
+      <button class="neu-btn btn-icon" onclick="toggleTheme()">🌙</button>
+    </div>
+
+    <div class="login-container">
+      <div class="neu-login-card">
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 2rem">
+          <h1
+            style="
+              font-size: 1.5rem;
+              font-weight: 600;
+              color: var(--text);
+              margin-bottom: 0.25rem;
+              letter-spacing: 0.5px;
+            "
+          >
+            Rflix User
+          </h1>
+          <p
+            style="
+              color: var(--text-muted);
+              font-size: 0.875rem;
+              font-weight: 400;
+            "
+          >
+            Welcome back! Please login to your account
+          </p>
         </div>
 
-        <!-- Password -->
-        <div class="input-wrapper">
-          <span class="input-icon">🔒</span>
-          <input 
-            type="password" 
-            id="password" 
-            name="password" 
-            required 
-            class="neu-input input-with-icon"
-            placeholder="Password"
-          />
+        <!-- Error Message -->
+        <div id="errorMsg" class="error-message"></div>
+
+        <!-- Form -->
+        <form id="userLoginForm">
+          <!-- Email Address -->
+          <div style="margin-bottom: 1.25rem">
+            <label
+              for="email"
+              style="
+                display: block;
+                color: var(--text-muted);
+                font-size: 0.8rem;
+                margin-bottom: 0.5rem;
+                font-weight: 500;
+              "
+              >Email Address</label
+            >
+            <div style="position: relative">
+              <span
+                style="
+                  position: absolute;
+                  left: 15px;
+                  top: 50%;
+                  transform: translateY(-50%);
+                  color: var(--text-muted);
+                  font-size: 1rem;
+                "
+                >📧</span
+              >
+              <input
+                type="email"
+                id="email"
+                name="email"
+                required
+                class="neu-input"
+                style="padding-left: 45px; width: 100%"
+                placeholder="Email Address"
+              />
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div style="margin-bottom: 1rem">
+            <label
+              for="password"
+              style="
+                display: block;
+                color: var(--text-muted);
+                font-size: 0.8rem;
+                margin-bottom: 0.5rem;
+                font-weight: 500;
+              "
+              >Password</label
+            >
+            <div style="position: relative">
+              <span
+                style="
+                  position: absolute;
+                  left: 15px;
+                  top: 50%;
+                  transform: translateY(-50%);
+                  color: var(--text-muted);
+                  font-size: 1rem;
+                "
+                >🔒</span
+              >
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                class="neu-input"
+                style="padding-left: 45px; width: 100%"
+                placeholder="Password"
+              />
+            </div>
+          </div>
+
+          <!-- Forgot Password -->
+          <div style="text-align: right; margin-bottom: 1.5rem">
+            <a
+              href="#"
+              style="
+                color: var(--accent);
+                font-size: 0.8rem;
+                text-decoration: none;
+                font-weight: 500;
+              "
+              >Forgot password?</a
+            >
+          </div>
+
+          <!-- Captcha -->
+          <div
+            id="captchaContainer"
+            style="
+              display: flex;
+              justify-content: center;
+              margin-bottom: 1.5rem;
+            "
+          ></div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            class="neu-btn primary"
+            style="width: 100%; justify-content: center"
+          >
+            SIGN IN
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div style="text-align: center; margin: 1.75rem 0; position: relative">
+          <div
+            style="
+              position: absolute;
+              left: 0;
+              right: 0;
+              top: 50%;
+              height: 1px;
+              background: rgba(255, 255, 255, 0.08);
+            "
+          ></div>
+          <span
+            style="
+              background: var(--bg);
+              padding: 0 1rem;
+              position: relative;
+              color: var(--text-muted);
+              font-size: 0.8rem;
+            "
+            >or</span
+          >
         </div>
 
-        <!-- Forgot Password -->
-        <div class="forgot-link">
-          <a href="#">Forgot password?</a>
+        <!-- Sign Up Link -->
+        <div
+          style="
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+          "
+        >
+          Don't have an account?
+          <a
+            href="/registration"
+            style="
+              color: var(--accent);
+              text-decoration: none;
+              font-weight: 600;
+            "
+            >Sign Up</a
+          >
         </div>
-
-        <!-- Captcha -->
-        <div id="captchaContainer" style="display: flex; justify-content: center; margin: 1.5rem 0;"></div>
-
-        <!-- Submit Button -->
-        <button type="submit" class="neu-btn submit-btn primary">
-          Sign In
-        </button>
-      </form>
-
-      <!-- Divider -->
-      <div class="divider">
-        <span>or</span>
-      </div>
-
-      <!-- Sign Up Link -->
-      <div class="signup-link">
-        Don't have an account? <a href="/registration">Sign Up</a>
       </div>
     </div>
-  </div>
 
-  <script>
-    async function getCaptchaProvider() {
-      try {
-        const res = await fetch('/api/config/captcha-provider');
-        const data = await res.json();
-        return data.data?.provider || 'turnstile';
-      } catch {
-        return 'turnstile';
-      }
-    }
-
-    async function renderCaptcha() {
-      const provider = await getCaptchaProvider();
-      const container = document.getElementById('captchaContainer');
-      
-      try {
-        const res = await fetch('/api/config/captcha-sitekey');
-        const data = await res.json();
-        const siteKey = data.data?.siteKey;
-
-        if (!siteKey) {
-          console.warn('No captcha site key configured');
-          return;
+    <script>
+      async function getCaptchaProvider() {
+        try {
+          const res = await fetch("/api/config/captcha-provider");
+          const data = await res.json();
+          return data.data?.provider || "turnstile";
+        } catch {
+          return "turnstile";
         }
+      }
 
-        if (provider === 'turnstile' || provider === 'cloudflare') {
-          container.innerHTML = `<div class="cf-turnstile" data-sitekey="${siteKey}" data-theme="dark"></div>`;
-        } else {
-          container.innerHTML = `<div class="g-recaptcha" data-sitekey="${siteKey}" data-theme="dark"></div>`;
+      async function renderCaptcha() {
+        const provider = await getCaptchaProvider();
+        const container = document.getElementById("captchaContainer");
+
+        try {
+          const res = await fetch("/api/config/captcha-sitekey");
+          const data = await res.json();
+          const siteKey = data.data?.siteKey;
+
+          if (!siteKey) {
+            console.warn("No captcha site key configured");
+            return;
+          }
+
+          if (provider === "turnstile" || provider === "cloudflare") {
+            container.innerHTML = `<div class="cf-turnstile" data-sitekey="${siteKey}" data-theme="dark"></div>`;
+          } else {
+            container.innerHTML = `<div class="g-recaptcha" data-sitekey="${siteKey}" data-theme="dark"></div>`;
+          }
+        } catch (error) {
+          console.error("Failed to render captcha:", error);
         }
-      } catch (error) {
-        console.error('Failed to render captcha:', error);
-      }
-    }
-
-    document.getElementById('userLoginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const errorMsg = document.getElementById('errorMsg');
-      errorMsg.style.display = 'none';
-
-      const email = e.target.email.value;
-      const password = e.target.password.value;
-      
-      const provider = await getCaptchaProvider();
-      let captchaToken = '';
-      
-      if (provider === 'turnstile' || provider === 'cloudflare') {
-        const turnstileInput = document.querySelector('.cf-turnstile input[name="cf-turnstile-response"]');
-        captchaToken = turnstileInput?.value || '';
-      } else {
-        captchaToken = typeof grecaptcha !== 'undefined' ? grecaptcha.getResponse() : '';
       }
 
-      try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, captchaToken, provider }),
+      document
+        .getElementById("userLoginForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const errorMsg = document.getElementById("errorMsg");
+          errorMsg.style.display = "none";
+
+          const email = e.target.email.value;
+          const password = e.target.password.value;
+
+          const provider = await getCaptchaProvider();
+          let captchaToken = "";
+
+          if (provider === "turnstile" || provider === "cloudflare") {
+            const turnstileInput = document.querySelector(
+              '.cf-turnstile input[name="cf-turnstile-response"]'
+            );
+            captchaToken = turnstileInput?.value || "";
+          } else {
+            captchaToken =
+              typeof grecaptcha !== "undefined" ? grecaptcha.getResponse() : "";
+          }
+
+          try {
+            const res = await fetch("/api/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password, captchaToken, provider }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+              localStorage.setItem("token", data.data.token);
+              window.location.href = "/user_dashboard.html";
+            } else {
+              errorMsg.textContent = data.error?.message || "Login failed";
+              errorMsg.style.display = "block";
+              if (
+                provider === "recaptcha" &&
+                typeof grecaptcha !== "undefined"
+              ) {
+                grecaptcha.reset();
+              }
+            }
+          } catch (error) {
+            errorMsg.textContent = "Network error. Please try again.";
+            errorMsg.style.display = "block";
+          }
         });
 
-        const data = await res.json();
+      renderCaptcha();
 
-        if (res.ok && data.success) {
-          localStorage.setItem('token', data.data.token);
-          window.location.href = '/user_dashboard.html';
+      // Theme Toggle Logic
+      function toggleTheme() {
+        const body = document.body;
+        const btn = document.querySelector(".theme-toggle button");
+
+        body.classList.toggle("light-mode");
+
+        if (body.classList.contains("light-mode")) {
+          btn.textContent = "☀️";
+          localStorage.setItem("theme", "light");
         } else {
-          errorMsg.textContent = data.error?.message || 'Login failed';
-          errorMsg.style.display = 'block';
-          if (provider === 'recaptcha' && typeof grecaptcha !== 'undefined') {
-            grecaptcha.reset();
-          }
+          btn.textContent = "🌙";
+          localStorage.setItem("theme", "dark");
         }
-      } catch (error) {
-        errorMsg.textContent = 'Network error. Please try again.';
-        errorMsg.style.display = 'block';
       }
-    });
 
-    renderCaptcha();
-
-    // Theme Toggle Logic
-    function toggleTheme() {
-      const body = document.body;
-      const btn = document.querySelector('.theme-toggle button');
-      
-      body.classList.toggle('light-mode');
-      
-      if (body.classList.contains('light-mode')) {
-        btn.textContent = 'Light';
-        localStorage.setItem('theme', 'light');
-      } else {
-        btn.textContent = 'Dark';
-        localStorage.setItem('theme', 'dark');
+      // Init Theme
+      if (localStorage.getItem("theme") === "light") {
+        document.body.classList.add("light-mode");
+        document.querySelector(".theme-toggle button").textContent = "☀️";
       }
-    }
-
-    // Init Theme
-    if (localStorage.getItem('theme') === 'light') {
-      document.body.classList.add('light-mode');
-      document.querySelector('.theme-toggle button').textContent = 'Light';
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>

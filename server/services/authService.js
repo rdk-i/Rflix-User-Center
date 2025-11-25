@@ -142,15 +142,21 @@ class AuthService {
    */
   async authenticateUser(email, password) {
     try {
+      logger.info(`Attempting login for: ${email}`);
       const user = db.prepare('SELECT * FROM api_users WHERE email = ?').get(email);
       
       if (!user) {
+        logger.warn(`Login failed: User not found for email ${email}`);
         return { success: false, error: 'Invalid credentials' };
       }
 
+      logger.info(`User found: ${user.email}, Role: ${user.role}, Hash: ${user.password_hash.substring(0, 20)}...`);
+
       const isValid = await this.comparePassword(password, user.password_hash);
+      logger.info(`Password validation result: ${isValid}`);
       
       if (!isValid) {
+        logger.warn('Login failed: Invalid password');
         return { success: false, error: 'Invalid credentials' };
       }
 

@@ -173,7 +173,7 @@ CREATE INDEX IF NOT EXISTS idx_user_notifications_userId ON user_notifications(u
 -- Insert default admin user (password: admin123 - CHANGE THIS!)
 -- Password hash for 'admin123' with bcrypt rounds=12
 INSERT OR IGNORE INTO api_users (id, email, password_hash, role) 
-VALUES (1, 'admin@rflix.local', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYILCy3jKxe', 'admin');
+VALUES (1, 'admin@rflix.local', '$2b$12$xNAZWs0z4ZqzCXBRZ5xDFujBU.mMm8FCahblLq.NOOCliCNjdzhKi', 'admin');
 
 -- Insert default roles
 INSERT OR IGNORE INTO roles (id, name, permissions) VALUES 

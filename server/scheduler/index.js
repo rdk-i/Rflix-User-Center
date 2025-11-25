@@ -45,6 +45,14 @@ class Scheduler {
     });
     logger.info(`Scheduled backup_db every ${backupInterval}ms`);
 
+    // Record Stats Task (Every 10 minutes)
+    const recordStats = require('./record_stats');
+    this.intervals.push({
+      name: 'record_stats',
+      interval: setInterval(() => recordStats(), 10 * 60 * 1000),
+    });
+    logger.info('Scheduled record_stats every 10 minutes');
+
     // Clean expired token blacklist (runs at midnight)
     this.intervals.push({
       name: 'clean_token_blacklist',

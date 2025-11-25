@@ -115,6 +115,7 @@ if (!process.env.SETUP_COMPLETED) {
   app.use('/api/simple-packages', simplePackageRoutes);
   app.use('/api/simple-registration', simpleRegistrationRoutes);
   
+  app.use('/api/stats', require('./routes/stats'));
   app.use('/api/form-fields', require('./routes/formFields'));
 }
 

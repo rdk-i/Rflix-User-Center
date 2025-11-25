@@ -12,7 +12,13 @@ if (!fs.existsSync(dataDir)) {
 }
 
 // Connect to database
-const db = new Database(dbPath);
+let db;
+try {
+  db = new Database(dbPath);
+} catch (error) {
+  console.warn('Failed to load better-sqlite3, using mock database for migration (no-op)');
+  db = require('../server/config/database-mock');
+}
 db.pragma("journal_mode = WAL");
 
 // Get all migration files

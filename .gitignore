@@ -1,3 +1,6 @@
+# CSS Reference
+ref-css/
+
 # Node modules
 node_modules/
 npm-debug.log*
@@ -10,19 +13,21 @@ pnpm-debug.log*
 .env.local
 .env.production
 
-# Database
-data/*.db
-data/*.db-shm
-data/*.db-wal
+# Database files (sensitive data)
+data/
+*.db
+*.db-shm
+*.db-wal
 
 # Logs
 logs/
 *.log
 
 # Backups
-backups/*.db
+backups/
+*.backup
 
-# IDE
+# IDE & Editor
 .vscode/
 .idea/
 *.swp
@@ -46,7 +51,35 @@ build/
 tmp/
 temp/
 *.tmp
+output.txt
+
+# Development documentation (exclude internal docs, keep README)
+CLEANUP_AND_SUBSCRIPTION_ANALYSIS.md
+DEPLOYMENT_GUIDE.md
+DESIGN_OVERHAUL.md
+DESIGN_UPDATE.md
+IMPLEMENTATION_COMPLETE.md
+MODULAR_ARCHITECTURE.md
+PROGRESS_REPORT.md
+STYLE_OVERHAUL.md
+URGENT_FIX.md
+
+# Development scripts & utilities
+cleanup.ps1
+gen_verify_hash.js
+valid_hash.txt
+
+# Test files
+**/test_*.js
+**/test_*.html
+**/test-*.html
+**/*test*.js
+**/*test*.html
 
 # Lock files (keep package-lock.json but ignore yarn/pnpm)
 yarn.lock
 pnpm-lock.yaml
+
+# Miscellaneous
+$null
+-p/

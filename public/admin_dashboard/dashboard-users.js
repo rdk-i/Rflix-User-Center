@@ -3,9 +3,9 @@
 async function loadUsers() {
   const view = document.getElementById('users-view');
   view.innerHTML = `
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex justify-between items-center mb-8">
       <h2 class="text-2xl font-bold">User Management</h2>
-      <button onclick="loadUsers()" class="neu-btn neu-btn-sm">🔄 Refresh</button>
+      <button onclick="loadUsers()" class="neu-btn btn-icon" title="Refresh">🔄</button>
     </div>
     <div class="neu-panel overflow-hidden">
       <div class="overflow-x-auto">
@@ -97,8 +97,10 @@ function renderUsersTable(users) {
         <td>${expDate}</td>
         <td class="${statusClass}">${statusText}</td>
         <td>
-          <button class="neu-btn neu-btn-sm" onclick="editUser('${userId}', '${username}')" title="Edit User">✏️</button>
-          <button class="neu-btn neu-btn-sm text-danger" onclick="deleteUser('${userId}', '${username}')" title="Delete User">🗑️</button>
+          <div class="flex gap-2">
+            <button class="neu-btn neu-btn-sm" onclick="editUser('${userId}', '${username}')" title="Edit User">✏️</button>
+            <button class="neu-btn neu-btn-sm danger" onclick="deleteUser('${userId}', '${username}')" title="Delete User">🗑️</button>
+          </div>
         </td>
       </tr>
     `;

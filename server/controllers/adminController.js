@@ -575,11 +575,25 @@ class AdminController {
 
       fs.writeFileSync(envPath, envContent);
 
+      // Update in-memory service configuration
+      jellyfinService.baseUrl = url;
+      jellyfinService.apiKey = apiKey;
+      jellyfinService.isConfigured = !!(url && apiKey);
+      jellyfinService.client.defaults.baseURL = url;
+      jellyfinService.client.defaults.headers['X-Emby-Token'] = apiKey;
+      
+      // Re-initialize health check
+      if (jellyfinService.isConfigured) {
+          jellyfinService.performHealthCheck().catch(err => 
+              logger.warn('Jellyfin health check failed after update:', err.message)
+          );
+      }
+
       logger.info('Jellyfin configuration updated');
 
       res.json({
         success: true,
-        data: { message: 'Configuration updated. Please restart the server.' }
+        data: { message: 'Configuration updated successfully.' }
       });
     } catch (error) {
       logger.error('Update Jellyfin config error:', error);
@@ -885,6 +899,99 @@ class AdminController {
       });
     } catch (error) {
       logger.error('Reset password error:', error);
+      next(error);
+    }
+  }
+  /**
+   * Update general settings
+   */
+  async updateSettings(req, res, next) {
+    try {
+      const { siteName, adminEmail } = req.body;
+      const fs = require('fs');
+      const path = require('path');
+      const envPath = path.join(__dirname, '../../.env');
+
+      let envContent = fs.readFileSync(envPath, 'utf8');
+
+      const updateEnvVar = (key, value) => {
+        const regex = new RegExp(`^${key}=.*$`, 'm');
+        if (envContent.match(regex)) {
+          envContent = envContent.replace(regex, `${key}=${value}`);
+        } else {
+          envContent += `\n${key}=${value}`;
+        }
+      };
+
+      if (siteName) updateEnvVar('SITE_NAME', siteName);
+      if (adminEmail) updateEnvVar('ADMIN_EMAIL', adminEmail);
+
+      fs.writeFileSync(envPath, envContent);
+
+      // Update admin email in database if provided
+      if (adminEmail) {
+        db.prepare("UPDATE api_users SET email = ? WHERE role = 'admin'").run(adminEmail);
+      }
+
+      logger.info('General settings updated');
+
+      res.json({
+        success: true,
+        message: 'Settings updated successfully'
+      });
+    } catch (error) {
+      logger.error('Update settings error:', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Update admin password
+   */
+  async updateAdminPassword(req, res, next) {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const adminId = req.user.id;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'MISSING_FIELDS',
+            message: 'Current and new password are required'
+          }
+        });
+      }
+
+      // Verify current password
+      const admin = db.prepare('SELECT * FROM api_users WHERE id = ?').get(adminId);
+      const isValid = await authService.comparePassword(currentPassword, admin.password_hash);
+
+      if (!isValid) {
+        return res.status(401).json({
+          success: false,
+          error: {
+            code: 'INVALID_PASSWORD',
+            message: 'Current password is incorrect'
+          }
+        });
+      }
+
+      // Hash new password
+      const newHash = await authService.hashPassword(newPassword);
+
+      // Update database
+      db.prepare('UPDATE api_users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run(newHash, adminId);
+
+      logger.info(`Admin password updated for user ${adminId}`);
+
+      res.json({
+        success: true,
+        message: 'Password updated successfully'
+      });
+    } catch (error) {
+      logger.error('Update admin password error:', error);
       next(error);
     }
   }

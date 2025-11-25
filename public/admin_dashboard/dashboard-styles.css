@@ -22,11 +22,11 @@ body {
   min-width: 280px; /* Prevent shrinking */
   height: 100%;
   background-color: var(--bg);
-  border-right: 1px solid rgba(255,255,255,0.05);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
-  box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+  padding: 2rem 1.5rem; /* Increased top/bottom padding */
+  box-shadow: var(--shadow-out); /* Use new shadow variable */
   z-index: 50;
   overflow-y: auto; /* Scroll inside sidebar if needed */
   position: relative; /* Not fixed */
@@ -37,7 +37,7 @@ main {
   flex: 1;
   height: 100%;
   overflow-y: auto; /* Scroll inside main content */
-  padding: 2rem;
+  padding: 3rem; /* Increased padding for airy feel */
   position: relative;
   z-index: 1;
 }
@@ -45,8 +45,8 @@ main {
 /* Theme Toggle Position */
 .theme-toggle {
   position: absolute; /* Relative to main or body */
-  top: 1.5rem;
-  right: 2rem;
+  top: 2rem;
+  right: 3rem;
   z-index: 100;
 }
 
@@ -59,7 +59,7 @@ main {
 }
 
 .neu-sidebar .nav-item {
-  margin-bottom: 0.8rem;
+  margin-bottom: 1rem; /* Increased spacing */
 }
 
 .neu-sidebar .neu-btn {
@@ -67,17 +67,18 @@ main {
   justify-content: flex-start;
   text-align: left;
   padding-left: 1.5rem;
-  font-size: 0.9rem;
-  height: 45px;
+  font-size: 0.95rem; /* Slightly larger font */
+  height: 50px; /* Taller buttons */
   margin: 0;
   display: flex;
   align-items: center;
+  border-radius: var(--radius-md); /* Match nav item radius */
 }
 
 .neu-sidebar .neu-btn:hover,
 .neu-sidebar .nav-item.active .neu-btn {
   color: var(--accent);
-  box-shadow: var(--shadow-in);
+  box-shadow: var(--shadow-in); /* Use new shadow variable */
 }
 
 /* View Sections */
@@ -97,39 +98,113 @@ main {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Settings Page Specifics */
+#settings-view h2 {
+    padding-bottom: 20px;
+}
+
+.neu-panel {
+    padding-bottom: 20px;
+}
+
+/* Mobile Header (Hidden on Desktop) */
+.mobile-header {
+  display: none;
+  background-color: var(--bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Sidebar Overlay */
+#sidebar-overlay {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+#sidebar-overlay.hidden {
+  display: none;
+  opacity: 0;
+}
+
+#sidebar-overlay:not(.hidden) {
+  display: block;
+  opacity: 1;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .dashboard-grid {
     flex-direction: column;
+    height: auto; /* Allow body scroll on mobile */
+    overflow: visible;
   }
 
-  .neu-sidebar {
-    width: 100%;
-    height: auto;
-    min-height: auto;
-    flex-direction: row;
-    overflow-x: auto;
-    padding: 1rem;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  }
-
-  .neu-sidebar ul {
+  /* Show Mobile Header */
+  .mobile-header {
     display: flex;
-    margin: 0;
-    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    width: 100%;
   }
 
-  .neu-sidebar .nav-item {
-    margin-bottom: 0;
+  /* Sidebar - Slide out drawer */
+  .neu-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+    /* Reset any previous mobile hacks */
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .neu-sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Adjust Main Content */
+  main {
+    padding: 1.5rem;
+    width: 100%;
+    overflow-x: hidden; /* Prevent horizontal scroll */
   }
   
-  .neu-sidebar .neu-btn {
-    width: auto;
-    padding: 0.5rem 1rem;
-    white-space: nowrap;
+  /* Adjust Theme Toggle */
+  .theme-toggle {
+    display: none; /* Hide desktop toggle on mobile */
   }
+}
 
-  main {
-    padding: 1rem;
-  }
+/* --- NEW STYLES FOR SETTINGS PAGE --- */
+
+/* Improve label visibility */
+/* Improve label visibility and spacing */
+.form-group label {
+  color: var(--text); /* Brighter text */
+  font-weight: 500; /* Slightly bolder */
+  font-size: 0.95rem;
+  opacity: 0.9;
+  margin-bottom: 15px; /* Increased spacing between label and field */
+  display: block;
+}
+
+.form-group {
+    margin-bottom: 25px; /* Increased spacing between form groups */
+}
+
+/* Fix autofill background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px var(--bg) inset !important;
+    -webkit-text-fill-color: var(--text) !important;
+    transition: background-color 5000s ease-in-out 0s;
+    border-radius: var(--radius-sm);
 }

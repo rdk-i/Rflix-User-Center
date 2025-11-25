@@ -27,7 +27,7 @@
       border-radius: var(--radius-lg);
       padding: 3rem 2.5rem;
       box-shadow: var(--shadow-out);
-      border: 1px solid rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
       max-height: 90vh;
       overflow-y: auto;
     }
@@ -148,15 +148,35 @@
       margin-bottom: 0.5rem;
       margin-left: 0.5rem;
     }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+      
+      .neu-login-card {
+        padding: 2rem 1.5rem;
+      }
+      
+      .theme-toggle {
+        top: 1rem;
+        right: 1rem;
+      }
+      
+      .register-title {
+        font-size: 1.75rem;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="theme-toggle">
-    <button class="neu-btn neu-btn-sm" onclick="toggleTheme()">Dark</button>
+    <button class="neu-btn btn-icon" onclick="toggleTheme()">🌙</button>
   </div>
 
   <div class="register-container">
-    <div class="register-card">
+    <div class="neu-login-card">
       <!-- Header -->
       <div class="register-header">
         <h1 class="register-title">Create Account</h1>
@@ -203,17 +223,17 @@
       body.classList.toggle('light-mode');
       
       if (body.classList.contains('light-mode')) {
-        btn.textContent = 'Light';
+        btn.textContent = '☀️';
         localStorage.setItem('theme', 'light');
       } else {
-        btn.textContent = 'Dark';
+        btn.textContent = '🌙';
         localStorage.setItem('theme', 'dark');
       }
     }
 
     if (localStorage.getItem('theme') === 'light') {
       document.body.classList.add('light-mode');
-      document.querySelector('.theme-toggle button').textContent = 'Light';
+      document.querySelector('.theme-toggle button').textContent = '☀️';
     }
 
     // Icon mapping for different field types
