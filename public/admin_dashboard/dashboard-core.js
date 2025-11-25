@@ -117,28 +117,6 @@ async function loadDashboardData() {
   } catch (error) {
     console.error('Failed to load dashboard data:', error);
   }
-}
-
-// Load Recent Activity
-function loadRecentActivity(activities) {
-  const container = document.getElementById('recentActivity');
-  if (!activities || activities.length === 0) {
-    container.innerHTML = '<p class="text-muted">No recent activity</p>';
-    return;
-  }
-  
-  container.innerHTML = activities.slice(0, 5).map(activity => `
-    <div class="flex justify-between items-center py-2 border-b border-gray-700">
-      <span>${activity.message}</span>
-      <span class="text-xs text-muted">${new Date(activity.timestamp).toLocaleString()}</span>
-    </div>
-  `).join('');
-}
-
-// Utility: Show Alert
-function showAlert(message, type = 'info') {
-  const alertDiv = document.createElement('div');
-  alertDiv.className = 'neu-panel';
   alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; padding: 1rem; border-left: 4px solid;';
   
   switch (type) {

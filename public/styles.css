@@ -68,11 +68,18 @@ h1, h2, h3, h4, h5, h6 {
 /* Neumorphic Components */
 
 /* Panels & Cards */
-.neu-panel, .neu-card, .neu-sidebar {
+.neu-panel, .neu-card {
   background: var(--bg);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-out);
   border: 1px solid rgba(255,255,255,0.02);
+}
+
+.neu-sidebar {
+  background: var(--bg);
+  box-shadow: var(--shadow-out);
+  border-right: 1px solid rgba(255,255,255,0.02);
+  border-radius: 0;
 }
 
 .neu-panel { padding: 1.5rem; }
@@ -173,24 +180,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .nav-item.active a {
   color: var(--accent);
-  box-shadow: var(--shadow-in);
-  font-weight: 600;
-}
-
-/* Badges & Tags */
-.neu-badge {
-  padding: 6px 12px;
-  border-radius: var(--radius-pill);
-  font-size: 0.75rem;
-  font-weight: 600;
-  box-shadow: var(--shadow-out);
-  display: inline-block;
-}
-
-.neu-badge.active {
-  color: var(--bg);
-  background: var(--accent);
-  box-shadow: 0 0 15px var(--accent-glow);
 }
 
 /* Tables */
@@ -291,6 +280,8 @@ h1, h2, h3, h4, h5, h6 {
 /* Utilities */
 .flex { display: flex; }
 .justify-between { justify-content: space-between; }
+.justify-start { justify-content: flex-start; }
+.justify-center { justify-content: center; }
 .items-center { align-items: center; }
 .gap-4 { gap: 1rem; }
 .mb-4 { margin-bottom: 1rem; }
