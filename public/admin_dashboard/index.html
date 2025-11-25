@@ -14,7 +14,61 @@
 
     <div class="dashboard-grid">
       <!-- Sidebar -->
-      <aside class="neu-sidebar p-6 flex flex-col">
+      <aside class="neu-sidebar">
+        <div class="mb-8 text-center px-4 pt-4">
+          <h2 class="text-2xl font-bold mb-1 text-accent">Rflix Admin</h2>
+          <p class="text-muted text-sm" id="adminEmail">Loading...</p>
+        </div>
+        
+        <ul class="space-y-2 flex-1 px-4">
+          <li class="nav-item active mb-2" data-page="dashboard">
+            <button class="neu-btn w-full">
+              📊 Dashboard
+            </button>
+          </li>
+          <li class="nav-item mb-2" data-page="users">
+            <button class="neu-btn w-full">
+              👥 Users
+            </button>
+          </li>
+          <li class="nav-item mb-2" data-page="pending">
+            <button class="neu-btn w-full">
+              ⏳ Pending
+            </button>
+          </li>
+          <li class="nav-item mb-2" data-page="logs">
+            <button class="neu-btn w-full">
+              📜 Logs
+            </button>
+          </li>
+          <li class="nav-item mb-2" data-page="settings">
+            <button class="neu-btn w-full">
+              ⚙️ Settings
+            </button>
+          </li>
+          <li class="nav-item mb-2">
+            <a href="subscriptions.html" class="neu-btn w-full" style="text-decoration: none;">
+              💳 Subscriptions
+            </a>
+          </li>
+          <li class="nav-item mb-2" data-page="forms">
+            <button class="neu-btn w-full">
+              📝 Form Builder
+            </button>
+          </li>
+        </ul>
+
+        <div class="p-4 mt-auto">
+          <button onclick="logout()" class="neu-btn neu-btn-danger w-full">
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main>
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view-section">
           <h1 class="text-3xl font-bold mb-8">Dashboard Overview</h1>
           
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
