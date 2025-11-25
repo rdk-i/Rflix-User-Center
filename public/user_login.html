@@ -3,81 +3,227 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User Login - Rflix API</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>User Login - Rflix</title>
+  <link rel="stylesheet" href="/styles.css" />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      padding: 2rem;
+    }
+    
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+    }
+    
+    .login-card {
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      padding: 3rem 2.5rem;
+      box-shadow: var(--shadow-out);
+      border: 1px solid rgba(255,255,255,0.02);
+    }
+    
+    .login-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    
+    .login-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .login-subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    
+    .input-wrapper {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+    
+    .input-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    .input-with-icon {
+      padding-left: 50px !important;
+    }
+    
+    .forgot-link {
+      text-align: right;
+      margin-bottom: 1.5rem;
+    }
+    
+    .forgot-link a {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    
+    .forgot-link a:hover {
+      color: var(--accent);
+    }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 1rem;
+    }
+    
+    .divider {
+      text-align: center;
+      margin: 2rem 0;
+      position: relative;
+    }
+    
+    .divider::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .divider span {
+      background: var(--bg);
+      padding: 0 1rem;
+      position: relative;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    
+    .signup-link {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    
+    .signup-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+    
+    .signup-link a:hover {
+      text-shadow: 0 0 10px var(--accent-glow);
+    }
+    
+    .theme-toggle {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      z-index: 100;
+    }
+    
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      color: var(--danger);
+      font-size: 0.9rem;
+      text-align: center;
+      display: none;
+    }
+  </style>
 </head>
-<body class="centered">
+<body>
   <div class="theme-toggle">
-    <button class="theme-btn" onclick="toggleTheme()">Dark</button>
+    <button class="neu-btn neu-btn-sm" onclick="toggleTheme()">Dark</button>
   </div>
 
-  <div class="neu-card">
-    <!-- Header -->
-    <div class="mb-6 text-center">
-      <h1 style="margin-bottom: 0.5rem;">Rflix</h1>
-      <p class="text-muted" style="font-size: 0.875rem;">Welcome Back!</p>
-    </div>
-
-    <!-- Form -->
-    <form id="userLoginForm" class="w-full">
-      <!-- Email -->
-      <div class="neu-input-group">
-        <input 
-          type="email" 
-          id="email" 
-          name="email" 
-          required 
-          class="neu-input"
-          placeholder="Email Address"
-        />
-        <div class="icon-indicator">
-          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-        </div>
+  <div class="login-container">
+    <div class="login-card">
+      <!-- Header -->
+      <div class="login-header">
+        <h1 class="login-title">Login Form</h1>
+        <p class="login-subtitle">Welcome back! Please login to your account</p>
       </div>
-
-      <!-- Password -->
-      <div class="neu-input-group">
-        <input 
-          type="password" 
-          id="password" 
-          name="password" 
-          required 
-          class="neu-input"
-          placeholder="Password"
-        />
-        <div class="icon-indicator">
-          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-        </div>
-      </div>
-
-      <!-- Captcha Container -->
-      <div id="captchaContainer" style="display: flex; justify-content: center; margin: 1rem 0;"></div>
 
       <!-- Error Message -->
-      <div id="errorMsg" style="display: none; padding: 1rem; margin-bottom: 1rem; color: #f87171; font-size: 0.875rem; text-align: center; background: rgba(239, 68, 68, 0.1); border-radius: 0.5rem; border: 1px solid rgba(239, 68, 68, 0.2);"></div>
+      <div id="errorMsg" class="error-message"></div>
 
-      <!-- Submit Button -->
-      <button type="submit" class="neu-btn">
-        Sign In
-      </button>
-    </form>
+      <!-- Form -->
+      <form id="userLoginForm">
+        <!-- Username/Email -->
+        <div class="input-wrapper">
+          <span class="input-icon">📧</span>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            required 
+            class="neu-input input-with-icon"
+            placeholder="Email Address"
+          />
+        </div>
 
-    <!-- Footer Links -->
-    <div style="margin-top: 1.5rem; text-align: center; font-size: 0.875rem; color: var(--text-muted);">
-      Don't have an account? 
-      <a href="/registration" style="font-weight: 500; color: var(--text);">
-        Register here
-      </a>
+        <!-- Password -->
+        <div class="input-wrapper">
+          <span class="input-icon">🔒</span>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            required 
+            class="neu-input input-with-icon"
+            placeholder="Password"
+          />
+        </div>
+
+        <!-- Forgot Password -->
+        <div class="forgot-link">
+          <a href="#">Forgot password?</a>
+        </div>
+
+        <!-- Captcha -->
+        <div id="captchaContainer" style="display: flex; justify-content: center; margin: 1.5rem 0;"></div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="neu-btn submit-btn primary">
+          Sign In
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="divider">
+        <span>or</span>
+      </div>
+
+      <!-- Sign Up Link -->
+      <div class="signup-link">
+        Don't have an account? <a href="/registration">Sign Up</a>
+      </div>
     </div>
-
-    <!-- Admin Link -->
-    <p style="text-align: center; margin-top: 1rem; font-size: 0.875rem;">
-      <a href="/admin" style="color: var(--text-muted);">
-        Admin Portal →
-      </a>
-    </p>
   </div>
 
   <script>
@@ -164,7 +310,7 @@
     // Theme Toggle Logic
     function toggleTheme() {
       const body = document.body;
-      const btn = document.querySelector('.theme-btn');
+      const btn = document.querySelector('.theme-toggle button');
       
       body.classList.toggle('light-mode');
       
@@ -180,7 +326,7 @@
     // Init Theme
     if (localStorage.getItem('theme') === 'light') {
       document.body.classList.add('light-mode');
-      document.querySelector('.theme-btn').textContent = 'Light';
+      document.querySelector('.theme-toggle button').textContent = 'Light';
     }
   </script>
 </body>

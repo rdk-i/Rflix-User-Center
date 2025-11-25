@@ -3,49 +3,194 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Register - Rflix API</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="custom-dropdown.css" />
+  <title>Register - Rflix</title>
+  <link rel="stylesheet" href="/styles.css" />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      padding: 2rem;
+    }
+    
+    .register-container {
+      width: 100%;
+      max-width: 480px;
+    }
+    
+    .register-card {
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      padding: 3rem 2.5rem;
+      box-shadow: var(--shadow-out);
+      border: 1px solid rgba(255,255,255,0.02);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .register-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    
+    .register-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .register-subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    
+    .input-wrapper {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+    
+    .input-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    .input-with-icon {
+      padding-left: 50px !important;
+    }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 1rem;
+    }
+    
+    .divider {
+      text-align: center;
+      margin: 2rem 0;
+      position: relative;
+    }
+    
+    .divider::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .divider span {
+      background: var(--bg);
+      padding: 0 1rem;
+      position: relative;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    
+    .login-link {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    
+    .login-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+    
+    .login-link a:hover {
+      text-shadow: 0 0 10px var(--accent-glow);
+    }
+    
+    .theme-toggle {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      z-index: 100;
+    }
+    
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      color: var(--danger);
+      font-size: 0.9rem;
+      text-align: center;
+      display: none;
+    }
+    
+    .field-label {
+      display: block;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+      margin-left: 0.5rem;
+    }
+  </style>
 </head>
-<body class="centered">
+<body>
   <div class="theme-toggle">
-    <button class="theme-btn" onclick="toggleTheme()">Dark</button>
+    <button class="neu-btn neu-btn-sm" onclick="toggleTheme()">Dark</button>
   </div>
 
-  <div class="neu-card">
-    <!-- Header -->
-    <div class="mb-6 text-center">
-      <h1 class="mb-2">Create Account</h1>
-      <p class="text-muted">Join Rflix Today</p>
-    </div>
-
-    <!-- Form -->
-    <form id="registrationForm" class="w-full">
-      <!-- Dynamic Fields Container -->
-      <div id="dynamicFields">
-        <div class="text-center text-muted p-4">Loading form...</div>
+  <div class="register-container">
+    <div class="register-card">
+      <!-- Header -->
+      <div class="register-header">
+        <h1 class="register-title">Create Account</h1>
+        <p class="register-subtitle">Join Rflix Today</p>
       </div>
 
-      <!-- Captcha Container -->
-      <div id="captchaContainer" class="flex justify-center my-4"></div>
-
       <!-- Error Message -->
-      <div id="errorMsg" class="hidden p-4 mb-4 text-red-400 text-sm text-center bg-red-500/10 rounded-lg border border-red-500/20"></div>
+      <div id="errorMsg" class="error-message"></div>
 
-      <!-- Submit Button -->
-      <button type="submit" class="neu-btn">
-        Register
-      </button>
-    </form>
+      <!-- Form -->
+      <form id="registrationForm">
+        <!-- Dynamic Fields Container -->
+        <div id="dynamicFields">
+          <div class="text-center text-muted p-4">Loading form...</div>
+        </div>
 
-    <!-- Footer Links -->
-    <div class="mt-4 text-center text-sm text-muted">
-      Already have an account? 
-      <a href="/user" class="font-medium hover:text-white transition-colors">
-        Login here
-      </a>
+        <!-- Captcha -->
+        <div id="captchaContainer" style="display: flex; justify-content: center; margin: 1.5rem 0;"></div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="neu-btn submit-btn primary">
+          Register
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="divider">
+        <span>or</span>
+      </div>
+
+      <!-- Login Link -->
+      <div class="login-link">
+        Already have an account? <a href="/user">Login Here</a>
+      </div>
     </div>
   </div>
 
@@ -53,7 +198,7 @@
     // Theme Toggle Logic
     function toggleTheme() {
       const body = document.body;
-      const btn = document.querySelector('.theme-btn');
+      const btn = document.querySelector('.theme-toggle button');
       
       body.classList.toggle('light-mode');
       
@@ -68,7 +213,28 @@
 
     if (localStorage.getItem('theme') === 'light') {
       document.body.classList.add('light-mode');
-      document.querySelector('.theme-btn').textContent = 'Light';
+      document.querySelector('.theme-toggle button').textContent = 'Light';
+    }
+
+    // Icon mapping for different field types
+    const fieldIcons = {
+      'email': '📧',
+      'password': '🔒',
+      'text': '✏️',
+      'tel': '📱',
+      'number': '🔢',
+      'username': '👤',
+      'phone': '📱',
+      'address': '🏠'
+    };
+
+    function getFieldIcon(field) {
+      // Check field name first
+      if (fieldIcons[field.name]) return fieldIcons[field.name];
+      // Then check field type
+      if (fieldIcons[field.type]) return fieldIcons[field.type];
+      // Default
+      return '📝';
     }
 
     // Fetch and Render Fields
@@ -77,102 +243,79 @@
         const res = await fetch('/api/form-fields');
         const json = await res.json();
         
-        if (!json.success) throw new Error(json.error.message);
+        if (!json.success) throw new Error(json.error?.message || 'Failed to load form');
         
         const container = document.getElementById('dynamicFields');
         container.innerHTML = '';
 
-        json.data.forEach(field => {
+        // Sort by display order
+        const fields = json.data.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+
+        fields.forEach(field => {
           const fieldHtml = createFieldHtml(field);
           container.insertAdjacentHTML('beforeend', fieldHtml);
         });
 
-        // Initialize custom dropdowns
-        initCustomDropdowns();
-
       } catch (error) {
         console.error('Failed to load form fields:', error);
-        document.getElementById('dynamicFields').innerHTML = '<div class="text-red-400 text-center">Failed to load form</div>';
+        document.getElementById('dynamicFields').innerHTML = 
+          '<div class="text-danger text-center">Failed to load form</div>';
       }
     }
 
     function createFieldHtml(field) {
-      const requiredAttr = field.required ? 'required' : '';
-      const patternAttr = field.validation_pattern ? `pattern="${field.validation_pattern}"` : '';
-      const titleAttr = field.validation_message ? `title="${field.validation_message}"` : '';
+      const requiredAttr = field.isRequired ? 'required' : '';
+      const icon = getFieldIcon(field);
       
       if (field.type === 'select') {
+        const options = field.options ? field.options.split(',').map(o => o.trim()) : [];
         return `
-          <div class="neu-input-group">
-            <div class="custom-select-wrapper">
-              <div class="custom-select" id="select-${field.field_key}">
-                <div class="custom-select__trigger">
-                  <span>${field.options[0]?.label || 'Select option'}</span>
-                  <div class="arrow"></div>
-                </div>
-                <div class="custom-select-options">
-                  ${field.options.map((opt, idx) => `
-                    <span class="custom-option ${idx === 0 ? 'selected' : ''}" data-value="${opt.value}">${opt.label}</span>
-                  `).join('')}
-                </div>
-              </div>
-              <input type="hidden" id="${field.field_key}" name="${field.field_key}" value="${field.options[0]?.value || ''}">
-            </div>
-            <div class="icon-indicator">
-              <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-            </div>
+          <div class="input-wrapper">
+            ${field.label ? `<label class="field-label">${field.label}${field.isRequired ? ' *' : ''}</label>` : ''}
+            <span class="input-icon">📋</span>
+            <select 
+              id="${field.name}" 
+              name="${field.name}" 
+              ${requiredAttr}
+              class="neu-input input-with-icon"
+            >
+              <option value="">${field.placeholder || 'Select ' + field.label}</option>
+              ${options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+            </select>
+          </div>
+        `;
+      }
+      
+      if (field.type === 'textarea') {
+        return `
+          <div class="input-wrapper">
+            ${field.label ? `<label class="field-label">${field.label}${field.isRequired ? ' *' : ''}</label>` : ''}
+            <textarea 
+              id="${field.name}" 
+              name="${field.name}" 
+              ${requiredAttr}
+              class="neu-input"
+              placeholder="${field.placeholder || field.label}"
+              rows="3"
+            ></textarea>
           </div>
         `;
       }
 
       return `
-        <div class="neu-input-group">
+        <div class="input-wrapper">
+          ${field.label ? `<label class="field-label">${field.label}${field.isRequired ? ' *' : ''}</label>` : ''}
+          <span class="input-icon">${icon}</span>
           <input 
             type="${field.type}" 
-            id="${field.field_key}" 
-            name="${field.field_key}" 
-            ${requiredAttr} 
-            class="neu-input"
+            id="${field.name}" 
+            name="${field.name}" 
+            ${requiredAttr}
+            class="neu-input input-with-icon"
             placeholder="${field.placeholder || field.label}"
-            ${patternAttr}
-            ${titleAttr}
           />
-          <div class="icon-indicator">
-            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-          </div>
         </div>
       `;
-    }
-
-    function initCustomDropdowns() {
-      document.querySelectorAll('.custom-select-wrapper').forEach(wrapper => {
-        wrapper.addEventListener('click', function() {
-          this.querySelector('.custom-select').classList.toggle('open');
-        });
-      });
-
-      document.querySelectorAll(".custom-option").forEach(option => {
-        option.addEventListener('click', function(e) {
-          e.stopPropagation(); // Prevent bubbling
-          const wrapper = this.closest('.custom-select-wrapper');
-          const select = this.closest('.custom-select');
-          const input = wrapper.querySelector('input[type="hidden"]');
-          
-          select.querySelector('.custom-option.selected')?.classList.remove('selected');
-          this.classList.add('selected');
-          select.querySelector('.custom-select__trigger span').textContent = this.textContent;
-          input.value = this.dataset.value;
-          select.classList.remove('open');
-        });
-      });
-
-      window.addEventListener('click', function(e) {
-        document.querySelectorAll('.custom-select').forEach(select => {
-          if (!select.contains(e.target) && !select.parentElement.contains(e.target)) {
-            select.classList.remove('open');
-          }
-        });
-      });
     }
 
     // Captcha Logic
@@ -215,7 +358,7 @@
       e.preventDefault();
       
       const errorMsg = document.getElementById('errorMsg');
-      errorMsg.classList.add('hidden');
+      errorMsg.style.display = 'none';
 
       // Collect data
       const formData = new FormData(e.target);
@@ -224,7 +367,7 @@
       // Client-side validation for password match
       if (data.password && data.confirmPassword && data.password !== data.confirmPassword) {
         errorMsg.textContent = 'Passwords do not match';
-        errorMsg.classList.remove('hidden');
+        errorMsg.style.display = 'block';
         return;
       }
       
@@ -255,14 +398,14 @@
           window.location.href = '/user';
         } else {
           errorMsg.textContent = result.error?.message || 'Registration failed';
-          errorMsg.classList.remove('hidden');
+          errorMsg.style.display = 'block';
           if (provider === 'recaptcha' && typeof grecaptcha !== 'undefined') {
             grecaptcha.reset();
           }
         }
       } catch (error) {
         errorMsg.textContent = 'Network error. Please try again.';
-        errorMsg.classList.remove('hidden');
+        errorMsg.style.display = 'block';
       }
     });
 
