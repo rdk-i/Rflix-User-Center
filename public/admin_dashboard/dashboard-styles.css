@@ -1,68 +1,99 @@
-/* Dashboard Specific Styles */
+/* Dashboard Specific Styles - FIX */
 
-/* Layout */
+/* Layout Reset */
 body {
-  display: block;
-  align-items: unset;
-  justify-content: unset;
+  display: block !important;
   overflow-x: hidden;
+  background-color: var(--bg);
 }
 
 .dashboard-grid {
   display: flex;
   min-height: 100vh;
+  width: 100%;
+  position: relative;
 }
 
+/* Sidebar Styling */
 .neu-sidebar {
   width: 280px;
   position: fixed;
   top: 0;
   left: 0;
   height: 100vh;
-  z-index: 40;
+  z-index: 1000; /* Ensure it's on top */
   overflow-y: auto;
+  background-color: var(--bg);
+  border-right: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  box-shadow: 4px 0 15px rgba(0,0,0,0.3);
 }
 
+/* Main Content Area */
 main {
   flex: 1;
-  margin-left: 280px;
+  margin-left: 280px; /* Match sidebar width */
   padding: 2rem;
   width: calc(100% - 280px);
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
 }
 
+/* Theme Toggle Position */
 .theme-toggle {
   position: fixed;
   top: 1.5rem;
   right: 2rem;
-  z-index: 100;
+  z-index: 2000; /* Above everything */
+}
+
+/* Sidebar Navigation Items */
+.neu-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
+  flex: 1;
+}
+
+.neu-sidebar .nav-item {
+  margin-bottom: 0.8rem;
+}
+
+.neu-sidebar .neu-btn {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  padding-left: 1.5rem;
+  font-size: 0.9rem;
+  height: 45px;
+  margin: 0;
+}
+
+.neu-sidebar .neu-btn:hover,
+.neu-sidebar .nav-item.active .neu-btn {
+  color: var(--accent);
+  box-shadow: var(--shadow-in);
 }
 
 /* View Sections */
 .view-section {
   display: block;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 .view-section.hidden {
   display: none;
 }
 
-/* Loading Spinner */
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top: 4px solid var(--accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 768px) {
   .neu-sidebar {
     transform: translateX(-100%);
@@ -76,5 +107,8 @@ main {
   main {
     margin-left: 0;
     width: 100%;
+    padding: 1rem;
   }
+  
+  /* Mobile Menu Toggle Button (Optional - need to add to HTML if needed) */
 }
