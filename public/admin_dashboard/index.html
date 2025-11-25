@@ -65,6 +65,34 @@
         </div>
       </aside>
 
+      <!-- Main Content -->
+      <main>
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view-section">
+          <h1 class="text-3xl font-bold mb-8">Dashboard Overview</h1>
+          
+          <!-- Stats Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div class="neu-panel text-center">
+              <p class="stat-header">Total Users</p>
+              <p class="text-4xl font-bold text-accent" id="totalUsers">-</p>
+            </div>
+            <div class="neu-panel text-center">
+              <p class="stat-header">Now Playing</p>
+              <p class="text-4xl font-bold text-input-text" id="nowPlaying">-</p>
+            </div>
+            <div class="neu-panel text-center">
+              <p class="stat-header">Pending Requests</p>
+              <p class="text-4xl font-bold text-yellow-500" id="pendingReqs">-</p>
+            </div>
+          </div>
+
+          <!-- Activity & Status Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="neu-panel">
+              <h3 class="mb-4">Recent Activity</h3>
+              <div id="recentActivity" class="text-sm text-muted">Loading...</div>
+            </div>
             <div class="neu-panel">
               <h3 class="mb-4">System Status</h3>
               <div class="space-y-4">
