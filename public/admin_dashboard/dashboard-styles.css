@@ -1,53 +1,53 @@
-/* Dashboard Specific Styles - FIX */
+/* Dashboard Specific Styles - STABLE LAYOUT FIX */
 
 /* Layout Reset */
 body {
-  display: block !important;
-  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent body scroll, handle in main/sidebar */
   background-color: var(--bg);
+  height: 100vh;
 }
 
 .dashboard-grid {
   display: flex;
-  min-height: 100vh;
-  width: 100%;
-  position: relative;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
-/* Sidebar Styling */
+/* Sidebar Styling - Flex Item */
 .neu-sidebar {
   width: 280px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  z-index: 1000; /* Ensure it's on top */
-  overflow-y: auto;
+  min-width: 280px; /* Prevent shrinking */
+  height: 100%;
   background-color: var(--bg);
   border-right: 1px solid rgba(255,255,255,0.05);
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
   box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+  z-index: 50;
+  overflow-y: auto; /* Scroll inside sidebar if needed */
+  position: relative; /* Not fixed */
 }
 
-/* Main Content Area */
+/* Main Content Area - Flex Item */
 main {
   flex: 1;
-  margin-left: 280px; /* Match sidebar width */
+  height: 100%;
+  overflow-y: auto; /* Scroll inside main content */
   padding: 2rem;
-  width: calc(100% - 280px);
-  min-height: 100vh;
   position: relative;
   z-index: 1;
 }
 
 /* Theme Toggle Position */
 .theme-toggle {
-  position: fixed;
+  position: absolute; /* Relative to main or body */
   top: 1.5rem;
   right: 2rem;
-  z-index: 2000; /* Above everything */
+  z-index: 100;
 }
 
 /* Sidebar Navigation Items */
@@ -70,6 +70,8 @@ main {
   font-size: 0.9rem;
   height: 45px;
   margin: 0;
+  display: flex;
+  align-items: center;
 }
 
 .neu-sidebar .neu-btn:hover,
@@ -82,6 +84,8 @@ main {
 .view-section {
   display: block;
   animation: fadeIn 0.3s ease-in-out;
+  max-width: 1200px; /* Limit content width for better readability */
+  margin: 0 auto;
 }
 
 .view-section.hidden {
@@ -95,20 +99,37 @@ main {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .dashboard-grid {
+    flex-direction: column;
+  }
+
   .neu-sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-  }
-  
-  .neu-sidebar.open {
-    transform: translateX(0);
-  }
-  
-  main {
-    margin-left: 0;
     width: 100%;
+    height: auto;
+    min-height: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 1rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+
+  .neu-sidebar ul {
+    display: flex;
+    margin: 0;
+    gap: 1rem;
+  }
+
+  .neu-sidebar .nav-item {
+    margin-bottom: 0;
+  }
+  
+  .neu-sidebar .neu-btn {
+    width: auto;
+    padding: 0.5rem 1rem;
+    white-space: nowrap;
+  }
+
+  main {
     padding: 1rem;
   }
-  
-  /* Mobile Menu Toggle Button (Optional - need to add to HTML if needed) */
 }
