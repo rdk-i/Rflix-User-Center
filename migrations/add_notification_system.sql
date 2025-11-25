@@ -67,93 +67,49 @@ CREATE INDEX IF NOT EXISTS idx_notification_queue_priority ON notification_queue
 -- Insert default notification templates
 INSERT OR IGNORE INTO notification_templates (name, type, subject, template_content, variables) VALUES
 ('welcome_email', 'email', 'Welcome to Rflix!', 
-'<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-  <h2 style="color: #6C5CE7;">Welcome to Rflix!</h2>
-  <p>Hello {{username}},</p>
-  <p>Your registration has been approved! You can now access the Rflix media streaming service.</p>
-  <p>Login at: <a href="{{app_url}}/user_login.html">Rflix Login</a></p>
-  <p>Thank you for joining us!</p>
-  <p style="color: #888; font-size: 12px;">This is an automated message. Please do not reply.</p>
-</div>',
-'["username", "app_url"]'),
+'Welcome to Rflix! Hello {{username}}, your registration has been approved. Login at: {{app_url}}/user_login.html',
+'["username", "app_url"]');
 
+INSERT OR IGNORE INTO notification_templates (name, type, subject, template_content, variables) VALUES
 ('expiration_warning_email', 'email', 'Subscription Expiring Soon',
-'<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-  <h2 style="color: #FF7675;">Subscription Expiring Soon</h2>
-  <p>Hello {{username}},</p>
-  <p>Your Rflix subscription will expire in <strong>{{days_remaining}} days</strong>.</p>
-  <p>To continue enjoying our service, please renew your subscription.</p>
-  <p>Renew now: <a href="{{app_url}}/user_dashboard.html">Renew Subscription</a></p>
-  <p>Thank you!</p>
-  <p style="color: #888; font-size: 12px;">This is an automated message. Please do not reply.</p>
-</div>',
-'["username", "days_remaining", "app_url"]'),
+'Subscription Expiring Soon. Hello {{username}}, your Rflix subscription will expire in {{days_remaining}} days. Renew at: {{app_url}}/user_dashboard.html',
+'["username", "days_remaining", "app_url"]');
 
+INSERT OR IGNORE INTO notification_templates (name, type, subject, template_content, variables) VALUES
 ('subscription_expired_email', 'email', 'Subscription Expired',
-'<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-  <h2 style="color: #D63031;">Subscription Expired</h2>
-  <p>Hello {{username}},</p>
-  <p>Your Rflix subscription has expired. Your account has been disabled.</p>
-  <p>To regain access, please renew your subscription.</p>
-  <p>Renew now: <a href="{{app_url}}/user_dashboard.html">Renew Subscription</a></p>
-  <p>Thank you!</p>
-  <p style="color: #888; font-size: 12px;">This is an automated message. Please do not reply.</p>
-</div>',
-'["username", "app_url"]'),
+'Subscription Expired. Hello {{username}}, your Rflix subscription has expired. Renew at: {{app_url}}/user_dashboard.html',
+'["username", "app_url"]');
 
+INSERT OR IGNORE INTO notification_templates (name, type, subject, template_content, variables) VALUES
 ('welcome_telegram', 'telegram', NULL,
-'🎉 <b>Welcome to Rflix!</b>
+'🎉 Welcome to Rflix! Hello {{username}}! Your registration has been approved. Login: {{app_url}}/user_login.html',
+'["username", "app_url"]');
 
-Hello {{username}}!
-
-Your registration has been approved. You can now access unlimited streaming on Rflix.
-
-Login here: {{app_url}}/user_login.html
-
-Enjoy! 🍿',
-'["username", "app_url"]'),
-
+INSERT OR IGNORE INTO notification_templates (name, type, subject, template_content, variables) VALUES
 ('expiration_warning_telegram', 'telegram', NULL,
-'⚠️ <b>Subscription Expiring Soon</b>
+'⚠️ Subscription Expiring Soon. Hello {{username}}, your subscription will expire in {{days_remaining}} days. Renew: {{app_url}}/user_dashboard.html',
+'["username", "days_remaining", "app_url"]');
 
-Hello {{username}},
-
-Your Rflix subscription will expire in <b>{{days_remaining}} days</b>.
-
-Please renew to continue enjoying our service.
-
-Renew: {{app_url}}/user_dashboard.html',
-'["username", "days_remaining", "app_url"]'),
-
+INSERT OR IGNORE INTO notification_templates (name, type, subject, template_content, variables) VALUES
 ('subscription_expired_telegram', 'telegram', NULL,
-'❌ <b>Subscription Expired</b>
+'❌ Subscription Expired. Hello {{username}}, your subscription has expired. Renew: {{app_url}}/user_dashboard.html',
+'["username", "app_url"]');
 
-Hello {{username}},
-
-Your Rflix subscription has expired and your account has been disabled.
-
-Renew now: {{app_url}}/user_dashboard.html',
-'["username", "app_url"]'),
-
+INSERT OR IGNORE INTO notification_templates (name, type, subject, template_content, variables) VALUES
 ('new_registration_admin', 'telegram', NULL,
-'🔔 <b>New Registration</b>
-
-Email: {{email}}
-Package: {{package_months}} month(s)
-
-Please review and approve/reject.',
+'🔔 New Registration. Email: {{email}}, Package: {{package_months}} month(s). Please review.',
 '["email", "package_months"]');
 
 -- Add notification delivery settings to user_notifications table
-ALTER TABLE user_notifications ADD COLUMN IF NOT EXISTS email_frequency TEXT DEFAULT 'immediate';
-ALTER TABLE user_notifications ADD COLUMN IF NOT EXISTS telegram_frequency TEXT DEFAULT 'immediate';
-ALTER TABLE user_notifications ADD COLUMN IF NOT EXISTS quiet_hours_start TIME;
-ALTER TABLE user_notifications ADD COLUMN IF NOT EXISTS quiet_hours_end TIME;
-ALTER TABLE user_notifications ADD COLUMN IF NOT EXISTS last_notification_sent DATETIME;
+ALTER TABLE user_notifications ADD COLUMN email_frequency TEXT DEFAULT 'immediate';
+ALTER TABLE user_notifications ADD COLUMN telegram_frequency TEXT DEFAULT 'immediate';
+ALTER TABLE user_notifications ADD COLUMN quiet_hours_start TIME;
+ALTER TABLE user_notifications ADD COLUMN quiet_hours_end TIME;
+ALTER TABLE user_notifications ADD COLUMN last_notification_sent DATETIME;
 
 -- Add notification tracking fields to user_expiration table
-ALTER TABLE user_expiration ADD COLUMN IF NOT EXISTS last_warning_sent DATETIME;
-ALTER TABLE user_expiration ADD COLUMN IF NOT EXISTS warning_sent_days INTEGER DEFAULT 0;
+ALTER TABLE user_expiration ADD COLUMN last_warning_sent DATETIME;
+ALTER TABLE user_expiration ADD COLUMN warning_sent_days INTEGER DEFAULT 0;
 
 -- Create notification delivery schedule table for advanced scheduling
 CREATE TABLE IF NOT EXISTS notification_schedule (
