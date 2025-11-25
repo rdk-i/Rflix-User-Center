@@ -13,7 +13,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--bg);
       padding: 2rem;
     }
     
@@ -26,7 +25,7 @@
       background: var(--bg);
       border-radius: var(--radius-lg);
       padding: 3rem 2.5rem;
-      box-shadow: var(--shadow-out);
+      box-shadow: var(--shadow-deep);
       border: 1px solid var(--border-color);
       max-height: 90vh;
       overflow-y: auto;
@@ -94,7 +93,7 @@
       right: 0;
       top: 50%;
       height: 1px;
-      background: rgba(255,255,255,0.1);
+      background: var(--border-color);
     }
     
     .divider span {
@@ -128,6 +127,14 @@
       right: 2rem;
       z-index: 100;
     }
+
+    .btn-icon {
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      font-size: 1.25rem;
+      border-radius: 50%;
+    }
     
     .error-message {
       background: rgba(239, 68, 68, 0.1);
@@ -147,6 +154,8 @@
       font-size: 0.85rem;
       margin-bottom: 0.5rem;
       margin-left: 0.5rem;
+      font-weight: 500;
+      letter-spacing: 0.3px;
     }
 
     /* Responsive Design */
@@ -155,7 +164,7 @@
         padding: 1rem;
       }
       
-      .neu-login-card {
+      .register-card {
         padding: 2rem 1.5rem;
       }
       
@@ -171,12 +180,15 @@
   </style>
 </head>
 <body>
+  <!-- Theme Toggle -->
   <div class="theme-toggle">
-    <button class="neu-btn btn-icon" onclick="toggleTheme()">🌙</button>
+    <button class="neu-btn btn-icon" onclick="toggleTheme()" aria-label="Toggle theme">
+      🌙
+    </button>
   </div>
 
   <div class="register-container">
-    <div class="neu-login-card">
+    <div class="register-card">
       <!-- Header -->
       <div class="register-header">
         <h1 class="register-title">Create Account</h1>
@@ -214,6 +226,7 @@
     </div>
   </div>
 
+
   <script>
     // Theme Toggle Logic
     function toggleTheme() {
@@ -224,17 +237,28 @@
       
       if (body.classList.contains('light-mode')) {
         btn.textContent = '☀️';
+        btn.setAttribute('aria-label', 'Switch to dark mode');
         localStorage.setItem('theme', 'light');
       } else {
         btn.textContent = '🌙';
+        btn.setAttribute('aria-label', 'Switch to light mode');
         localStorage.setItem('theme', 'dark');
       }
     }
 
-    if (localStorage.getItem('theme') === 'light') {
-      document.body.classList.add('light-mode');
-      document.querySelector('.theme-toggle button').textContent = '☀️';
-    }
+    // Initialize theme from localStorage
+    (function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      const btn = document.querySelector('.theme-toggle button');
+      
+      if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        btn.textContent = '☀️';
+        btn.setAttribute('aria-label', 'Switch to dark mode');
+      } else {
+        btn.setAttribute('aria-label', 'Switch to light mode');
+      }
+    })();
 
     // Icon mapping for different field types
     const fieldIcons = {

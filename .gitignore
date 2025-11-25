@@ -12,12 +12,16 @@ pnpm-debug.log*
 .env
 .env.local
 .env.production
+.env.development
+.env.test
 
 # Database files (sensitive data)
 data/
 *.db
 *.db-shm
 *.db-wal
+*.sqlite
+*.sqlite3
 
 # Logs
 logs/
@@ -26,6 +30,7 @@ logs/
 # Backups
 backups/
 *.backup
+*.bak
 
 # IDE & Editor
 .vscode/
@@ -34,10 +39,14 @@ backups/
 *.swo
 *~
 .DS_Store
+*.sublime-project
+*.sublime-workspace
 
 # OS
 Thumbs.db
 desktop.ini
+.Spotlight-V100
+.Trashes
 
 # Test coverage
 coverage/
@@ -56,6 +65,7 @@ output.txt
 # Development documentation (exclude internal docs, keep README)
 CLEANUP_AND_SUBSCRIPTION_ANALYSIS.md
 DEPLOYMENT_GUIDE.md
+DEPLOYMENT_FIX.md
 DESIGN_OVERHAUL.md
 DESIGN_UPDATE.md
 IMPLEMENTATION_COMPLETE.md
@@ -68,6 +78,7 @@ URGENT_FIX.md
 cleanup.ps1
 gen_verify_hash.js
 valid_hash.txt
+fix-database.sh
 
 # Test files
 **/test_*.js
@@ -80,6 +91,27 @@ valid_hash.txt
 yarn.lock
 pnpm-lock.yaml
 
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Security & Secrets
+*.pem
+*.key
+*.cert
+*.p12
+.npmrc
+.yarnrc
+
+# Cache
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.eslintcache
+
 # Miscellaneous
-$null
--p/
+*.orig
+.DS_Store?
+._*
+

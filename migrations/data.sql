@@ -161,6 +161,15 @@ CREATE TABLE IF NOT EXISTS registration_fields (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Table: stats_history (Dashboard statistics history)
+CREATE TABLE IF NOT EXISTS stats_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+  active_streams INTEGER DEFAULT 0,
+  total_users INTEGER DEFAULT 0,
+  online_users INTEGER DEFAULT 0
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_user_expiration_userId ON user_expiration(userId);
 CREATE INDEX IF NOT EXISTS idx_user_expiration_jellyfinUserId ON user_expiration(jellyfinUserId);
@@ -169,6 +178,7 @@ CREATE INDEX IF NOT EXISTS idx_audit_log_timestamp ON audit_log(timestamp);
 CREATE INDEX IF NOT EXISTS idx_token_blacklist_token ON token_blacklist(token);
 CREATE INDEX IF NOT EXISTS idx_user_media_stats_userId ON user_media_stats(userId);
 CREATE INDEX IF NOT EXISTS idx_user_notifications_userId ON user_notifications(userId);
+CREATE INDEX IF NOT EXISTS idx_stats_timestamp ON stats_history(timestamp);
 
 -- Insert default admin user (password: admin123 - CHANGE THIS!)
 -- Password hash for 'admin123' with bcrypt rounds=12

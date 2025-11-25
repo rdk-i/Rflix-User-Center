@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rflix - Home</title>
+  <title>Rflix - Premium Media Streaming</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
     body {
@@ -11,21 +11,20 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--bg);
       padding: 2rem;
     }
     
     .home-container {
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
     }
     
-    .neu-login-card {
+    .home-card {
       background: var(--bg);
       border-radius: var(--radius-lg);
       padding: 3rem 2.5rem;
-      box-shadow: 14px 14px 40px var(--shadow-dark), -14px -14px 40px var(--shadow-light);
-      border: 1px solid rgba(255,255,255,0.02);
+      box-shadow: var(--shadow-deep);
+      border: 1px solid var(--border-color);
     }
 
     .theme-toggle {
@@ -35,42 +34,74 @@
       z-index: 100;
     }
 
+    .brand-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .brand-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+    }
+
+    .brand-subtitle {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
     .nav-btn {
       width: 100%;
-      padding: 0.875rem;
-      font-size: 0.9rem;
+      padding: 1rem;
+      font-size: 0.875rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
       background: var(--bg);
       color: var(--text);
-      border-radius: var(--radius-sm);
-      box-shadow: var(--shadow-soft);
+      border-radius: var(--radius-pill);
+      box-shadow: var(--shadow-out-sm);
       transition: var(--transition);
       border: none;
       cursor: pointer;
       text-decoration: none;
-      display: block;
-      text-align: center;
-      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .nav-btn:hover {
       transform: translateY(-2px);
       color: var(--accent);
-      box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
+      box-shadow: var(--shadow-out);
     }
 
     .nav-btn:active {
       transform: translateY(0);
-      box-shadow: var(--shadow-inset);
+      box-shadow: var(--shadow-in);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border-color);
+      margin: 1.5rem 0;
     }
 
     .admin-link {
       text-align: center;
       margin-top: 1.5rem;
       padding-top: 1.5rem;
-      border-top: 1px solid rgba(255,255,255,0.08);
+      border-top: 1px solid var(--border-color);
     }
 
     .admin-link a {
@@ -79,10 +110,20 @@
       font-size: 0.85rem;
       font-weight: 500;
       transition: var(--transition);
+      letter-spacing: 0.5px;
     }
 
     .admin-link a:hover {
       color: var(--accent);
+    }
+
+    /* Theme Toggle Button */
+    .btn-icon {
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      font-size: 1.25rem;
+      border-radius: 50%;
     }
 
     /* Responsive Design */
@@ -91,7 +132,7 @@
         padding: 1rem;
       }
       
-      .neu-login-card {
+      .home-card {
         padding: 2rem 1.5rem;
       }
       
@@ -99,24 +140,32 @@
         top: 1rem;
         right: 1rem;
       }
+
+      .brand-title {
+        font-size: 1.75rem;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- Theme Toggle -->
   <div class="theme-toggle">
-    <button class="neu-btn btn-icon" onclick="toggleTheme()">🌙</button>
+    <button class="neu-btn btn-icon" onclick="toggleTheme()" aria-label="Toggle theme">
+      🌙
+    </button>
   </div>
 
+  <!-- Main Container -->
   <div class="home-container">
-    <div class="neu-login-card">
-      <!-- Header -->
-      <div style="text-align: center; margin-bottom: 2.5rem;">
-        <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; letter-spacing: 0.5px;">Rflix</h1>
-        <p style="color: var(--text-muted); font-size: 0.875rem; font-weight: 400;">Premium Media Streaming Management</p>
+    <div class="home-card">
+      <!-- Brand Header -->
+      <div class="brand-header">
+        <h1 class="brand-title">Rflix</h1>
+        <p class="brand-subtitle">Premium Media Streaming Management</p>
       </div>
 
       <!-- Navigation Buttons -->
-      <div>
+      <div class="nav-buttons">
         <a href="/user" class="nav-btn">User Login</a>
         <a href="/registration" class="nav-btn">Create Account</a>
       </div>
@@ -137,18 +186,28 @@
       
       if (body.classList.contains('light-mode')) {
         btn.textContent = '☀️';
+        btn.setAttribute('aria-label', 'Switch to dark mode');
         localStorage.setItem('theme', 'light');
       } else {
         btn.textContent = '🌙';
+        btn.setAttribute('aria-label', 'Switch to light mode');
         localStorage.setItem('theme', 'dark');
       }
     }
 
-    // Init Theme
-    if (localStorage.getItem('theme') === 'light') {
-      document.body.classList.add('light-mode');
-      document.querySelector('.theme-toggle button').textContent = '☀️';
-    }
+    // Initialize theme from localStorage
+    (function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      const btn = document.querySelector('.theme-toggle button');
+      
+      if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        btn.textContent = '☀️';
+        btn.setAttribute('aria-label', 'Switch to dark mode');
+      } else {
+        btn.setAttribute('aria-label', 'Switch to light mode');
+      }
+    })();
   </script>
 </body>
 </html>

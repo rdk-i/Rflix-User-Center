@@ -642,6 +642,34 @@ pm2 logs rflix-user-center
 docker logs rflix-user-center
 ```
 
+#### Missing stats_history table error
+
+If you see this error after deploying to a new server:
+
+```
+SqliteError: no such table: stats_history
+```
+
+**Quick Fix:**
+
+```bash
+# Option 1: Run migrations (Recommended)
+npm run migrate
+
+# Option 2: Use the automated fix script
+chmod +x fix-database.sh
+./fix-database.sh
+
+# Option 3: Manual SQL execution
+sqlite3 data/rflix.db < migrations/add_stats_history.sql
+```
+
+**Root Cause**: The database was created before the stats_history table was added to the schema.
+
+**Prevention**: Always run `npm run migrate` after pulling updates or deploying to a new server.
+
+For more details, see [DEPLOYMENT_FIX.md](DEPLOYMENT_FIX.md)
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please follow these steps:

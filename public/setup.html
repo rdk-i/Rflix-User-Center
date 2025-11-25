@@ -3,115 +3,275 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rflix API - Setup Wizard</title>
+  <title>Rflix - Setup Wizard</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="custom-dropdown.css" />
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .setup-container {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    .setup-card {
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      padding: 3rem 2.5rem;
+      box-shadow: var(--shadow-deep);
+      border: 1px solid var(--border-color);
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      z-index: 100;
+    }
+
+    .btn-icon {
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      font-size: 1.25rem;
+      border-radius: 50%;
+    }
+
+    .setup-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .setup-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+    }
+
+    .setup-subtitle {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      letter-spacing: 0.5px;
+    }
+
+    .section-title {
+      color: var(--accent);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      letter-spacing: 0.5px;
+    }
+
+    .form-section {
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-section:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .input-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    .flex-row .neu-input {
+      flex: 1;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 1rem;
+      font-size: 0.95rem;
+      margin-top: 1.5rem;
+    }
+
+    #statusLog {
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-in);
+      padding: 1rem;
+      margin-top: 1.5rem;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+    }
+
+    #statusLog.hidden {
+      display: none;
+    }
+
+    .log-info { color: var(--text-muted); }
+    .log-success { color: var(--success); }
+    .log-error { color: var(--danger); }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .setup-card {
+        padding: 2rem 1.5rem;
+      }
+
+      .theme-toggle {
+        top: 1rem;
+        right: 1rem;
+      }
+
+      .input-row {
+        grid-template-columns: 1fr;
+      }
+
+      .setup-title {
+        font-size: 1.75rem;
+      }
+    }
+  </style>
 </head>
-<body class="centered">
+<body>
+  <!-- Theme Toggle -->
   <div class="theme-toggle">
-    <button class="theme-btn" onclick="toggleTheme()">Dark</button>
+    <button class="neu-btn btn-icon" onclick="toggleTheme()" aria-label="Toggle theme">
+      🌙
+    </button>
   </div>
 
-  <div class="neu-card" style="max-width: 600px;">
-    <!-- Header -->
-    <div class="mb-6 text-center">
-      <h1 class="mb-2">🚀 Rflix Setup</h1>
-      <p class="text-muted">First time configuration wizard</p>
-    </div>
+  <div class="setup-container">
+    <div class="setup-card">
+      <!-- Header -->
+      <div class="setup-header">
+        <h1 class="setup-title">🚀 Rflix Setup</h1>
+        <p class="setup-subtitle">First time configuration wizard</p>
+      </div>
 
-    <form id="setupForm" class="w-full">
-      
-      <!-- Step 1: Server Config -->
-      <div class="mb-6">
-        <h3 class="mb-4 text-accent">Server Configuration</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="neu-input-group">
-            <input type="number" name="PORT" value="3000" class="neu-input" placeholder="Port" required />
-          </div>
-          <div class="neu-input-group">
-            <div class="custom-select-wrapper">
-              <div class="custom-select">
-                <div class="custom-select__trigger">
-                  <span>Production</span>
-                  <div class="arrow"></div>
+
+      <form id="setupForm">
+        
+        <!-- Step 1: Server Config -->
+        <div class="form-section">
+          <h3 class="section-title">Server Configuration</h3>
+          <div class="input-row">
+            <div class="input-group">
+              <input type="number" name="PORT" value="3000" class="neu-input" placeholder="Port" required />
+            </div>
+            <div class="input-group">
+              <div class="custom-select-wrapper">
+                <div class="custom-select">
+                  <div class="custom-select__trigger">
+                    <span>Production</span>
+                    <div class="arrow"></div>
+                  </div>
+                  <div class="custom-select-options">
+                    <span class="custom-option selected" data-value="production">Production</span>
+                    <span class="custom-option" data-value="development">Development</span>
+                  </div>
                 </div>
-                <div class="custom-select-options">
-                  <span class="custom-option selected" data-value="production">Production</span>
-                  <span class="custom-option" data-value="development">Development</span>
-                </div>
+                <input type="hidden" id="nodeEnv" name="NODE_ENV" value="production">
               </div>
-              <input type="hidden" id="nodeEnv" name="NODE_ENV" value="production">
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Step 2: Jellyfin Config -->
-      <div class="mb-6">
-        <h3 class="mb-4 text-accent">Jellyfin Connection</h3>
-        <div class="neu-input-group mb-4">
-          <input type="url" name="JELLYFIN_URL" placeholder="http://localhost:8096" class="neu-input" required />
+        <!-- Step 2: Jellyfin Config -->
+        <div class="form-section">
+          <h3 class="section-title">Jellyfin Connection</h3>
+          <div class="input-group">
+            <input type="url" name="JELLYFIN_URL" placeholder="http://localhost:8096" class="neu-input" required />
+          </div>
+          <div class="input-group">
+            <input type="text" name="JELLYFIN_API_KEY" placeholder="Jellyfin API Key" class="neu-input" required />
+          </div>
         </div>
-        <div class="neu-input-group">
-          <input type="text" name="JELLYFIN_API_KEY" placeholder="Jellyfin API Key" class="neu-input" required />
-        </div>
-      </div>
 
-      <!-- Step 3: Security -->
-      <div class="mb-6">
-        <h3 class="mb-4 text-accent">Security</h3>
-        <div class="flex gap-4">
-          <div class="neu-input-group">
+        <!-- Step 3: Security -->
+        <div class="form-section">
+          <h3 class="section-title">Security</h3>
+          <div class="flex-row">
             <input type="text" name="JWT_SECRET" id="jwtSecret" class="neu-input" placeholder="JWT Secret" required />
-          </div>
-          <button type="button" onclick="generateSecret()" class="neu-btn neu-btn-sm" style="margin-top: 0;">Gen</button>
-        </div>
-      </div>
-
-      <!-- Step 4: Admin Account -->
-      <div class="mb-6">
-        <h3 class="mb-4 text-accent">Create Admin Account</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="neu-input-group">
-            <input type="email" name="ADMIN_EMAIL" placeholder="admin@example.com" class="neu-input" required />
-          </div>
-          <div class="neu-input-group">
-            <input type="password" name="ADMIN_PASSWORD" placeholder="Strong Password" class="neu-input" required />
+            <button type="button" onclick="generateSecret()" class="neu-btn neu-btn-sm">Gen</button>
           </div>
         </div>
-      </div>
 
-      <!-- Submit -->
-      <button type="submit" id="submitBtn" class="neu-btn">
-        Install & Configure
-      </button>
+        <!-- Step 4: Admin Account -->
+        <div class="form-section">
+          <h3 class="section-title">Create Admin Account</h3>
+          <div class="input-row">
+            <div class="input-group">
+              <input type="email" name="ADMIN_EMAIL" placeholder="admin@example.com" class="neu-input" required />
+            </div>
+            <div class="input-group">
+              <input type="password" name="ADMIN_PASSWORD" placeholder="Strong Password" class="neu-input" required />
+            </div>
+          </div>
+        </div>
 
-      <div id="statusLog" class="hidden mt-4 p-4 rounded-lg font-mono text-xs text-muted max-h-40 overflow-y-auto bg-black/20"></div>
-    </form>
+        <!-- Submit -->
+        <button type="submit" id="submitBtn" class="neu-btn submit-btn primary">
+          Install & Configure
+        </button>
+
+        <div id="statusLog" class="hidden"></div>
+      </form>
+    </div>
   </div>
 
   <script>
     // Theme Toggle Logic
     function toggleTheme() {
       const body = document.body;
-      const btn = document.querySelector('.theme-btn');
+      const btn = document.querySelector('.theme-toggle button');
       
       body.classList.toggle('light-mode');
       
       if (body.classList.contains('light-mode')) {
-        btn.textContent = 'Light';
+        btn.textContent = '☀️';
+        btn.setAttribute('aria-label', 'Switch to dark mode');
         localStorage.setItem('theme', 'light');
       } else {
-        btn.textContent = 'Dark';
+        btn.textContent = '🌙';
+        btn.setAttribute('aria-label', 'Switch to light mode');
         localStorage.setItem('theme', 'dark');
       }
     }
 
-    // Init Theme
-    if (localStorage.getItem('theme') === 'light') {
-      document.body.classList.add('light-mode');
-      document.querySelector('.theme-btn').textContent = 'Light';
-    }
+    // Initialize theme from localStorage
+    (function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      const btn = document.querySelector('.theme-toggle button');
+      
+      if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        btn.textContent = '☀️';
+        btn.setAttribute('aria-label', 'Switch to dark mode');
+      } else {
+        btn.setAttribute('aria-label', 'Switch to light mode');
+      }
+    })();
 
     // Custom Dropdown Logic
     document.querySelector('.custom-select-wrapper').addEventListener('click', function() {
@@ -143,11 +303,12 @@
       document.getElementById('jwtSecret').value = secret;
     }
 
+
     function log(msg, type = 'info') {
       const logDiv = document.getElementById('statusLog');
       logDiv.classList.remove('hidden');
-      const color = type === 'error' ? 'text-red-400' : (type === 'success' ? 'text-emerald-400' : 'text-zinc-400');
-      logDiv.innerHTML += `<div class="${color}">> ${msg}</div>`;
+      const colorClass = type === 'error' ? 'log-error' : (type === 'success' ? 'log-success' : 'log-info');
+      logDiv.innerHTML += `<div class="${colorClass}">› ${msg}</div>`;
       logDiv.scrollTop = logDiv.scrollHeight;
     }
 

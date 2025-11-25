@@ -21,11 +21,35 @@ try {
 }
 db.pragma("journal_mode = WAL");
 
-// Get all migration files
+// Get all migration files in order
 const migrationFiles = fs
   .readdirSync(migrationsDir)
-  .filter((file) => file === "data.sql")
-  .sort();
+  .filter((file) => {
+    // Run these migrations in order
+    const orderedMigrations = [
+      'data.sql',
+      'add_settings_table.sql',
+      'add_notification_system.sql',
+      'add_packages.sql',
+      'simplify_packages.sql',
+      'add_usage_limits_system.sql',
+      'add_stats_history.sql'
+    ];
+    return orderedMigrations.includes(file);
+  })
+  .sort((a, b) => {
+    // Define migration order
+    const order = [
+      'data.sql',
+      'add_settings_table.sql',
+      'add_notification_system.sql',
+      'add_packages.sql',
+      'simplify_packages.sql',
+      'add_usage_limits_system.sql',
+      'add_stats_history.sql'
+    ];
+    return order.indexOf(a) - order.indexOf(b);
+  });
 
 console.log("Running migrations...");
 
