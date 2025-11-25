@@ -30,7 +30,7 @@ async function loadUsers() {
 
   try {
     const token = localStorage.getItem('token');
-    const res = await fetch('/api/admin/users', {
+    const res = await fetch('/api/admin/users/jellyfin', {
       headers: { Authorization: `Bearer ${token}` }
     });
     const json = await res.json();
@@ -39,13 +39,15 @@ async function loadUsers() {
       renderUsersTable(json.data);
     } else {
       document.getElementById('usersTableBody').innerHTML = `
-        <tr><td colspan="6" class="text-center py-4 text-danger">Failed to load users</td></tr>
+        <tr><td colspan="6" class="text-center py-4 text-danger">
+          Failed to load users: ${json.error?.message || 'Unknown error'}
+        </td></tr>
       `;
     }
   } catch (error) {
     console.error('Error loading users:', error);
     document.getElementById('usersTableBody').innerHTML = `
-      <tr><td colspan="6" class="text-center py-4 text-danger">Error loading data</td></tr>
+      <tr><td colspan="6" class="text-center py-4 text-danger">Error loading data: ${error.message}</td></tr>
     `;
   }
 }
@@ -58,39 +60,84 @@ function renderUsersTable(users) {
   }
 
   tbody.innerHTML = users.map(user => {
-    const statusClass = user.is_active ? 'text-success' : 'text-danger';
-    const statusText = user.is_active ? 'Active' : 'Inactive';
-    // Handle package name safely
-    const packageName = user.packageName || user.package || 'No Package';
+    // Jellyfin user data structure
+    const username = user.Name || 'Unknown';
+    const userId = user.Id;
+    const isDisabled = user.Policy?.IsDisabled || false;
+    
+    // Local database data
+    const email = user.email || '-';
+    const packageName = user.package || 'No Package';
+    
     // Format expiration date
     let expDate = '-';
     if (user.expirationDate) {
-        expDate = new Date(user.expirationDate).toLocaleDateString();
+      const date = new Date(user.expirationDate);
+      expDate = date.toLocaleDateString('id-ID', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+      
+      // Check if expired
+      if (date < new Date()) {
+        expDate = `<span class="text-danger">${expDate} (Expired)</span>`;
+      }
     }
+    
+    // Status
+    const statusClass = !isDisabled ? 'text-success' : 'text-danger';
+    const statusText = !isDisabled ? 'Active' : 'Disabled';
 
     return `
       <tr>
-        <td class="font-bold">${user.username}</td>
-        <td class="text-muted">${user.email}</td>
+        <td class="font-bold">${username}</td>
+        <td class="text-muted">${email}</td>
         <td><span class="neu-badge">${packageName}</span></td>
         <td>${expDate}</td>
         <td class="${statusClass}">${statusText}</td>
         <td>
-          <button class="neu-btn neu-btn-sm" onclick="editUser(${user.id})">✏️</button>
-          <button class="neu-btn neu-btn-sm text-danger" onclick="deleteUser(${user.id})">🗑️</button>
+          <button class="neu-btn neu-btn-sm" onclick="editUser('${userId}', '${username}')" title="Edit User">✏️</button>
+          <button class="neu-btn neu-btn-sm text-danger" onclick="deleteUser('${userId}', '${username}')" title="Delete User">🗑️</button>
         </td>
       </tr>
     `;
   }).join('');
 }
 
-// Placeholder for edit/delete functions
-function editUser(id) {
-  alert('Edit user functionality coming soon for ID: ' + id);
+// Edit user function
+function editUser(userId, username) {
+  showAlert(`Edit functionality for user "${username}" is coming soon!`, 'info');
+  console.log('Edit user:', userId, username);
+  // TODO: Implement edit modal
 }
 
-function deleteUser(id) {
-  if(confirm('Are you sure you want to delete this user?')) {
-      alert('Delete functionality coming soon');
+// Delete user function
+async function deleteUser(userId, username) {
+  if(!confirm(`Are you sure you want to delete user "${username}"?\n\nThis will remove the user from both Jellyfin and the local database.`)) {
+    return;
+  }
+  
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`/api/admin/users/${userId}`, {
+      method: 'DELETE',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const json = await res.json();
+    
+    if (json.success) {
+      showAlert(`User "${username}" deleted successfully`, 'success');
+      loadUsers(); // Reload the table
+    } else {
+      showAlert(`Failed to delete user: ${json.error?.message || 'Unknown error'}`, 'error');
+    }
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    showAlert(`Error deleting user: ${error.message}`, 'error');
   }
 }
