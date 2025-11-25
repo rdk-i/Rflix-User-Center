@@ -4,7 +4,7 @@
 // Theme Toggle
 function toggleTheme() {
   const body = document.body;
-  const btn = document.querySelector('.theme-btn');
+  const btn = document.querySelector('.theme-toggle button');
   
   body.classList.toggle('light-mode');
   
@@ -20,7 +20,8 @@ function toggleTheme() {
 // Initialize Theme
 if (localStorage.getItem('theme') === 'light') {
   document.body.classList.add('light-mode');
-  document.querySelector('.theme-btn').textContent = 'Light';
+  const btn = document.querySelector('.theme-toggle button');
+  if (btn) btn.textContent = 'Light';
 }
 
 // Check Authentication
