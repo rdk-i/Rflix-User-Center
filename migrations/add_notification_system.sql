@@ -100,16 +100,8 @@ INSERT OR IGNORE INTO notification_templates (name, type, subject, template_cont
 '🔔 New Registration. Email: {{email}}, Package: {{package_months}} month(s). Please review.',
 '["email", "package_months"]');
 
--- Add notification delivery settings to user_notifications table
-ALTER TABLE user_notifications ADD COLUMN email_frequency TEXT DEFAULT 'immediate';
-ALTER TABLE user_notifications ADD COLUMN telegram_frequency TEXT DEFAULT 'immediate';
-ALTER TABLE user_notifications ADD COLUMN quiet_hours_start TIME;
-ALTER TABLE user_notifications ADD COLUMN quiet_hours_end TIME;
-ALTER TABLE user_notifications ADD COLUMN last_notification_sent DATETIME;
-
--- Add notification tracking fields to user_expiration table
-ALTER TABLE user_expiration ADD COLUMN last_warning_sent DATETIME;
-ALTER TABLE user_expiration ADD COLUMN warning_sent_days INTEGER DEFAULT 0;
+-- Note: Additional columns for user_notifications and user_expiration
+-- will be added by subsequent migrations if needed
 
 -- Create notification delivery schedule table for advanced scheduling
 CREATE TABLE IF NOT EXISTS notification_schedule (
@@ -169,10 +161,6 @@ SELECT
   n.emailEnabled,
   n.telegramEnabled,
   n.telegramChatId,
-  n.email_frequency,
-  n.telegram_frequency,
-  n.quiet_hours_start,
-  n.quiet_hours_end,
   COUNT(nl.id) as total_notifications_received,
   SUM(CASE WHEN nl.success = 1 THEN 1 ELSE 0 END) as successful_notifications,
   MAX(nl.timestamp) as last_notification_timestamp

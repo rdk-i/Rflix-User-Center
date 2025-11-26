@@ -21,7 +21,6 @@ try {
 }
 db.pragma("journal_mode = WAL");
 
-// Get all migration files in order
 const migrationFiles = fs
   .readdirSync(migrationsDir)
   .filter((file) => {
@@ -33,7 +32,9 @@ const migrationFiles = fs
       'add_packages.sql',
       'simplify_packages.sql',
       'add_usage_limits_system.sql',
-      'add_stats_history.sql'
+      'add_stats_history.sql',
+      'add_tracking_columns.sql',
+      'update_views_with_tracking.sql'
     ];
     return orderedMigrations.includes(file);
   })
@@ -46,7 +47,9 @@ const migrationFiles = fs
       'add_packages.sql',
       'simplify_packages.sql',
       'add_usage_limits_system.sql',
-      'add_stats_history.sql'
+      'add_stats_history.sql',
+      'add_tracking_columns.sql',
+      'update_views_with_tracking.sql'
     ];
     return order.indexOf(a) - order.indexOf(b);
   });
@@ -60,7 +63,22 @@ migrationFiles.forEach((file) => {
   console.log(`Executing: ${file}`);
 
   try {
-    db.exec(sql);
+    // For add_tracking_columns.sql, execute each statement separately to handle duplicate column errors
+    if (file === 'add_tracking_columns.sql') {
+      const statements = sql.split(';').filter(stmt => stmt.trim() && !stmt.trim().startsWith('--'));
+      statements.forEach((stmt) => {
+        try {
+          db.exec(stmt + ';');
+        } catch (error) {
+          // Ignore duplicate column errors
+          if (!error.message.includes('duplicate column name')) {
+            throw error;
+          }
+        }
+      });
+    } else {
+      db.exec(sql);
+    }
     console.log(`✓ ${file} completed successfully`);
   } catch (error) {
     console.error(`✗ Error in ${file}:`, error.message);

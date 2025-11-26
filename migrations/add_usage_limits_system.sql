@@ -130,10 +130,8 @@ CREATE INDEX IF NOT EXISTS idx_usage_notifications_userId ON usage_notifications
 CREATE INDEX IF NOT EXISTS idx_usage_notifications_sent ON usage_notifications(is_sent);
 CREATE INDEX IF NOT EXISTS idx_usage_analytics_userId_date ON usage_analytics(userId, date);
 
--- Add usage tracking columns to existing tables if they don't exist
-ALTER TABLE user_expiration ADD COLUMN IF NOT EXISTS usage_violations INTEGER DEFAULT 0;
-ALTER TABLE user_expiration ADD COLUMN IF NOT EXISTS last_violation DATETIME;
-ALTER TABLE user_expiration ADD COLUMN IF NOT EXISTS is_throttled BOOLEAN DEFAULT 0;
+-- Note: Additional columns for user_expiration (usage_violations, last_violation, is_throttled)
+-- will be added by subsequent migrations if needed
 
 -- Create triggers to maintain usage analytics
 CREATE TRIGGER IF NOT EXISTS update_usage_analytics_daily
@@ -196,18 +194,16 @@ SELECT
   CAST(ut.concurrent_users AS REAL) / st.concurrent_users_limit * 100 as concurrent_users_percentage,
   CAST(ut.api_calls AS REAL) / st.api_calls_limit * 100 as api_calls_percentage,
   CAST(ut.stream_duration AS REAL) / st.stream_duration_limit * 100 as stream_duration_percentage,
-  uv.violations_count,
-  ue.last_violation,
-  ue.is_throttled
+  uv.violations_count
 FROM api_users u
 LEFT JOIN user_expiration ue ON u.id = ue.userId
 LEFT JOIN packages p ON ue.packageId = p.id
 LEFT JOIN usage_tracking ut ON u.id = ut.userId
 LEFT JOIN subscription_tiers st ON 
   CASE 
-    WHEN p.name IN ('1 Month') THEN st.tier_name = 'basic'
-    WHEN p.name IN ('3 Months', '6 Months') THEN st.tier_name = 'premium'
-    WHEN p.name IN ('12 Months') THEN st.tier_name = 'enterprise'
+    WHEN p.name IN ('1 Bulan') THEN st.tier_name = 'basic'
+    WHEN p.name IN ('3 Bulan', '6 Bulan') THEN st.tier_name = 'premium'
+    WHEN p.name IN ('12 Bulan') THEN st.tier_name = 'enterprise'
     ELSE st.tier_name = 'basic'
   END
 LEFT JOIN (
