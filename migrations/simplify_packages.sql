@@ -43,6 +43,7 @@ CREATE TABLE user_expiration (
 );
 
 -- Restore data with default package (1 month) for existing users
+-- Only insert for users who have a jellyfinUserId
 INSERT INTO user_expiration (userId, jellyfinUserId, packageId, expirationDate, isActive, created_at, updated_at)
 SELECT 
   u.id, 
@@ -52,7 +53,8 @@ SELECT
   0, -- Inactive by default (needs admin approval)
   datetime('now'),
   datetime('now')
-FROM api_users u;
+FROM api_users u
+WHERE u.jellyfinUserId IS NOT NULL AND u.jellyfinUserId != '';
 
 -- Drop the backup table
 DROP TABLE IF EXISTS user_expiration_backup;
