@@ -15,7 +15,7 @@ async function loadSettings() {
         </div>
         <div class="form-group mt-4">
           <label class="block text-muted mb-2">Admin Email</label>
-          <input type="email" id="admin-email" class="neu-input" placeholder="Loading...">
+          <input type="email" id="admin-email" class="neu-input" placeholder="admin@example.com">
         </div>
         <button id="save-general-btn" class="neu-btn primary mt-6" onclick="saveGeneralSettings()">Save Changes</button>
       </div>
@@ -49,8 +49,8 @@ async function loadSettings() {
       <!-- Change Password -->
       <div class="neu-panel md:col-span-2">
         <h3 class="text-xl font-bold mb-4">Change Admin Password</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="form-group">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-group md:col-span-2">
                 <label class="block text-muted mb-2">Current Password</label>
                 <input type="password" id="current-password" class="neu-input">
             </div>
@@ -63,7 +63,7 @@ async function loadSettings() {
                 <input type="password" id="confirm-password" class="neu-input">
             </div>
         </div>
-        <button id="change-password-btn" class="neu-btn mt-6 danger" onclick="changeAdminPassword()">Update Password</button>
+        <button id="change-password-btn" class="neu-btn mt-6 primary" onclick="changeAdminPassword()">Update Password</button>
       </div>
 
     </div>
@@ -78,13 +78,9 @@ async function loadSettings() {
     
     if (result.success) {
       document.getElementById('site-name').value = result.data.siteName || '';
-      document.getElementById('admin-email').value = localStorage.getItem('userEmail') || ''; // Fallback or fetch from profile
+      document.getElementById('admin-email').value = result.data.adminEmail || localStorage.getItem('userEmail') || '';
       document.getElementById('jellyfin-url').value = result.data.jellyfinUrl || '';
-      // API Key is usually hidden/masked, we might not want to populate it fully if it's sensitive, 
-      // but for editing we might need it. Let's leave it empty placeholder if set.
-      if (result.data.jellyfinUrl) {
-          document.getElementById('jellyfin-api-key').placeholder = "Stored (Enter new to update)";
-      }
+      document.getElementById('jellyfin-api-key').value = result.data.jellyfinApiKey || '';
     }
   } catch (error) {
     console.error('Failed to load settings:', error);

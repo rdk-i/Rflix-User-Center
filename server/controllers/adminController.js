@@ -511,11 +511,42 @@ class AdminController {
         }
       }
 
+      // Force read .env to get fresh values
+      let envUrl = process.env.JELLYFIN_URL;
+      let envApiKey = process.env.JELLYFIN_API_KEY;
+      
+      try {
+        const envContent = fs.readFileSync(path.join(__dirname, '../../.env'), 'utf8');
+        const urlMatch = envContent.match(/^JELLYFIN_URL=(.*)$/m);
+        const keyMatch = envContent.match(/^JELLYFIN_API_KEY=(.*)$/m);
+        if (urlMatch) envUrl = urlMatch[1];
+        if (keyMatch) envApiKey = keyMatch[1];
+      } catch (e) {
+        logger.warn('Failed to read .env file directly:', e.message);
+      }
+
+      // Get admin email
+      let adminEmail = '';
+      try {
+        const adminUser = db.prepare("SELECT email FROM api_users WHERE role = 'admin'").get();
+        if (adminUser) {
+          adminEmail = adminUser.email;
+        } else {
+          // Fallback to user ID 1 if no admin role found
+          const firstUser = db.prepare("SELECT email FROM api_users WHERE id = 1").get();
+          if (firstUser) adminEmail = firstUser.email;
+        }
+      } catch (e) {
+        logger.error('Failed to fetch admin email:', e.message);
+      }
+
       res.json({
         success: true,
         data: {
           siteName: process.env.SITE_NAME || 'Rflix',
-          jellyfinUrl: process.env.JELLYFIN_URL || '',
+          jellyfinUrl: envUrl || '',
+          jellyfinApiKey: envApiKey || '',
+          adminEmail: adminEmail || '',
           allowRegistration: process.env.ALLOW_REGISTRATION !== 'false',
           autoBackup: process.env.AUTO_BACKUP !== 'false',
           lastBackup

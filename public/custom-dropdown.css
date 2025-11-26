@@ -19,12 +19,14 @@
   padding: 0 20px;
   font-size: 16px;
   font-weight: 500;
-  color: var(--input-text);
-  height: 46px;
-  line-height: 46px;
-  background: transparent;
+  color: var(--text);
+  height: 56px; /* Match input height approx */
+  line-height: 56px;
+  background: var(--bg);
   cursor: pointer;
-  border-radius: 13px;
+  border-radius: var(--radius-sm); /* Match input radius */
+  box-shadow: var(--shadow-in);
+  transition: var(--transition);
 }
 
 .custom-select-options {
@@ -73,7 +75,7 @@
 }
 
 .custom-option.selected {
-  color: var(--input-text);
+  color: var(--text);
   background: var(--bg);
   box-shadow: var(--shadow-in);
 }

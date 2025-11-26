@@ -208,6 +208,13 @@ function showAlert(message, type = 'info') {
 document.addEventListener('DOMContentLoaded', () => {
   loadDashboardData();
   
+  // Update Admin Email in Sidebar
+  const adminEmailEl = document.getElementById('adminEmail');
+  if (adminEmailEl) {
+    const email = localStorage.getItem('userEmail');
+    adminEmailEl.textContent = email || 'Administrator';
+  }
+  
   // Close sidebar when clicking a nav item on mobile
   document.querySelectorAll('.nav-item').forEach((item) => {
     item.addEventListener('click', () => {
