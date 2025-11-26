@@ -11,6 +11,7 @@ async function recordStats() {
     try {
       const sessionsResponse = await jellyfinService.client.get('/Sessions');
       if (sessionsResponse.data) {
+        // Count only sessions with NowPlayingItem (actual playback)
         activeStreams = sessionsResponse.data.filter(s => s.NowPlayingItem).length;
       }
     } catch (error) {

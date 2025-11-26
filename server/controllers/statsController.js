@@ -90,9 +90,10 @@ class StatsController {
         const jellyfinService = require('../services/jellyfinService');
         const sessionsResponse = await jellyfinService.client.get('/Sessions');
         if (sessionsResponse.data) {
+          // Count only sessions with NowPlayingItem (actual playback)
           const currentActive = sessionsResponse.data.filter(s => s.NowPlayingItem).length;
           
-          logger.info(`[Stats] Current active streams: ${currentActive}`);
+          logger.info(`[Stats] Current now playing: ${currentActive}`);
           
           // Add current point
           data.push({

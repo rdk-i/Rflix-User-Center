@@ -346,6 +346,7 @@ class AdminController {
   async getDashboardStats(req, res, next) {
     try {
       let totalUsers = 0;
+      let totalOnline = 0;
       let nowPlaying = 0;
       let pendingRequests = 0;
       let jellyfinConnected = false;
@@ -371,19 +372,26 @@ class AdminController {
           logger.warn('Failed to fetch Jellyfin users:', usersResponse.error);
         }
 
-        // Get active sessions (Now Playing)
+        // Get active sessions
         logger.debug('Fetching active sessions from Jellyfin');
         const sessionsResponse = await jellyfinService.client.get('/Sessions');
         if (sessionsResponse.data) {
-          const activeSessions = sessionsResponse.data.filter(s => s.NowPlayingItem);
-          nowPlaying = activeSessions.length;
-          logger.info(`Active sessions count: ${nowPlaying}`);
+          // Total Online: Count all active sessions (connected devices)
+          const activeSessions = sessionsResponse.data.filter(s => s.Client);
+          totalOnline = activeSessions.length;
+          logger.info(`Total online sessions: ${totalOnline}`);
 
-          // Build recent activity from active sessions
-          recentActivity = activeSessions.slice(0, 5).map(session => ({
+          // Now Playing: Count only sessions with NowPlayingItem
+          const playingSessions = sessionsResponse.data.filter(s => s.NowPlayingItem);
+          nowPlaying = playingSessions.length;
+          logger.info(`Now playing sessions: ${nowPlaying}`);
+
+          // Build recent activity from sessions with NowPlayingItem
+          recentActivity = playingSessions.slice(0, 5).map(session => ({
             user: session.UserName || 'Unknown',
             action: `watching ${session.NowPlayingItem?.Name || 'content'}`,
-            time: 'Now'
+            time: 'Now',
+            timestamp: new Date().toISOString()
           }));
           logger.debug(`Generated ${recentActivity.length} recent activity items from sessions`);
         }
@@ -401,7 +409,8 @@ class AdminController {
           recentActivity = auditLogs.map(log => ({
             user: log.adminId ? `Admin #${log.adminId}` : 'System',
             action: log.action,
-            time: new Date(log.timestamp).toLocaleTimeString()
+            time: new Date(log.timestamp).toLocaleTimeString(),
+            timestamp: log.timestamp
           }));
           logger.debug(`Generated ${recentActivity.length} recent activity items from audit log`);
         }
@@ -419,6 +428,7 @@ class AdminController {
       if (!jellyfinConnected) {
         logger.info('Using fallback local database stats');
         totalUsers = db.prepare("SELECT COUNT(*) as count FROM api_users WHERE role != 'admin'").get().count;
+        totalOnline = 0;
         nowPlaying = 0;
         pendingRequests = db.prepare('SELECT COUNT(*) as count FROM user_expiration WHERE isActive = 0').get().count;
         recentActivity = [];
@@ -429,6 +439,7 @@ class AdminController {
         success: true,
         data: {
           totalUsers,
+          totalOnline,
           nowPlaying,
           pendingRequests,
           jellyfinConnected,
