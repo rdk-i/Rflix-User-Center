@@ -26,12 +26,7 @@ CREATE TABLE IF NOT EXISTS packages (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Default packages
-INSERT OR IGNORE INTO packages (id, name, durationMonths, price, description, displayOrder) VALUES
-  (1, '1 Month', 1, 50000, 'Monthly subscription', 1),
-  (2, '3 Months', 3, 135000, 'Quarterly subscription (10% discount)', 2),
-  (3, '6 Months', 6, 255000, 'Semi-annual subscription (15% discount)', 3),
-  (4, '12 Months', 12, 480000, 'Annual subscription (20% discount)', 4);
+-- Note: Default packages are inserted by simplify_packages.sql migration
 
 -- Table: user_expiration (Subscription expiration tracking)
 CREATE TABLE IF NOT EXISTS user_expiration (
